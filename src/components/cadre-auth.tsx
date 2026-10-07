@@ -21,7 +21,7 @@ export function CadreAuth({ titre, description, children, pied }: { titre: strin
           <Logo clair />
         </Link>
         <div className="relative max-w-md">
-          <h2 className="text-3xl font-bold leading-tight">La paie zéro papier pour les cabinets et entreprises du Gabon.</h2>
+          <h2 className="text-3xl font-bold leading-tight">La paie zéro papier pour les cabinets et entreprises.</h2>
           <ul className="mt-8 flex flex-col gap-4">
             {ATOUTS.map(({ icone: Icone, texte }) => (
               <li key={texte} className="flex items-center gap-3 text-white/90">
