@@ -33,7 +33,7 @@ const telephoneFacultatif = z
   })
   .transform((v) => (v === "" ? null : v));
 
-export const ROLES_ENTREPRISE = ["gestionnaire_paie", "controleur", "signataire", "rh"] as const;
+export const ROLES_ENTREPRISE = ["admin_entreprise", "gestionnaire_paie", "controleur", "signataire", "rh"] as const;
 export const MODES_ENTREPRISE = ["cabinet", "autonome"] as const;
 
 export const schemaCabinet = z
@@ -74,6 +74,31 @@ export const schemaNouveauMembre = z.object({
 
 export const schemaNouvelleAffectation = schemaNouveauMembre.extend({
   role: z.enum(ROLES_ENTREPRISE, { error: "Choisissez un rôle." }),
+});
+
+// Inscription libre d'un prospect (cabinet ou entreprise)
+export const schemaInscription = z.object({
+  type: z.enum(["cabinet", "entreprise"], { error: "Indiquez si vous êtes un cabinet ou une entreprise." }),
+  formule: z.enum(["essai", "pro"], { error: "Choisissez une formule." }),
+  nom_structure: obligatoire("Le nom de votre structure"),
+  nom_complet: obligatoire("Votre nom complet"),
+  email: emailObligatoire,
+  conditions: z.literal("on", { error: "Vous devez accepter les conditions d'utilisation." }),
+});
+
+// Activation ou prolongation d'un abonnement par l'administrateur plateforme
+export const schemaActivationAbonnement = z.object({
+  formule_id: z.uuid({ error: "Choisissez une formule." }),
+  fin: z.iso.date({ error: "Indiquez une date de fin valide." }),
+});
+
+export const schemaFormule = z.object({
+  libelle: obligatoire("Le nom de la formule"),
+  prix_mensuel: z.coerce
+    .number({ error: "Indiquez un prix (0 si gratuit)." })
+    .int({ error: "Le prix doit être un nombre entier." })
+    .min(0, { error: "Le prix ne peut pas être négatif." }),
+  description: facultatif,
 });
 
 export const schemaProfil = z.object({

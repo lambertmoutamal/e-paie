@@ -38,9 +38,13 @@ export async function dansUneTransaction(test: (client: pg.Client) => Promise<vo
 
 // Se met dans la peau d'un utilisateur, exactement comme le ferait Supabase
 // quand cette personne est connectée. null = visiteur non connecté.
-export async function commeUtilisateur(client: pg.Client, id: string | null) {
+export async function commeUtilisateur(
+  client: pg.Client,
+  id: string | null,
+  autresInfos: Record<string, unknown> = {},
+) {
   await client.query("reset role");
-  const claims = id ? { sub: id, role: "authenticated" } : { role: "anon" };
+  const claims = id ? { sub: id, role: "authenticated", ...autresInfos } : { role: "anon" };
   await client.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify(claims)]);
   await client.query(id ? "set local role authenticated" : "set local role anon");
 }

@@ -38,6 +38,42 @@ export async function trouverOuCreerCompte(email: string, nomComplet: string): P
   };
 }
 
+export type DemandeInscription = { type: "cabinet" | "entreprise"; nom_structure: string; formule: "essai" | "pro" };
+
+// Inscription libre : crée le compte en attente d'activation et mémorise la demande dans
+// app_metadata (modifiable par le serveur uniquement). Le cabinet ou l'entreprise n'est créé
+// qu'après le clic sur le lien, ce qui évite les structures fantômes.
+// Renvoie null si un compte existe déjà avec cet email.
+export async function creerCompteInscription(
+  email: string,
+  nomComplet: string,
+  demande: DemandeInscription,
+): Promise<string | null> {
+  const admin = clientSupabaseAdmin();
+  const { data: existant } = await admin.from("profils").select("id").eq("email", email).maybeSingle();
+  if (existant) return null;
+
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "invite",
+    email,
+    options: { data: { nom_complet: nomComplet } },
+  });
+  if (error || !data.user) throw error ?? new Error("Création du compte impossible.");
+
+  const { error: erreurMeta } = await admin.auth.admin.updateUserById(data.user.id, {
+    app_metadata: { mot_de_passe_a_definir: true, inscription: demande },
+  });
+  if (erreurMeta) {
+    await admin.auth.admin.deleteUser(data.user.id);
+    throw erreurMeta;
+  }
+  return lienConfirmation(data.properties.hashed_token, "invite");
+}
+
+export async function effacerDemandeInscription(idUtilisateur: string) {
+  await clientSupabaseAdmin().auth.admin.updateUserById(idUtilisateur, { app_metadata: { inscription: null } });
+}
+
 // Annule la création d'un compte si l'étape suivante a échoué (pas de compte orphelin).
 export async function supprimerCompteCree(compte: Compte) {
   if (!compte.nouveau) return;

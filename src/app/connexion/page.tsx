@@ -12,9 +12,15 @@ export default function PageConnexion() {
       titre="Connexion"
       description="Espace cabinet et entreprise. Connectez-vous avec l'email fourni par votre administrateur."
       pied={
-        <>
-          Vous êtes salarié ? L&apos;espace salarié, avec connexion par téléphone, arrive bientôt.
-        </>
+        <div className="flex flex-col gap-3">
+          <p>
+            Pas encore de compte ?{" "}
+            <Link href="/inscription" className="font-medium text-marque hover:underline">
+              Essayer gratuitement 30 jours
+            </Link>
+          </p>
+          <p>Vous êtes salarié ? L&apos;espace salarié, avec connexion par téléphone, arrive bientôt.</p>
+        </div>
       }
     >
       <FormulaireConnexion action={seConnecter} />

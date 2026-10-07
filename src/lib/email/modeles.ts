@@ -82,6 +82,56 @@ export function emailAccesAjoute(p: { nom: string; perimetre: string; lienConnex
   };
 }
 
+export function emailInscription(p: { nom: string; structure: string; lien: string; pro: boolean }): Email {
+  const nom = echapper(p.nom);
+  const structure = echapper(p.structure);
+  const suite = p.pro
+    ? "Vous avez choisi la formule Pro : votre essai gratuit de 30 jours démarre dès l'activation, et notre équipe vous contactera pour mettre en place votre abonnement."
+    : "Votre essai gratuit de 30 jours démarre dès l'activation : toutes les fonctionnalités, sans engagement.";
+  return {
+    sujet: "Activez votre compte e-Paie",
+    html: gabarit({
+      titre: `Bienvenue ${nom}`,
+      paragraphes: [
+        `Merci d'avoir inscrit <strong>${structure}</strong> sur e-Paie, la plateforme de paie zéro papier.`,
+        echapper(suite),
+        "Cliquez sur le bouton ci-dessous pour confirmer votre adresse email et choisir votre mot de passe.",
+      ],
+      bouton: { libelle: "Activer mon compte", lien: p.lien },
+      note: "Ce lien est personnel et valable 24 heures. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email : aucun compte ne sera activé.",
+    }),
+    texte: `Bienvenue ${p.nom},\n\nMerci d'avoir inscrit ${p.structure} sur e-Paie.\n${suite}\n\nActivez votre compte (lien valable 24 heures) :\n${p.lien}\n\nSi vous n'êtes pas à l'origine de cette inscription, ignorez cet email.`,
+  };
+}
+
+export function emailCompteExistant(p: { lienConnexion: string; lienMotDePasse: string }): Email {
+  return {
+    sujet: "Vous avez déjà un compte e-Paie",
+    html: gabarit({
+      titre: "Vous avez déjà un compte",
+      paragraphes: [
+        "Quelqu'un (probablement vous) a tenté de créer un compte e-Paie avec cette adresse, mais un compte existe déjà.",
+        `Connectez-vous simplement. En cas d'oubli, utilisez <a href="${echapper(p.lienMotDePasse)}" style="color:#0b5d3b">« Mot de passe oublié »</a>.`,
+      ],
+      bouton: { libelle: "Se connecter", lien: p.lienConnexion },
+      note: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre compte n'a pas été modifié.",
+    }),
+    texte: `Un compte e-Paie existe déjà avec cette adresse.\nConnexion : ${p.lienConnexion}\nMot de passe oublié : ${p.lienMotDePasse}`,
+  };
+}
+
+// Alerte interne envoyée à l'équipe e-Paie
+export function emailAlerte(p: { titre: string; lignes: [string, string][] }): Email {
+  const tableau = p.lignes
+    .map(([cle, valeur]) => `<strong>${echapper(cle)} :</strong> ${echapper(valeur)}`)
+    .join("<br>");
+  return {
+    sujet: `[e-Paie] ${p.titre}`,
+    html: gabarit({ titre: echapper(p.titre), paragraphes: [tableau] }),
+    texte: `${p.titre}\n\n${p.lignes.map(([cle, valeur]) => `${cle} : ${valeur}`).join("\n")}`,
+  };
+}
+
 export function emailRecuperation(p: { lien: string }): Email {
   return {
     sujet: "Réinitialisation de votre mot de passe e-Paie",

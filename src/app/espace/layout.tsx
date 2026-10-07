@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { LogOut } from "lucide-react";
 import { droitsUtilisateur } from "@/lib/auth/utilisateur";
+import { messageBandeau } from "@/lib/abonnements/phases";
 import { Logo } from "@/components/logo";
 import { Squelette } from "@/components/ui";
 import { seDeconnecter } from "../connexion/actions";
@@ -37,6 +38,10 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
           </Suspense>
         </header>
 
+        <Suspense fallback={null}>
+          <BandeauAbonnement />
+        </Suspense>
+
         <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-10">
           <div className="mx-auto w-full max-w-5xl">
             <Suspense fallback={<Squelette />}>{children}</Suspense>
@@ -54,12 +59,15 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
 }
 
 async function Menu({ variante }: { variante: "lateral" | "onglets" }) {
-  const { adminPlateforme, cabinets, affectations } = await droitsUtilisateur();
+  const { adminPlateforme, cabinets, affectations, abonnements } = await droitsUtilisateur();
   const elements: ElementMenu[] = [
     { href: "/espace", libelle: "Tableau de bord", icone: "tableau" },
     ...(adminPlateforme ? [{ href: "/espace/cabinets", libelle: "Cabinets", icone: "cabinets" as const }] : []),
     ...(adminPlateforme || cabinets.length > 0 || affectations.length > 0
       ? [{ href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const }]
+      : []),
+    ...(adminPlateforme || abonnements.length > 0
+      ? [{ href: "/espace/abonnement", libelle: adminPlateforme ? "Abonnements" : "Abonnement", icone: "abonnement" as const }]
       : []),
     { href: "/espace/profil", libelle: "Mon profil", icone: "profil" },
   ];
@@ -67,6 +75,33 @@ async function Menu({ variante }: { variante: "lateral" | "onglets" }) {
     return <BarreOnglets elements={elements.map((e) => (e.href === "/espace" ? { ...e, libelle: "Accueil" } : e))} />;
   }
   return <MenuLateral elements={elements} />;
+}
+
+// Bandeau d'information sur l'abonnement (essai, lecture seule, blocage).
+// Non affiché pour l'administrateur plateforme, qui voit tous les abonnements.
+async function BandeauAbonnement() {
+  const { adminPlateforme, abonnements } = await droitsUtilisateur();
+  if (adminPlateforme) return null;
+  const messages = abonnements.map(messageBandeau).filter((m) => m !== null);
+  if (!messages.length) return null;
+
+  const couleurs = {
+    info: "border-sky-200 bg-sky-50 text-sky-900",
+    alerte: "border-amber-200 bg-amber-50 text-amber-900",
+    danger: "border-red-200 bg-red-50 text-red-900",
+  };
+  return (
+    <div className="flex flex-col">
+      {messages.map((m) => (
+        <div key={m.texte} role="status" className={`flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-sm lg:px-8 ${couleurs[m.niveau]}`}>
+          <span>{m.texte}</span>
+          <Link href="/espace/abonnement" className="font-semibold underline">
+            Passer à Pro
+          </Link>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 async function MenuUtilisateur() {

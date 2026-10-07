@@ -159,6 +159,67 @@ export function ChoixListe({
   );
 }
 
+// Choix exclusif présenté sous forme de cartes (ex. « Cabinet » / « Entreprise »).
+export function ChoixCartes({
+  nom,
+  libelle,
+  options,
+  valeurInitiale,
+}: {
+  nom: string;
+  libelle: string;
+  options: { valeur: string; titre: string; texte: string }[];
+  valeurInitiale?: string;
+}) {
+  const etat = use(ContexteFormulaire);
+  const erreur = etat?.erreurs?.[nom];
+  const choisie = etat?.valeurs?.[nom] ?? valeurInitiale;
+  const id = useId();
+
+  return (
+    <fieldset className="flex flex-col gap-1.5 sm:col-span-2" aria-describedby={erreur ? `${id}-message` : undefined}>
+      <legend className="mb-1.5 text-sm font-medium">{libelle}</legend>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {options.map((o) => (
+          <label
+            key={o.valeur}
+            className="flex cursor-pointer gap-3 rounded-xl border border-bordure bg-surface p-4 transition has-[:checked]:border-marque has-[:checked]:bg-marque-claire/50 has-[:checked]:ring-1 has-[:checked]:ring-marque"
+          >
+            <input type="radio" name={nom} value={o.valeur} defaultChecked={choisie === o.valeur} className="mt-1 accent-[var(--marque)]" />
+            <span>
+              <span className="block font-semibold">{o.titre}</span>
+              <span className="block text-sm text-doux">{o.texte}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <MessageChamp id={id} erreur={erreur} />
+    </fieldset>
+  );
+}
+
+export function CaseACocher({ nom, children }: { nom: string; children: ReactNode }) {
+  const etat = use(ContexteFormulaire);
+  const erreur = etat?.erreurs?.[nom];
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1 sm:col-span-2">
+      <label htmlFor={id} className="flex items-start gap-2 text-sm">
+        <input
+          id={id}
+          type="checkbox"
+          name={nom}
+          defaultChecked={etat?.valeurs?.[nom] === "on"}
+          aria-invalid={erreur ? true : undefined}
+          className="mt-0.5 size-4 accent-[var(--marque)]"
+        />
+        <span>{children}</span>
+      </label>
+      <MessageChamp id={id} erreur={erreur} />
+    </div>
+  );
+}
+
 export function TitreGroupe({ children }: { children: ReactNode }) {
   return <p className="pt-2 text-sm font-semibold text-doux sm:col-span-2">{children}</p>;
 }

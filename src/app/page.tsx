@@ -31,6 +31,16 @@ export default function Accueil() {
               Pour les cabinets comptables et les entreprises : bulletins, congés et échanges avec les
               salariés, au même endroit, depuis le téléphone.
             </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/inscription" className="inline-flex h-12 items-center gap-2 rounded-lg bg-white px-5 font-semibold text-marque hover:bg-white/90">
+                Essai gratuit 30 jours
+                <ArrowRight size={16} aria-hidden />
+              </Link>
+              <Link href="/inscription?formule=pro" className="inline-flex h-12 items-center rounded-lg border border-white/40 px-5 font-semibold text-white hover:bg-white/10">
+                Souscrire à Pro
+              </Link>
+            </div>
+            <p className="mt-3 text-sm text-white/70">Sans engagement, sans moyen de paiement.</p>
           </div>
         </section>
 

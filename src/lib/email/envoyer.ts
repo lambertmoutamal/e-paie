@@ -38,6 +38,18 @@ export async function envoyerEmail(destinataire: string, email: Email): Promise<
   console.info(`[email] « ${email.sujet} » accepté par Resend (suivi : ${id ?? "inconnu"})`);
 }
 
+// Alerte interne à l'équipe e-Paie (nouvelle inscription, demande Pro…).
+// Ne bloque jamais l'action en cours : un échec est seulement noté dans le journal.
+export async function alerterEquipe(email: Email): Promise<void> {
+  const destinataire = process.env.EMAIL_ALERTES || process.env.EMAIL_REPONSE;
+  if (!destinataire) return;
+  try {
+    await envoyerEmail(destinataire, email);
+  } catch (erreur) {
+    console.error("Alerte interne non envoyée :", erreur);
+  }
+}
+
 export function adresseSite(): string {
   const url = process.env.NEXT_PUBLIC_SITE_URL;
   if (!url) throw new Error("NEXT_PUBLIC_SITE_URL manquant dans .env.local.");

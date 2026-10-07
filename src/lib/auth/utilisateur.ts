@@ -22,7 +22,7 @@ export async function estAdminPlateforme(supabase: Awaited<ReturnType<typeof cli
 // Profil et périmètre de la personne connectée (lu une fois par requête).
 export const droitsUtilisateur = cache(async () => {
   const { supabase, utilisateur } = await exigerUtilisateur();
-  const [{ data: profil }, { data: cabinets }, { data: affectations }] = await Promise.all([
+  const [{ data: profil }, { data: cabinets }, { data: affectations }, { data: abonnements }] = await Promise.all([
     supabase
       .from("profils")
       .select("nom_complet, email, est_admin_plateforme")
@@ -34,11 +34,19 @@ export const droitsUtilisateur = cache(async () => {
       .select("role, entreprise_id, entreprises(raison_sociale)")
       .eq("profil_id", utilisateur.id)
       .eq("actif", true),
+    supabase.rpc("mes_abonnements"),
   ]);
   return {
     profil,
     adminPlateforme: profil?.est_admin_plateforme === true,
     cabinets: cabinets ?? [],
     affectations: affectations ?? [],
+    abonnements: (abonnements ?? []) as {
+      abonnement_id: string;
+      titulaire: string;
+      phase: import("@/lib/abonnements/phases").Phase;
+      jours_restants: number;
+      fin_lecture_seule: string;
+    }[],
   };
 });

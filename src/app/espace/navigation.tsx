@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Briefcase, Building2, LayoutDashboard, UserRound } from "lucide-react";
+import { Briefcase, Building2, CreditCard, LayoutDashboard, UserRound } from "lucide-react";
 
-const ICONES = { tableau: LayoutDashboard, cabinets: Building2, entreprises: Briefcase, profil: UserRound };
+const ICONES = { tableau: LayoutDashboard, cabinets: Building2, entreprises: Briefcase, abonnement: CreditCard, profil: UserRound };
 
 export type ElementMenu = { href: string; libelle: string; icone: keyof typeof ICONES };
 
