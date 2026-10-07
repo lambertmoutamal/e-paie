@@ -25,6 +25,9 @@ export async function envoyerEmail(destinataire: string, email: Email): Promise<
   if (!reponse.ok) {
     throw new Error(`Resend a refusé l'envoi (${reponse.status}) : ${await reponse.text()}`);
   }
+  // Numéro de suivi : permet de retrouver l'email dans Resend (menu « Emails »).
+  const { id } = (await reponse.json().catch(() => ({}))) as { id?: string };
+  console.info(`[email] « ${email.sujet} » accepté par Resend (suivi : ${id ?? "inconnu"})`);
 }
 
 export function adresseSite(): string {
