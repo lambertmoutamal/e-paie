@@ -24,7 +24,7 @@ export async function proxy(requete: NextRequest) {
 
   const { data } = await supabase.auth.getClaims();
   const connecte = Boolean(data?.claims?.sub);
-  const motDePasseProvisoire = data?.claims?.app_metadata?.mot_de_passe_provisoire === true;
+  const motDePasseADefinir = data?.claims?.app_metadata?.mot_de_passe_a_definir === true;
   const chemin = requete.nextUrl.pathname;
 
   if (!connecte && chemin.startsWith("/espace")) {
@@ -33,8 +33,8 @@ export async function proxy(requete: NextRequest) {
   if (connecte && chemin === "/connexion") {
     return rediriger(requete, reponse, "/espace");
   }
-  // Première connexion avec un mot de passe provisoire : il faut d'abord le changer.
-  if (motDePasseProvisoire && chemin.startsWith("/espace") && chemin !== "/espace/mot-de-passe") {
+  // Compte tout juste activé (ou mot de passe oublié) : il faut d'abord choisir un mot de passe.
+  if (motDePasseADefinir && chemin.startsWith("/espace") && chemin !== "/espace/mot-de-passe") {
     return rediriger(requete, reponse, "/espace/mot-de-passe");
   }
   return reponse;

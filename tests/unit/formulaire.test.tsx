@@ -25,8 +25,8 @@ test("deux formulaires sur la même page ne partagent jamais un champ", () => {
   );
 });
 
-test("le mot de passe provisoire est affiché avec l'avertissement « une seule fois »", () => {
-  render(<MessageEtat etat={{ compteCree: { email: "a@exemple.ga", motDePasse: "Kx7m-Pq2r-Zt9w" } }} />);
-  expect(screen.getByText("Kx7m-Pq2r-Zt9w")).toBeDefined();
-  expect(screen.getByText("Il ne sera plus jamais affiché.")).toBeDefined();
+test("les messages de réussite et d'erreur sont annoncés aux lecteurs d'écran", () => {
+  render(<MessageEtat etat={{ succes: "Invitation envoyée.", erreur: "Échec partiel." }} />);
+  expect(screen.getByRole("status").textContent).toBe("Invitation envoyée.");
+  expect(screen.getByRole("alert").textContent).toBe("Échec partiel.");
 });

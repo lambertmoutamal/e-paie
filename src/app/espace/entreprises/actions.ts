@@ -3,14 +3,13 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { affecterPersonne } from "@/lib/admin/membres";
+import { affecterPersonne, renvoyerInvitation } from "@/lib/admin/membres";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import {
   schemaEntreprise,
   schemaNouvelleAffectation,
   schemaNouvelleEntreprise,
 } from "@/lib/validation/schemas";
-import { libelleRole } from "@/lib/auth/roles";
 
 export async function creerEntreprise(_etat: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
   const { supabase } = await exigerUtilisateur();
@@ -59,7 +58,13 @@ export async function ajouterUtilisateur(
   if ("erreur" in resultat) return { erreur: resultat.erreur, valeurs: lu.valeurs };
 
   refresh();
-  return { succes: `${nom_complet} : ${libelleRole(role)}.`, compteCree: resultat.compteCree };
+  return { succes: resultat.message };
+}
+
+export async function renvoyerInvitationEntreprise(entrepriseId: string, profilId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const resultat = await renvoyerInvitation(supabase, profilId, { entrepriseId });
+  return "erreur" in resultat ? { erreur: resultat.erreur } : { succes: resultat.message };
 }
 
 // Retirer un accès ne supprime rien : l'affectation est désactivée (et tracée).

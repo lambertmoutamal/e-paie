@@ -1,35 +1,25 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Pencil, UserRound, Users } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { libelleRole } from "@/lib/auth/roles";
-import { champLie } from "@/lib/supabase/relations";
+import { champLie, valeurLiee } from "@/lib/supabase/relations";
 import { ROLES_ENTREPRISE } from "@/lib/validation/schemas";
-import { Champ, ChoixListe, Formulaire } from "@/components/formulaire";
-import { Carte, Chargement, EnTete, PageEspace, Section, Vide } from "@/components/mise-en-page";
-import { ajouterUtilisateur, changerAcces, modifierEntreprise } from "../actions";
+import { ActionEnLigne, Champ, ChoixListe, Formulaire } from "@/components/formulaire";
+import { Badge, Carte, classesBouton, EnTetePage, EtatVide, Ligne, ListeLignes, Page } from "@/components/ui";
+import { ajouterUtilisateur, changerAcces, modifierEntreprise, renvoyerInvitationEntreprise } from "../actions";
 import { ChampsEntreprise } from "../champs-entreprise";
 
 export const metadata: Metadata = { title: "Entreprise" };
 
-export default function PageEntreprise({ params }: PageProps<"/espace/entreprises/[id]">) {
-  return (
-    <PageEspace>
-      <Suspense fallback={<Chargement />}>
-        <DetailEntreprise params={params} />
-      </Suspense>
-    </PageEspace>
-  );
-}
-
-async function DetailEntreprise({ params }: { params: Promise<{ id: string }> }) {
+export default async function PageEntreprise({ params }: PageProps<"/espace/entreprises/[id]">) {
   const { id } = await params;
   const { supabase } = await exigerUtilisateur();
 
   // La RLS ne renvoie l'entreprise qu'aux personnes qui y ont accès.
   const { data: entreprise } = await supabase
     .from("entreprises")
-    .select("id, raison_sociale, nif, rccm, numero_cnss, adresse, telephone, email, mode, statut, cabinets(nom)")
+    .select("id, raison_sociale, nif, rccm, numero_cnss, adresse, telephone, email, mode, statut, cabinet_id, cabinets(nom)")
     .eq("id", id)
     .maybeSingle();
   if (!entreprise) notFound();
@@ -38,111 +28,125 @@ async function DetailEntreprise({ params }: { params: Promise<{ id: string }> })
     supabase.rpc("peut_gerer_entreprise", { p_entreprise_id: id }),
     supabase
       .from("affectations")
-      .select("profil_id, role, actif, profils(nom_complet, email)")
+      .select("profil_id, role, actif, profils(nom_complet, email, active_le)")
       .eq("entreprise_id", id)
       .order("actif", { ascending: false }),
   ]);
   const peutGerer = gere === true;
+  const nomCabinet = entreprise.cabinets ? champLie(entreprise.cabinets, "nom") : null;
 
   return (
-    <>
-      <EnTete
+    <Page>
+      <EnTetePage
         titre={entreprise.raison_sociale}
-        retour={{ href: "/espace/entreprises", libelle: "Entreprises" }}
-        sousTitre={entreprise.cabinets ? `Cabinet : ${champLie(entreprise.cabinets, "nom")}` : "Sans cabinet"}
+        description={nomCabinet ? `Cliente du cabinet ${nomCabinet}` : "Sans cabinet"}
+        fil={[
+          { href: "/espace", libelle: "Tableau de bord" },
+          { href: "/espace/entreprises", libelle: "Entreprises" },
+        ]}
+        actions={
+          <Badge teinte={entreprise.mode === "autonome" ? "bleu" : "vert"}>
+            {entreprise.mode === "autonome" ? "Mode autonome" : "Mode cabinet"}
+          </Badge>
+        }
       />
 
-      <Section titre="Utilisateurs et rôles">
-        {!affectations?.length ? (
-          <Vide>Personne n&apos;est encore affecté à cette entreprise.</Vide>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {affectations.map((a) => (
-              <li key={`${a.profil_id}-${a.role}`}>
-                <Carte>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className={a.actif ? "" : "opacity-50"}>
-                      <p className="font-medium">{champLie(a.profils, "nom_complet")}</p>
-                      <p className="text-sm text-foreground/70">{champLie(a.profils, "email")}</p>
-                      <p className="mt-1 text-sm">
-                        {libelleRole(a.role)}
-                        {!a.actif && " · accès retiré"}
-                      </p>
-                    </div>
-                    {peutGerer && (
-                      <form action={changerAcces.bind(null, id, a.profil_id, a.role, !a.actif)}>
-                        <button type="submit" className="rounded-lg border border-black/20 px-3 py-1 text-sm">
-                          {a.actif ? "Retirer" : "Rétablir"}
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </Carte>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="grid gap-6 lg:grid-cols-5">
+        <div className="flex flex-col gap-6 lg:col-span-3">
+          <Carte titre="Utilisateurs et rôles" description="Les personnes qui interviennent sur cette entreprise." sansMarge>
+            {!affectations?.length ? (
+              <EtatVide icone={Users} titre="Personne n'est encore affecté" texte="Invitez le gestionnaire de paie, le contrôleur, le signataire et le responsable RH." />
+            ) : (
+              <ListeLignes>
+                {affectations.map((a) => {
+                  const enAttente = valeurLiee(a.profils, "active_le") === null;
+                  return (
+                    <Ligne
+                      key={`${a.profil_id}-${a.role}`}
+                      icone={UserRound}
+                      titre={<span className={a.actif ? "" : "text-doux line-through"}>{champLie(a.profils, "nom_complet")}</span>}
+                      sousTitre={
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          {libelleRole(a.role)}
+                          {!a.actif ? <Badge teinte="rouge">Accès retiré</Badge> : enAttente ? <Badge teinte="ambre">Invitation en attente</Badge> : null}
+                        </span>
+                      }
+                      fin={
+                        peutGerer && (
+                          <div className="flex flex-col items-end gap-1">
+                            {a.actif && enAttente && (
+                              <ActionEnLigne action={renvoyerInvitationEntreprise.bind(null, id, a.profil_id)} libelle="Renvoyer l'invitation" variante="discret" />
+                            )}
+                            <form action={changerAcces.bind(null, id, a.profil_id, a.role, !a.actif)}>
+                              <button type="submit" className={classesBouton(a.actif ? "danger" : "secondaire", "petit")}>
+                                {a.actif ? "Retirer" : "Rétablir"}
+                              </button>
+                            </form>
+                          </div>
+                        )
+                      }
+                    />
+                  );
+                })}
+              </ListeLignes>
+            )}
+          </Carte>
 
-        {peutGerer && (
-          <div className="rounded-xl border-2 border-marque/40 bg-white p-4">
-            <p className="mb-1 font-semibold">Ajouter une personne à {entreprise.raison_sociale}</p>
-            <p className="mb-3 text-sm text-foreground/70">
-              Un compte est créé avec un mot de passe provisoire, affiché une seule fois.
-            </p>
-            <Formulaire action={ajouterUtilisateur.bind(null, id)} libelleBouton="Ajouter la personne">
-              <Champ nom="nom_complet" libelle="Nom complet de la personne" requis />
-              <Champ
-                nom="email"
-                libelle="Email de la personne"
-                type="email"
-                requis
-                aide="Si la personne a déjà un compte (autre entreprise), elle est simplement ajoutée."
-              />
-              <ChoixListe
-                nom="role"
-                libelle="Rôle"
-                requis
-                options={ROLES_ENTREPRISE.map((r) => ({ valeur: r, libelle: libelleRole(r) }))}
-              />
-            </Formulaire>
-          </div>
-        )}
-      </Section>
-
-      <Section titre="Fiche entreprise">
-        <Carte>
-          <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-            {[
-              ["NIF", entreprise.nif],
-              ["RCCM", entreprise.rccm],
-              ["N° CNSS", entreprise.numero_cnss],
-              ["Adresse", entreprise.adresse],
-              ["Téléphone", entreprise.telephone],
-              ["Email de l'entreprise", entreprise.email],
-              ["Mode", entreprise.mode === "autonome" ? "Autonome" : "Cabinet"],
-            ].map(([libelle, valeur]) => (
-              <div key={libelle}>
-                <dt className="text-foreground/60">{libelle}</dt>
-                <dd className="font-medium">{valeur || "—"}</dd>
-              </div>
-            ))}
-          </dl>
-        </Carte>
-        {peutGerer && (
-          // Formulaire replié par défaut : il ne se confond pas avec l'ajout d'une personne.
-          <details className="rounded-xl border border-black/10 bg-white p-4">
-            <summary className="cursor-pointer font-medium text-marque">Modifier la fiche</summary>
-            <div className="mt-4">
-              <Formulaire action={modifierEntreprise.bind(null, id)} libelleBouton="Enregistrer la fiche">
-                <ChampsEntreprise fiche={entreprise} />
+          {peutGerer && (
+            <Carte titre={`Inviter une personne à ${entreprise.raison_sociale}`} description="Elle recevra un email pour activer son compte et choisir son mot de passe.">
+              <Formulaire action={ajouterUtilisateur.bind(null, id)} libelleBouton="Envoyer l'invitation" colonnes={2}>
+                <Champ nom="nom_complet" libelle="Nom complet de la personne" requis />
+                <Champ nom="email" libelle="Email de la personne" type="email" requis />
+                <ChoixListe
+                  nom="role"
+                  libelle="Rôle"
+                  requis
+                  pleineLargeur
+                  options={ROLES_ENTREPRISE.map((r) => ({ valeur: r, libelle: libelleRole(r) }))}
+                  aide="Si la personne a déjà un compte (autre entreprise), l'accès est simplement ajouté."
+                />
               </Formulaire>
-            </div>
-          </details>
-        )}
-        <p className="text-xs text-foreground/60">
-          Logo, cachet et signature numérisés : ajout prévu avec le dépôt des fichiers (étape 7).
-        </p>
-      </Section>
-    </>
+            </Carte>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <Carte titre="Fiche entreprise">
+            <dl className="grid grid-cols-1 gap-3 text-sm">
+              {[
+                ["NIF", entreprise.nif],
+                ["RCCM", entreprise.rccm],
+                ["N° employeur CNSS", entreprise.numero_cnss],
+                ["Téléphone", entreprise.telephone],
+                ["Email de l'entreprise", entreprise.email],
+                ["Adresse", entreprise.adresse],
+              ].map(([libelle, valeur]) => (
+                <div key={libelle} className="flex justify-between gap-4 border-b border-bordure pb-2 last:border-0 last:pb-0">
+                  <dt className="text-doux">{libelle}</dt>
+                  <dd className="text-right font-medium">{valeur || "—"}</dd>
+                </div>
+              ))}
+            </dl>
+            {peutGerer && (
+              // Formulaire replié par défaut : il ne se confond pas avec l'invitation d'une personne.
+              <details className="group mt-4 border-t border-bordure pt-4">
+                <summary className={`${classesBouton("secondaire", "petit")} cursor-pointer list-none`}>
+                  <Pencil size={14} aria-hidden />
+                  Modifier la fiche
+                </summary>
+                <div className="mt-4">
+                  <Formulaire action={modifierEntreprise.bind(null, id)} libelleBouton="Enregistrer la fiche">
+                    <ChampsEntreprise fiche={entreprise} />
+                  </Formulaire>
+                </div>
+              </details>
+            )}
+          </Carte>
+          <p className="text-xs text-doux">
+            Logo, cachet et signature numérisés : ajout prévu avec le dépôt des fichiers (étape 7).
+          </p>
+        </div>
+      </div>
+    </Page>
   );
 }

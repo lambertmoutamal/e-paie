@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CadreAuth } from "@/components/cadre-auth";
 import { seConnecter } from "./actions";
 import { FormulaireConnexion } from "./formulaire-connexion";
 
@@ -7,20 +8,21 @@ export const metadata: Metadata = { title: "Connexion" };
 
 export default function PageConnexion() {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-10">
-      <header className="flex flex-col gap-2">
-        <Link href="/" className="text-sm font-semibold uppercase tracking-wide text-marque">
-          e-Paie
-        </Link>
-        <h1 className="text-2xl font-bold">Espace cabinet / entreprise</h1>
-        <p className="text-foreground/70">Connectez-vous avec l&apos;email fourni par votre administrateur.</p>
-      </header>
-
+    <CadreAuth
+      titre="Connexion"
+      description="Espace cabinet et entreprise. Connectez-vous avec l'email fourni par votre administrateur."
+      pied={
+        <>
+          Vous êtes salarié ? L&apos;espace salarié, avec connexion par téléphone, arrive bientôt.
+        </>
+      }
+    >
       <FormulaireConnexion action={seConnecter} />
-
-      <p className="text-sm text-foreground/60">
-        Vous êtes salarié ? L&apos;espace salarié, avec connexion par téléphone, arrive bientôt.
+      <p className="mt-4 text-center text-sm">
+        <Link href="/mot-de-passe-oublie" className="font-medium text-marque hover:underline">
+          Mot de passe oublié ?
+        </Link>
       </p>
-    </main>
+    </CadreAuth>
   );
 }

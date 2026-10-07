@@ -1,26 +1,15 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Briefcase, Plus, UserRound } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { champLie } from "@/lib/supabase/relations";
-import { Champ, Formulaire } from "@/components/formulaire";
-import { Carte, Chargement, EnTete, PageEspace, Section, Vide } from "@/components/mise-en-page";
-import { ajouterAdministrateur } from "../actions";
+import { champLie, valeurLiee } from "@/lib/supabase/relations";
+import { ActionEnLigne, Champ, Formulaire } from "@/components/formulaire";
+import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
+import { ajouterAdministrateur, renvoyerInvitationAdmin } from "../actions";
 
 export const metadata: Metadata = { title: "Cabinet" };
 
-export default function PageCabinet({ params }: PageProps<"/espace/cabinets/[id]">) {
-  return (
-    <PageEspace>
-      <Suspense fallback={<Chargement />}>
-        <DetailCabinet params={params} />
-      </Suspense>
-    </PageEspace>
-  );
-}
-
-async function DetailCabinet({ params }: { params: Promise<{ id: string }> }) {
+export default async function PageCabinet({ params }: PageProps<"/espace/cabinets/[id]">) {
   const { id } = await params;
   const { supabase } = await exigerUtilisateur();
 
@@ -33,63 +22,82 @@ async function DetailCabinet({ params }: { params: Promise<{ id: string }> }) {
   if (!cabinet) notFound();
 
   const [{ data: admins }, { data: entreprises }] = await Promise.all([
-    supabase.from("membres_cabinet").select("profil_id, profils(nom_complet, email)").eq("cabinet_id", id),
-    supabase.from("entreprises").select("id, raison_sociale, statut").eq("cabinet_id", id).order("raison_sociale"),
+    supabase.from("membres_cabinet").select("profil_id, profils(nom_complet, email, active_le)").eq("cabinet_id", id),
+    supabase.from("entreprises").select("id, raison_sociale, statut, mode").eq("cabinet_id", id).order("raison_sociale"),
   ]);
 
   return (
-    <>
-      <EnTete
+    <Page>
+      <EnTetePage
         titre={cabinet.nom}
-        retour={{ href: "/espace", libelle: "Mon espace" }}
-        sousTitre={[cabinet.nif && `NIF ${cabinet.nif}`, cabinet.telephone, cabinet.email].filter(Boolean).join(" · ")}
+        description={[cabinet.nif && `NIF ${cabinet.nif}`, cabinet.telephone, cabinet.email, cabinet.adresse].filter(Boolean).join(" · ") || undefined}
+        fil={[{ href: "/espace", libelle: "Tableau de bord" }, { href: "/espace/cabinets", libelle: "Cabinets" }]}
+        actions={
+          <LienBouton href={`/espace/entreprises/nouvelle?cabinet=${cabinet.id}`} icone={Plus}>
+            Nouvelle entreprise
+          </LienBouton>
+        }
       />
 
-      <Section titre="Entreprises clientes">
+      <Carte titre={`Entreprises clientes (${entreprises?.length ?? 0})`} sansMarge>
         {!entreprises?.length ? (
-          <Vide>Aucune entreprise rattachée à ce cabinet.</Vide>
+          <EtatVide icone={Briefcase} titre="Aucune entreprise" texte="Ajoutez la première entreprise cliente de ce cabinet." />
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ListeLignes>
             {entreprises.map((e) => (
-              <li key={e.id}>
-                <Link href={`/espace/entreprises/${e.id}`} className="block rounded-xl border border-black/10 bg-white p-4">
-                  <p className="font-semibold">{e.raison_sociale}</p>
-                  {e.statut === "archivee" && <p className="text-sm text-foreground/60">Archivée</p>}
-                </Link>
-              </li>
+              <Ligne
+                key={e.id}
+                href={`/espace/entreprises/${e.id}`}
+                icone={Briefcase}
+                titre={e.raison_sociale}
+                fin={
+                  <>
+                    {e.statut === "archivee" && <Badge>Archivée</Badge>}
+                    <Badge teinte={e.mode === "autonome" ? "bleu" : "vert"}>{e.mode === "autonome" ? "Autonome" : "Cabinet"}</Badge>
+                  </>
+                }
+              />
             ))}
-          </ul>
+          </ListeLignes>
         )}
-        <Link
-          href={`/espace/entreprises/nouvelle?cabinet=${cabinet.id}`}
-          className="self-start rounded-lg bg-marque px-4 py-2 text-sm font-semibold text-white"
-        >
-          + Nouvelle entreprise
-        </Link>
-      </Section>
+      </Carte>
 
-      <Section titre="Administrateurs du cabinet">
+      <Carte titre="Administrateurs du cabinet" description="Ils gèrent toutes les entreprises de ce cabinet." sansMarge>
         {!admins?.length ? (
-          <Vide>Aucun administrateur.</Vide>
+          <EtatVide icone={UserRound} titre="Aucun administrateur" />
         ) : (
-          <ul className="flex flex-col gap-2">
-            {admins.map((a) => (
-              <li key={a.profil_id}>
-                <Carte>
-                  <p className="font-medium">{champLie(a.profils, "nom_complet")}</p>
-                  <p className="text-sm text-foreground/70">{champLie(a.profils, "email")}</p>
-                </Carte>
-              </li>
-            ))}
-          </ul>
+          <ListeLignes>
+            {admins.map((a) => {
+              const enAttente = valeurLiee(a.profils, "active_le") === null;
+              return (
+                <Ligne
+                  key={a.profil_id}
+                  icone={UserRound}
+                  titre={champLie(a.profils, "nom_complet")}
+                  sousTitre={champLie(a.profils, "email")}
+                  fin={
+                    enAttente ? (
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge teinte="ambre">Invitation en attente</Badge>
+                        <ActionEnLigne action={renvoyerInvitationAdmin.bind(null, cabinet.id, a.profil_id)} libelle="Renvoyer" variante="discret" />
+                      </div>
+                    ) : (
+                      <Badge teinte="vert">Actif</Badge>
+                    )
+                  }
+                />
+              );
+            })}
+          </ListeLignes>
         )}
-        <Carte>
-          <Formulaire action={ajouterAdministrateur.bind(null, cabinet.id)} libelleBouton="Ajouter l'administrateur">
+        <div className="border-t border-bordure p-4 sm:p-5">
+          <p className="mb-3 font-semibold">Ajouter un administrateur</p>
+          <Formulaire action={ajouterAdministrateur.bind(null, cabinet.id)} libelleBouton="Envoyer l'invitation" colonnes={2}>
             <Champ nom="nom_complet" libelle="Nom complet" requis />
             <Champ nom="email" libelle="Email" type="email" requis />
           </Formulaire>
-        </Carte>
-      </Section>
-    </>
+        </div>
+      </Carte>
+    </Page>
   );
 }

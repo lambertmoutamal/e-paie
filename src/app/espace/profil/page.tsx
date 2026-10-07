@@ -1,47 +1,38 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Suspense } from "react";
-import { exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { KeyRound } from "lucide-react";
+import { droitsUtilisateur } from "@/lib/auth/utilisateur";
 import { Champ, Formulaire } from "@/components/formulaire";
-import { Carte, Chargement, EnTete, PageEspace, Section } from "@/components/mise-en-page";
+import { Carte, EnTetePage, LienBouton, Page } from "@/components/ui";
 import { modifierProfil } from "./actions";
 
 export const metadata: Metadata = { title: "Mon profil" };
 
-export default function PageProfil() {
-  return (
-    <PageEspace>
-      <EnTete titre="Mon profil" retour={{ href: "/espace", libelle: "Mon espace" }} />
-      <Suspense fallback={<Chargement />}>
-        <FormulaireProfil />
-      </Suspense>
-    </PageEspace>
-  );
-}
-
-async function FormulaireProfil() {
-  const { supabase, utilisateur } = await exigerUtilisateur();
-  const { data: profil } = await supabase
-    .from("profils")
-    .select("nom_complet, email")
-    .eq("id", utilisateur.id)
-    .single();
+export default async function PageProfil() {
+  const { profil } = await droitsUtilisateur();
 
   return (
-    <>
-      <Section titre="Informations">
-        <Carte>
+    <Page>
+      <EnTetePage titre="Mon profil" description="Vos informations personnelles." fil={[{ href: "/espace", libelle: "Tableau de bord" }]} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Carte titre="Informations">
           <Formulaire action={modifierProfil} libelleBouton="Enregistrer">
             <Champ nom="nom_complet" libelle="Nom complet" requis valeurInitiale={profil?.nom_complet} />
-            <Champ nom="email" libelle="Email" type="email" valeurInitiale={profil?.email} desactive aide="L'email ne peut être changé que par un administrateur." />
+            <Champ
+              nom="email"
+              libelle="Email"
+              type="email"
+              valeurInitiale={profil?.email}
+              desactive
+              aide="L'email ne peut être changé que par un administrateur."
+            />
           </Formulaire>
         </Carte>
-      </Section>
-      <Section titre="Sécurité">
-        <Link href="/espace/mot-de-passe" className="self-start rounded-lg border border-black/20 bg-white px-4 py-2 font-medium">
-          Changer mon mot de passe
-        </Link>
-      </Section>
-    </>
+        <Carte titre="Sécurité" description="Choisissez un mot de passe que vous n'utilisez nulle part ailleurs.">
+          <LienBouton href="/espace/mot-de-passe" variante="secondaire" icone={KeyRound}>
+            Changer mon mot de passe
+          </LienBouton>
+        </Carte>
+      </div>
+    </Page>
   );
 }

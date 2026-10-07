@@ -6,7 +6,6 @@ import {
   schemaNouvelleAffectation,
   schemaNouvelleEntreprise,
 } from "@/lib/validation/schemas";
-import { genererMotDePasseProvisoire } from "@/lib/auth/mot-de-passe";
 
 function formulaire(champs: Record<string, string>) {
   const f = new FormData();
@@ -104,14 +103,5 @@ describe("mot de passe", () => {
     expect(lu.ok).toBe(false);
     if (lu.ok) return;
     expect(lu.erreurs.confirmation).toBe("Les deux mots de passe ne sont pas identiques.");
-  });
-
-  test("le mot de passe provisoire est lisible, sans caractère ambigu, et différent à chaque fois", () => {
-    const essais = Array.from({ length: 200 }, genererMotDePasseProvisoire);
-    for (const mdp of essais) {
-      expect(mdp).toMatch(/^[A-Za-z2-9]{4}-[A-Za-z2-9]{4}-[A-Za-z2-9]{4}$/);
-      expect(mdp).not.toMatch(/[0O1lI]/);
-    }
-    expect(new Set(essais).size).toBe(essais.length);
   });
 });

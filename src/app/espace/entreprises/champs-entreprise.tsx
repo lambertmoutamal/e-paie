@@ -17,23 +17,23 @@ export const OPTIONS_MODE = [
 ];
 
 // Champs communs à la création et à la modification d'une fiche entreprise.
-export function ChampsEntreprise({ fiche, lectureSeule }: { fiche?: FicheEntreprise; lectureSeule?: boolean }) {
+export function ChampsEntreprise({ fiche }: { fiche?: FicheEntreprise }) {
   return (
     <>
-      <Champ nom="raison_sociale" libelle="Raison sociale" requis valeurInitiale={fiche?.raison_sociale} desactive={lectureSeule} />
-      <Champ nom="nif" libelle="NIF" valeurInitiale={fiche?.nif} desactive={lectureSeule} />
-      <Champ nom="rccm" libelle="RCCM" valeurInitiale={fiche?.rccm} desactive={lectureSeule} />
-      <Champ nom="numero_cnss" libelle="N° employeur CNSS" valeurInitiale={fiche?.numero_cnss} desactive={lectureSeule} />
-      <Champ nom="adresse" libelle="Adresse" valeurInitiale={fiche?.adresse} desactive={lectureSeule} />
-      <Champ nom="telephone" libelle="Téléphone" type="tel" valeurInitiale={fiche?.telephone} desactive={lectureSeule} />
-      <Champ nom="email" libelle="Email de l'entreprise" type="email" valeurInitiale={fiche?.email} desactive={lectureSeule} />
+      <Champ nom="raison_sociale" libelle="Raison sociale" requis pleineLargeur valeurInitiale={fiche?.raison_sociale} />
+      <Champ nom="nif" libelle="NIF" valeurInitiale={fiche?.nif} />
+      <Champ nom="rccm" libelle="RCCM" valeurInitiale={fiche?.rccm} />
+      <Champ nom="numero_cnss" libelle="N° employeur CNSS" valeurInitiale={fiche?.numero_cnss} />
+      <Champ nom="telephone" libelle="Téléphone" type="tel" valeurInitiale={fiche?.telephone} />
+      <Champ nom="email" libelle="Email de l'entreprise" type="email" valeurInitiale={fiche?.email} />
+      <Champ nom="adresse" libelle="Adresse" valeurInitiale={fiche?.adresse} />
       <ChoixListe
         nom="mode"
         libelle="Mode d'utilisation"
         options={OPTIONS_MODE}
         valeurInitiale={fiche?.mode ?? "cabinet"}
         requis
-        desactive={lectureSeule}
+        pleineLargeur
       />
     </>
   );

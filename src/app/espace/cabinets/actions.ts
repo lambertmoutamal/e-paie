@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { estAdminPlateforme, exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { ajouterAdminCabinet } from "@/lib/admin/membres";
+import { ajouterAdminCabinet, renvoyerInvitation } from "@/lib/admin/membres";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import { schemaCabinet, schemaNouveauMembre } from "@/lib/validation/schemas";
 
@@ -18,18 +18,16 @@ export async function creerCabinet(_etat: EtatFormulaire, formulaire: FormData):
   const { data, error } = await supabase.from("cabinets").insert(cabinet).select("id").single();
   if (error || !data) return { erreur: "Le cabinet n'a pas pu être créé.", valeurs: lu.valeurs };
 
-  let compteCree;
+  let message = "";
   if (admin_email && admin_nom) {
     const resultat = await ajouterAdminCabinet(supabase, data.id, admin_email, admin_nom);
-    if ("erreur" in resultat) {
-      refresh();
-      return { erreur: `Cabinet créé, mais : ${resultat.erreur}` };
-    }
-    compteCree = resultat.compteCree;
+    refresh();
+    if ("erreur" in resultat) return { erreur: `Cabinet créé, mais : ${resultat.erreur}` };
+    message = ` ${resultat.message}`;
   }
 
   refresh();
-  return { succes: `Cabinet « ${cabinet.nom} » créé.`, compteCree };
+  return { succes: `Cabinet « ${cabinet.nom} » créé.${message}` };
 }
 
 export async function ajouterAdministrateur(
@@ -45,5 +43,11 @@ export async function ajouterAdministrateur(
   if ("erreur" in resultat) return { erreur: resultat.erreur, valeurs: lu.valeurs };
 
   refresh();
-  return { succes: `${lu.donnees.nom_complet} est maintenant administrateur du cabinet.`, compteCree: resultat.compteCree };
+  return { succes: resultat.message };
+}
+
+export async function renvoyerInvitationAdmin(cabinetId: string, profilId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const resultat = await renvoyerInvitation(supabase, profilId, { cabinetId });
+  return "erreur" in resultat ? { erreur: resultat.erreur } : { succes: resultat.message };
 }

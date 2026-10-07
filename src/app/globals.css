@@ -1,22 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f7f5;
-  --foreground: #1c1f1d;
-  --marque: #0f5132;
-  --marque-claire: #e3efe8;
+  --background: #f4f6f5;
+  --foreground: #17201b;
+  --surface: #ffffff;
+  --bordure: #e2e8e4;
+  --doux: #5b6b62;
+  --marque: #0b5d3b;
+  --marque-fonce: #08442b;
+  --marque-claire: #e7f3ec;
+  --accent: #c8a24a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-bordure: var(--bordure);
+  --color-doux: var(--doux);
   --color-marque: var(--marque);
+  --color-marque-fonce: var(--marque-fonce);
   --color-marque-claire: var(--marque-claire);
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --color-accent: var(--accent);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Contour de focus visible et cohérent (navigation au clavier) */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--marque);
+  outline-offset: 2px;
 }

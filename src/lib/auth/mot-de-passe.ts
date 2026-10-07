@@ -1,16 +1,3 @@
-import { randomInt } from "node:crypto";
-
-// Sans caractères ambigus (0/O, 1/l/I) pour une transmission orale ou écrite sans erreur.
-const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-
-// Exemple : « Kx7m-Pq2r-Zt9w » (12 caractères aléatoires, environ 70 bits).
-export function genererMotDePasseProvisoire(): string {
-  const groupes = Array.from({ length: 3 }, () =>
-    Array.from({ length: 4 }, () => ALPHABET[randomInt(ALPHABET.length)]).join(""),
-  );
-  return groupes.join("-");
-}
-
 export function messageErreurMotDePasse(code?: string): string {
   switch (code) {
     case "same_password":

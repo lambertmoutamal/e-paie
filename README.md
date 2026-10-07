@@ -72,6 +72,14 @@ Dans Supabase :
 2. **Authentication → Users → Add user → Create new user** : email, mot de passe,
    cochez « Auto Confirm User ».
 
+3. **Authentication → Email** (ou *Providers → Email*) : réglez « Email OTP Expiration » sur
+   `86400` secondes (24 h), durée de validité des liens d'invitation et de réinitialisation.
+
+**Emails (invitations, mot de passe oublié)** : créez un compte sur https://resend.com, ajoutez
+votre domaine (onglet *Domains*) et les enregistrements DNS demandés chez votre hébergeur de
+domaine, puis renseignez `RESEND_API_KEY` et `EMAIL_EXPEDITEUR` dans `.env.local`.
+Tant que ce n'est pas fait, en développement, les emails s'affichent dans la console du serveur.
+
 Puis donnez-lui le rôle d'administrateur plateforme :
 
 ```bash

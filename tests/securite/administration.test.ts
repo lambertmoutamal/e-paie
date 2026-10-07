@@ -91,6 +91,48 @@ describe("Profil", () => {
     }));
 });
 
+describe("Invitations et emails", () => {
+  test("la limite d'envoi bloque un second email dans le délai", () =>
+    dansUneTransaction(async (client) => {
+      await client.query("set local role service_role");
+      const cle = `test:${Date.now()}`;
+      expect(await droit(client, "public.reserver_envoi_email($1, 300)", [cle])).toBe(true);
+      expect(await droit(client, "public.reserver_envoi_email($1, 300)", [cle])).toBe(false);
+    }));
+
+  test("un utilisateur connecté ou un visiteur ne peut pas utiliser la limite d'envoi", () =>
+    dansUneTransaction(async (client) => {
+      const jeu = await creerJeuDeDonnees(client);
+      await commeUtilisateur(client, jeu.utilisateurs.adminPlateforme);
+      expect(await estRefusee(client, "select public.reserver_envoi_email('x', 1)")).toBe(true);
+      await commeUtilisateur(client, null);
+      expect(await estRefusee(client, "select public.reserver_envoi_email('x', 1)")).toBe(true);
+    }));
+
+  test("un compte invité est « en attente » jusqu'à sa première connexion", () =>
+    dansUneTransaction(async (client) => {
+      const jeu = await creerJeuDeDonnees(client);
+      const id = jeu.utilisateurs.gestionnaireA1;
+      const lire = async () =>
+        (await client.query("select active_le from public.profils where id = $1", [id])).rows[0].active_le;
+
+      expect(await lire()).toBeNull();
+      await client.query("update auth.users set last_sign_in_at = now() where id = $1", [id]);
+      expect(await lire()).not.toBeNull();
+    }));
+
+  test("personne ne peut se déclarer « activé » lui-même", () =>
+    dansUneTransaction(async (client) => {
+      const jeu = await creerJeuDeDonnees(client);
+      await commeUtilisateur(client, jeu.utilisateurs.gestionnaireA1);
+      expect(
+        await estRefusee(client, "update public.profils set active_le = now() where id = $1", [
+          jeu.utilisateurs.gestionnaireA1,
+        ]),
+      ).toBe(true);
+    }));
+});
+
 describe("Gestion des membres et des rôles", () => {
   test("un admin cabinet ne peut pas ajouter d'administrateur à un autre cabinet", () =>
     dansUneTransaction(async (client) => {

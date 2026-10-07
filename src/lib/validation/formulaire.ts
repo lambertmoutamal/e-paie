@@ -7,8 +7,6 @@ export type EtatFormulaire =
       erreur?: string;
       succes?: string;
       valeurs?: Record<string, string>;
-      // Affiché une seule fois quand un compte vient d'être créé.
-      compteCree?: { email: string; motDePasse: string };
     }
   | undefined;
 

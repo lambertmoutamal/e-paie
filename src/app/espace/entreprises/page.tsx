@@ -1,62 +1,64 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Suspense } from "react";
-import { estAdminPlateforme, exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { Briefcase, Plus } from "lucide-react";
+import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { champLie } from "@/lib/supabase/relations";
-import { Chargement, EnTete, PageEspace, Vide } from "@/components/mise-en-page";
+import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Entreprises" };
 
-export default function PageEntreprises() {
-  return (
-    <PageEspace>
-      <EnTete titre="Entreprises" retour={{ href: "/espace", libelle: "Mon espace" }} />
-      <Suspense fallback={<Chargement />}>
-        <ListeEntreprises />
-      </Suspense>
-    </PageEspace>
-  );
-}
-
-async function ListeEntreprises() {
-  const { supabase, utilisateur } = await exigerUtilisateur();
+export default async function PageEntreprises() {
+  const { supabase } = await exigerUtilisateur();
+  const { adminPlateforme, cabinets } = await droitsUtilisateur();
+  const peutCreer = adminPlateforme || cabinets.length > 0;
 
   // La RLS ne renvoie que les entreprises auxquelles la personne a accès.
-  const [{ data: entreprises }, adminPlateforme, { data: cabinets }] = await Promise.all([
-    supabase.from("entreprises").select("id, raison_sociale, statut, cabinets(nom)").order("raison_sociale"),
-    estAdminPlateforme(supabase),
-    supabase.from("membres_cabinet").select("cabinet_id").eq("profil_id", utilisateur.id),
-  ]);
-  const peutCreer = adminPlateforme || (cabinets?.length ?? 0) > 0;
+  const { data: entreprises } = await supabase
+    .from("entreprises")
+    .select("id, raison_sociale, statut, mode, nif, cabinets(nom)")
+    .order("raison_sociale");
 
   return (
-    <>
-      {peutCreer && (
-        <Link
-          href="/espace/entreprises/nouvelle"
-          className="self-start rounded-lg bg-marque px-4 py-2 text-sm font-semibold text-white"
-        >
-          + Nouvelle entreprise
-        </Link>
-      )}
+    <Page>
+      <EnTetePage
+        titre="Entreprises"
+        description="Les entreprises auxquelles vous avez accès."
+        fil={[{ href: "/espace", libelle: "Tableau de bord" }]}
+        actions={
+          peutCreer && (
+            <LienBouton href="/espace/entreprises/nouvelle" icone={Plus}>
+              Nouvelle entreprise
+            </LienBouton>
+          )
+        }
+      />
 
-      {!entreprises?.length ? (
-        <Vide>Aucune entreprise accessible pour le moment.</Vide>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {entreprises.map((e) => (
-            <li key={e.id}>
-              <Link href={`/espace/entreprises/${e.id}`} className="block rounded-xl border border-black/10 bg-white p-4">
-                <p className="font-semibold">{e.raison_sociale}</p>
-                <p className="text-sm text-foreground/70">
-                  {e.cabinets ? `Cabinet : ${champLie(e.cabinets, "nom")}` : "Sans cabinet (autonome)"}
-                  {e.statut === "archivee" ? " · Archivée" : ""}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
+      <Carte titre={`${entreprises?.length ?? 0} entreprise(s)`} sansMarge>
+        {!entreprises?.length ? (
+          <EtatVide
+            icone={Briefcase}
+            titre="Aucune entreprise"
+            texte={peutCreer ? "Créez votre première entreprise cliente." : "Aucune entreprise ne vous est encore affectée."}
+          />
+        ) : (
+          <ListeLignes>
+            {entreprises.map((e) => (
+              <Ligne
+                key={e.id}
+                href={`/espace/entreprises/${e.id}`}
+                icone={Briefcase}
+                titre={e.raison_sociale}
+                sousTitre={[e.cabinets ? champLie(e.cabinets, "nom") : "Sans cabinet", e.nif && `NIF ${e.nif}`].filter(Boolean).join(" · ")}
+                fin={
+                  <>
+                    {e.statut === "archivee" && <Badge>Archivée</Badge>}
+                    <Badge teinte={e.mode === "autonome" ? "bleu" : "vert"}>{e.mode === "autonome" ? "Autonome" : "Cabinet"}</Badge>
+                  </>
+                }
+              />
+            ))}
+          </ListeLignes>
+        )}
+      </Carte>
+    </Page>
   );
 }

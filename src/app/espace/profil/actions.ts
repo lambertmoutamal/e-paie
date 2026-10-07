@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { leverMotDePasseProvisoire } from "@/lib/admin/comptes";
+import { definirObligationMotDePasse } from "@/lib/admin/comptes";
 import { messageErreurMotDePasse } from "@/lib/auth/mot-de-passe";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import { schemaMotDePasse, schemaProfil } from "@/lib/validation/schemas";
@@ -33,9 +33,9 @@ export async function changerMotDePasse(_etat: EtatFormulaire, formulaire: FormD
   const { error } = await supabase.auth.updateUser({ password: lu.donnees.mot_de_passe });
   if (error) return { erreur: messageErreurMotDePasse(error.code) };
 
-  if (utilisateur.app_metadata?.mot_de_passe_provisoire) {
-    await leverMotDePasseProvisoire(utilisateur.id);
-    // Nouveau jeton de session, sans l'obligation de changer le mot de passe.
+  if (utilisateur.app_metadata?.mot_de_passe_a_definir) {
+    await definirObligationMotDePasse(utilisateur.id, false);
+    // Nouveau jeton de session, sans l'obligation de choisir un mot de passe.
     await supabase.auth.refreshSession();
   }
   redirect("/espace");

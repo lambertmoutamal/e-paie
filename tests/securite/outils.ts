@@ -8,8 +8,13 @@ let connexion: pg.Client | null = null;
 
 async function client() {
   if (!connexion) {
-    connexion = nouvelleConnexion();
-    await connexion.connect();
+    const nouvelle = nouvelleConnexion();
+    // Coupure réseau : on oublie cette connexion, le test suivant en ouvrira une neuve.
+    nouvelle.on("error", () => {
+      if (connexion === nouvelle) connexion = null;
+    });
+    await nouvelle.connect();
+    connexion = nouvelle;
   }
   return connexion;
 }

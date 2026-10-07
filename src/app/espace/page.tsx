@@ -1,128 +1,97 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Suspense } from "react";
-import { exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { Briefcase, Building2, Plus, ShieldCheck, Users } from "lucide-react";
+import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { libelleRole } from "@/lib/auth/roles";
 import { champLie } from "@/lib/supabase/relations";
-import { Chargement, PageEspace, Section } from "@/components/mise-en-page";
-import { seDeconnecter } from "../connexion/actions";
+import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page, Statistique } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Mon espace" };
+export const metadata: Metadata = { title: "Tableau de bord" };
 
-// Le cadre de la page s'affiche tout de suite ; la partie propre à la personne
-// connectée arrive juste après (utile sur une connexion lente).
-export default function PageAccueilEspace() {
-  return (
-    <PageEspace>
-      <p className="text-sm font-semibold uppercase tracking-wide text-marque">e-Paie</p>
+export default async function TableauDeBord() {
+  const { supabase } = await exigerUtilisateur();
+  const { profil, adminPlateforme, cabinets, affectations } = await droitsUtilisateur();
+  const administrateur = adminPlateforme || cabinets.length > 0;
 
-      <Suspense fallback={<Chargement />}>
-        <ContenuEspace />
-      </Suspense>
+  // Compteurs : la RLS limite automatiquement au périmètre de la personne.
+  const [nbCabinets, nbEntreprises, nbUtilisateurs] = administrateur
+    ? await Promise.all([
+        supabase.from("cabinets").select("id", { count: "exact", head: true }),
+        supabase.from("entreprises").select("id", { count: "exact", head: true }),
+        supabase.from("profils").select("id", { count: "exact", head: true }),
+      ]).then((r) => r.map((x) => x.count ?? 0))
+    : [0, 0, 0];
 
-      <form action={seDeconnecter} className="mt-auto">
-        <button
-          type="submit"
-          className="w-full rounded-lg border border-black/20 bg-white px-4 py-3 font-medium"
-        >
-          Se déconnecter
-        </button>
-      </form>
-    </PageEspace>
-  );
-}
-
-type Acces = { cle: string; role: string; perimetre: string; lien?: string };
-
-async function ContenuEspace() {
-  const { supabase, utilisateur } = await exigerUtilisateur();
-
-  // Toutes ces lectures passent par les règles RLS de la base.
-  const [{ data: profil }, { data: cabinets }, { data: affectations }] = await Promise.all([
-    supabase
-      .from("profils")
-      .select("nom_complet, email, est_admin_plateforme")
-      .eq("id", utilisateur.id)
-      .single(),
-    supabase.from("membres_cabinet").select("role, cabinet_id, cabinets(nom)").eq("profil_id", utilisateur.id),
-    supabase
-      .from("affectations")
-      .select("role, entreprise_id, entreprises(raison_sociale)")
-      .eq("profil_id", utilisateur.id)
-      .eq("actif", true),
-  ]);
-
-  const adminPlateforme = profil?.est_admin_plateforme === true;
-  const adminCabinet = (cabinets ?? []).length > 0;
-
-  const acces: Acces[] = [
+  const prenom = (profil?.nom_complet || "").split(" ")[0];
+  const acces = [
     ...(adminPlateforme
-      ? [{ cle: "plateforme", role: "admin_plateforme", perimetre: "Toute la plateforme" }]
+      ? [{ cle: "plateforme", role: "admin_plateforme", perimetre: "Toute la plateforme", href: undefined, icone: ShieldCheck }]
       : []),
-    ...(cabinets ?? []).map((m) => ({
+    ...cabinets.map((m) => ({
       cle: `cabinet-${m.cabinet_id}`,
       role: m.role,
       perimetre: champLie(m.cabinets, "nom"),
-      lien: `/espace/cabinets/${m.cabinet_id}`,
+      href: `/espace/cabinets/${m.cabinet_id}`,
+      icone: Building2,
     })),
-    ...(affectations ?? []).map((a) => ({
+    ...affectations.map((a) => ({
       cle: `entreprise-${a.entreprise_id}-${a.role}`,
       role: a.role,
       perimetre: champLie(a.entreprises, "raison_sociale"),
-      lien: `/espace/entreprises/${a.entreprise_id}`,
+      href: `/espace/entreprises/${a.entreprise_id}`,
+      icone: Briefcase,
     })),
   ];
 
-  const menu = [
-    ...(adminPlateforme ? [{ href: "/espace/cabinets", libelle: "Cabinets", texte: "Créer et gérer les cabinets" }] : []),
-    ...(adminPlateforme || adminCabinet || acces.length > 0
-      ? [{ href: "/espace/entreprises", libelle: "Entreprises", texte: "Fiches entreprises et utilisateurs" }]
-      : []),
-    { href: "/espace/profil", libelle: "Mon profil", texte: "Nom et mot de passe" },
-  ];
-
   return (
-    <>
-      <h1 className="text-2xl font-bold">Bonjour {profil?.nom_complet || profil?.email}</h1>
+    <Page>
+      <EnTetePage
+        titre={prenom ? `Bonjour ${prenom}` : "Bonjour"}
+        description="Bienvenue sur votre espace e-Paie."
+        actions={
+          administrateur && (
+            <>
+              {adminPlateforme && (
+                <LienBouton href="/espace/cabinets#nouveau" variante="secondaire" icone={Plus}>
+                  Nouveau cabinet
+                </LienBouton>
+              )}
+              <LienBouton href="/espace/entreprises/nouvelle" icone={Plus}>
+                Nouvelle entreprise
+              </LienBouton>
+            </>
+          )
+        }
+      />
 
-      <nav aria-label="Menu" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {menu.map((m) => (
-          <Link key={m.href} href={m.href} className="rounded-xl border border-black/10 bg-white p-4">
-            <p className="font-semibold text-marque">{m.libelle}</p>
-            <p className="text-sm text-foreground/70">{m.texte}</p>
-          </Link>
-        ))}
-      </nav>
+      {administrateur && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {adminPlateforme && <Statistique icone={Building2} libelle="Cabinets" valeur={nbCabinets} href="/espace/cabinets" />}
+          <Statistique icone={Briefcase} libelle="Entreprises" valeur={nbEntreprises} href="/espace/entreprises" />
+          <Statistique icone={Users} libelle="Utilisateurs" valeur={nbUtilisateurs} />
+        </div>
+      )}
 
-      <Section titre="Mes accès">
+      <Carte titre="Mes accès" description="Les espaces sur lesquels vous pouvez intervenir." sansMarge>
         {acces.length === 0 ? (
-          <p className="rounded-xl border border-black/10 bg-white p-4 text-sm text-foreground/70">
-            Aucun accès pour le moment. Votre administrateur doit vous affecter à une entreprise.
-          </p>
+          <EtatVide
+            icone={Briefcase}
+            titre="Aucun accès pour le moment"
+            texte="Votre administrateur doit vous affecter à une entreprise."
+          />
         ) : (
-          <ul className="flex flex-col gap-2">
-            {acces.map((a) => {
-              const contenu = (
-                <>
-                  <p className="font-medium">{libelleRole(a.role)}</p>
-                  <p className="text-sm text-foreground/70">{a.perimetre}</p>
-                </>
-              );
-              return (
-                <li key={a.cle}>
-                  {a.lien ? (
-                    <Link href={a.lien} className="block rounded-xl border border-black/10 bg-white p-4">
-                      {contenu}
-                    </Link>
-                  ) : (
-                    <div className="rounded-xl border border-black/10 bg-white p-4">{contenu}</div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          <ListeLignes>
+            {acces.map((a) => (
+              <Ligne
+                key={a.cle}
+                href={a.href}
+                icone={a.icone}
+                titre={a.perimetre}
+                fin={<Badge teinte={a.role.startsWith("admin") ? "vert" : "bleu"}>{libelleRole(a.role)}</Badge>}
+              />
+            ))}
+          </ListeLignes>
         )}
-      </Section>
-    </>
+      </Carte>
+    </Page>
   );
 }

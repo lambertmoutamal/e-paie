@@ -1,75 +1,64 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Building2 } from "lucide-react";
 import { estAdminPlateforme, exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { Champ, Formulaire } from "@/components/formulaire";
-import { Carte, Chargement, EnTete, PageEspace, Section, Vide } from "@/components/mise-en-page";
+import { Champ, Formulaire, TitreGroupe } from "@/components/formulaire";
+import { Badge, Carte, EnTetePage, EtatVide, Ligne, ListeLignes, Page } from "@/components/ui";
 import { creerCabinet } from "./actions";
 
 export const metadata: Metadata = { title: "Cabinets" };
 
-export default function PageCabinets() {
-  return (
-    <PageEspace>
-      <EnTete titre="Cabinets" retour={{ href: "/espace", libelle: "Mon espace" }} />
-      <Suspense fallback={<Chargement />}>
-        <ListeCabinets />
-      </Suspense>
-    </PageEspace>
-  );
-}
-
-async function ListeCabinets() {
+export default async function PageCabinets() {
   const { supabase } = await exigerUtilisateur();
   if (!(await estAdminPlateforme(supabase))) notFound();
 
   const { data: cabinets } = await supabase
     .from("cabinets")
-    .select("id, nom, email, entreprises(count)")
+    .select("id, nom, email, telephone, entreprises(count)")
     .order("nom");
 
   return (
-    <>
-      <Section titre={`Tous les cabinets (${cabinets?.length ?? 0})`}>
-        {!cabinets?.length ? (
-          <Vide>Aucun cabinet pour le moment. Créez le premier ci-dessous.</Vide>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {cabinets.map((c) => (
-              <li key={c.id}>
-                <Link href={`/espace/cabinets/${c.id}`} className="block rounded-xl border border-black/10 bg-white p-4">
-                  <p className="font-semibold">{c.nom}</p>
-                  <p className="text-sm text-foreground/70">
-                    {nombre(c.entreprises)} entreprise(s){c.email ? ` · ${c.email}` : ""}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
+    <Page>
+      <EnTetePage
+        titre="Cabinets"
+        description="Les cabinets comptables clients de la plateforme."
+        fil={[{ href: "/espace", libelle: "Tableau de bord" }]}
+      />
 
-      <Section titre="Nouveau cabinet">
-        <Carte>
-          <Formulaire action={creerCabinet} libelleBouton="Créer le cabinet">
-            <Champ nom="nom" libelle="Nom du cabinet" requis />
+      <Carte titre={`Tous les cabinets (${cabinets?.length ?? 0})`} sansMarge>
+        {!cabinets?.length ? (
+          <EtatVide icone={Building2} titre="Aucun cabinet" texte="Créez le premier cabinet avec le formulaire ci-dessous." />
+        ) : (
+          <ListeLignes>
+            {cabinets.map((c) => (
+              <Ligne
+                key={c.id}
+                href={`/espace/cabinets/${c.id}`}
+                icone={Building2}
+                titre={c.nom}
+                sousTitre={[c.email, c.telephone].filter(Boolean).join(" · ") || "Coordonnées non renseignées"}
+                fin={<Badge>{nombre(c.entreprises)} entreprise(s)</Badge>}
+              />
+            ))}
+          </ListeLignes>
+        )}
+      </Carte>
+
+      <div id="nouveau" className="scroll-mt-20">
+        <Carte titre="Nouveau cabinet" description="Le premier administrateur recevra une invitation par email.">
+          <Formulaire action={creerCabinet} libelleBouton="Créer le cabinet" colonnes={2}>
+            <Champ nom="nom" libelle="Nom du cabinet" requis pleineLargeur />
             <Champ nom="nif" libelle="NIF" />
             <Champ nom="telephone" libelle="Téléphone" type="tel" />
             <Champ nom="email" libelle="Email du cabinet" type="email" />
             <Champ nom="adresse" libelle="Adresse" />
-            <p className="pt-2 text-sm font-semibold">Premier administrateur du cabinet (facultatif)</p>
+            <TitreGroupe>Premier administrateur du cabinet (facultatif)</TitreGroupe>
             <Champ nom="admin_nom" libelle="Nom complet" />
-            <Champ
-              nom="admin_email"
-              libelle="Email"
-              type="email"
-              aide="Un compte sera créé avec un mot de passe provisoire s'il n'existe pas déjà."
-            />
+            <Champ nom="admin_email" libelle="Email" type="email" aide="Une invitation lui sera envoyée." />
           </Formulaire>
         </Carte>
-      </Section>
-    </>
+      </div>
+    </Page>
   );
 }
 

@@ -20,10 +20,11 @@ test("la page d'accueil présente les deux espaces", () => {
   ).toBeDefined();
 });
 
-test("l'espace cabinet / entreprise mène à la page de connexion", () => {
+test("les boutons « Se connecter » mènent à la page de connexion", () => {
   render(<Accueil />);
-  const lien = screen.getByRole("link", { name: "Se connecter" });
-  expect(lien.getAttribute("href")).toBe("/connexion");
+  const liens = screen.getAllByRole("link", { name: /Se connecter/ });
+  expect(liens.length).toBeGreaterThan(0);
+  for (const lien of liens) expect(lien.getAttribute("href")).toBe("/connexion");
 });
 
 test("la page introuvable propose un retour à l'accueil", () => {
