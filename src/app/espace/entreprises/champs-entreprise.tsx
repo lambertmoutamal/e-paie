@@ -26,7 +26,7 @@ export function ChampsEntreprise({ fiche, lectureSeule }: { fiche?: FicheEntrepr
       <Champ nom="numero_cnss" libelle="N° employeur CNSS" valeurInitiale={fiche?.numero_cnss} desactive={lectureSeule} />
       <Champ nom="adresse" libelle="Adresse" valeurInitiale={fiche?.adresse} desactive={lectureSeule} />
       <Champ nom="telephone" libelle="Téléphone" type="tel" valeurInitiale={fiche?.telephone} desactive={lectureSeule} />
-      <Champ nom="email" libelle="Email" type="email" valeurInitiale={fiche?.email} desactive={lectureSeule} />
+      <Champ nom="email" libelle="Email de l'entreprise" type="email" valeurInitiale={fiche?.email} desactive={lectureSeule} />
       <ChoixListe
         nom="mode"
         libelle="Mode d'utilisation"

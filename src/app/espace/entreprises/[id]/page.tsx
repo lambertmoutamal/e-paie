@@ -52,35 +52,6 @@ async function DetailEntreprise({ params }: { params: Promise<{ id: string }> })
         sousTitre={entreprise.cabinets ? `Cabinet : ${champLie(entreprise.cabinets, "nom")}` : "Sans cabinet"}
       />
 
-      <Section titre="Fiche entreprise">
-        <Carte>
-          {peutGerer ? (
-            <Formulaire action={modifierEntreprise.bind(null, id)} libelleBouton="Enregistrer la fiche">
-              <ChampsEntreprise fiche={entreprise} />
-            </Formulaire>
-          ) : (
-            <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              {[
-                ["NIF", entreprise.nif],
-                ["RCCM", entreprise.rccm],
-                ["N° CNSS", entreprise.numero_cnss],
-                ["Adresse", entreprise.adresse],
-                ["Téléphone", entreprise.telephone],
-                ["Email", entreprise.email],
-              ].map(([libelle, valeur]) => (
-                <div key={libelle}>
-                  <dt className="text-foreground/60">{libelle}</dt>
-                  <dd className="font-medium">{valeur || "—"}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </Carte>
-        <p className="text-xs text-foreground/60">
-          Logo, cachet et signature numérisés : ajout prévu avec le dépôt des fichiers (étape 7).
-        </p>
-      </Section>
-
       <Section titre="Utilisateurs et rôles">
         {!affectations?.length ? (
           <Vide>Personne n&apos;est encore affecté à cette entreprise.</Vide>
@@ -113,13 +84,16 @@ async function DetailEntreprise({ params }: { params: Promise<{ id: string }> })
         )}
 
         {peutGerer && (
-          <Carte>
-            <p className="mb-3 font-semibold">Ajouter une personne</p>
-            <Formulaire action={ajouterUtilisateur.bind(null, id)} libelleBouton="Ajouter">
-              <Champ nom="nom_complet" libelle="Nom complet" requis />
+          <div className="rounded-xl border-2 border-marque/40 bg-white p-4">
+            <p className="mb-1 font-semibold">Ajouter une personne à {entreprise.raison_sociale}</p>
+            <p className="mb-3 text-sm text-foreground/70">
+              Un compte est créé avec un mot de passe provisoire, affiché une seule fois.
+            </p>
+            <Formulaire action={ajouterUtilisateur.bind(null, id)} libelleBouton="Ajouter la personne">
+              <Champ nom="nom_complet" libelle="Nom complet de la personne" requis />
               <Champ
                 nom="email"
-                libelle="Email"
+                libelle="Email de la personne"
                 type="email"
                 requis
                 aide="Si la personne a déjà un compte (autre entreprise), elle est simplement ajoutée."
@@ -131,8 +105,43 @@ async function DetailEntreprise({ params }: { params: Promise<{ id: string }> })
                 options={ROLES_ENTREPRISE.map((r) => ({ valeur: r, libelle: libelleRole(r) }))}
               />
             </Formulaire>
-          </Carte>
+          </div>
         )}
+      </Section>
+
+      <Section titre="Fiche entreprise">
+        <Carte>
+          <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+            {[
+              ["NIF", entreprise.nif],
+              ["RCCM", entreprise.rccm],
+              ["N° CNSS", entreprise.numero_cnss],
+              ["Adresse", entreprise.adresse],
+              ["Téléphone", entreprise.telephone],
+              ["Email de l'entreprise", entreprise.email],
+              ["Mode", entreprise.mode === "autonome" ? "Autonome" : "Cabinet"],
+            ].map(([libelle, valeur]) => (
+              <div key={libelle}>
+                <dt className="text-foreground/60">{libelle}</dt>
+                <dd className="font-medium">{valeur || "—"}</dd>
+              </div>
+            ))}
+          </dl>
+        </Carte>
+        {peutGerer && (
+          // Formulaire replié par défaut : il ne se confond pas avec l'ajout d'une personne.
+          <details className="rounded-xl border border-black/10 bg-white p-4">
+            <summary className="cursor-pointer font-medium text-marque">Modifier la fiche</summary>
+            <div className="mt-4">
+              <Formulaire action={modifierEntreprise.bind(null, id)} libelleBouton="Enregistrer la fiche">
+                <ChampsEntreprise fiche={entreprise} />
+              </Formulaire>
+            </div>
+          </details>
+        )}
+        <p className="text-xs text-foreground/60">
+          Logo, cachet et signature numérisés : ajout prévu avec le dépôt des fichiers (étape 7).
+        </p>
       </Section>
     </>
   );

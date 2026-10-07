@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, use, useActionState, type ReactNode } from "react";
+import { createContext, use, useActionState, useId, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { EtatFormulaire } from "@/lib/validation/formulaire";
 
@@ -58,7 +58,8 @@ export function Champ({
 }: ProprietesChamp) {
   const etat = use(ContexteFormulaire);
   const erreur = etat?.erreurs?.[nom];
-  const id = `champ-${nom}`;
+  // Identifiant unique sur la page, même si deux formulaires ont un champ du même nom.
+  const id = useId();
 
   return (
     <div className="flex flex-col gap-1">
@@ -105,7 +106,7 @@ export function ChoixListe({
 }) {
   const etat = use(ContexteFormulaire);
   const erreur = etat?.erreurs?.[nom];
-  const id = `champ-${nom}`;
+  const id = useId();
 
   return (
     <div className="flex flex-col gap-1">
