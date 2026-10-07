@@ -34,8 +34,10 @@ type Acces = { cle: string; role: string; perimetre: string };
 
 async function ContenuEspace() {
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getClaims();
-  const idUtilisateur = session?.claims?.sub;
+  // getUser() interroge Supabase : une session fermée est refusée même si
+  // un ancien cookie traînait encore dans le navigateur.
+  const { data } = await supabase.auth.getUser();
+  const idUtilisateur = data.user?.id;
   if (!idUtilisateur) redirect("/connexion");
 
   // Toutes ces lectures passent par les règles RLS de la base.

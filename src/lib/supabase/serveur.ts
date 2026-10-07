@@ -1,13 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { configSupabase } from "./config";
 
 // Client Supabase pour les pages et actions côté serveur.
 // Un nouveau client par requête : il agit au nom de la personne connectée,
 // donc toutes ses lectures passent par les règles RLS.
 export async function clientSupabaseServeur() {
-  // Lire les cookies en premier : la page devient propre à chaque visiteur
-  // et n'est jamais pré-générée au moment de la construction.
+  // Données propres à chaque visiteur : jamais pré-générées à l'avance.
+  // (connection() est nécessaire car Supabase lit l'heure pour vérifier la session.)
+  await connection();
   const magasinCookies = await cookies();
   const { url, cle } = configSupabase();
 
