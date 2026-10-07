@@ -62,6 +62,9 @@ Applique les fichiers de `supabase/migrations` qui ne l'ont pas encore été.
 Dans `.env.local`, renseignez aussi :
 - `NEXT_PUBLIC_SUPABASE_URL` : `https://<Project ID>.supabase.co` (Project Settings → General)
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` : Project Settings → API Keys → « Publishable key »
+- `SUPABASE_SECRET_KEY` : Project Settings → API Keys → « Secret key » (bouton « Reveal »).
+  **Clé la plus sensible du projet** : elle contourne toutes les règles de sécurité. Elle n'est
+  utilisée que côté serveur, pour créer les comptes, et ne doit jamais être partagée.
 
 Dans Supabase :
 1. **Authentication → Sign In / Providers** : désactivez « Allow new users to sign up »
@@ -114,6 +117,7 @@ n'est laissée. Comptez 1 à 2 minutes selon la connexion.
 | `npm run test:securite` | Lance les tests d'isolation sur la base |
 | `npm run db:migrer` | Crée ou met à jour les tables de la base |
 | `npm run admin:promouvoir -- email` | Donne le rôle d'administrateur plateforme à un compte |
+| `npm run verifier:secrets` | Après `npm run build` : vérifie qu'aucun secret n'est envoyé au navigateur |
 | `npm run lint` | Vérifie la qualité du code |
 | `npm run build` | Prépare la version de production |
 

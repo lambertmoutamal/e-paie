@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:securite": "vitest run --config vitest.securite.config.mts",
     "db:migrer": "node --env-file=.env.local scripts/migrer.mjs",
-    "admin:promouvoir": "node --env-file=.env.local scripts/promouvoir-admin.mjs"
+    "admin:promouvoir": "node --env-file=.env.local scripts/promouvoir-admin.mjs",
+    "verifier:secrets": "node --env-file=.env.local scripts/verifier-secrets.mjs"
   },
   "engines": {
     "node": ">=24"
@@ -21,7 +22,9 @@
     "@supabase/supabase-js": "^2.117.2",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

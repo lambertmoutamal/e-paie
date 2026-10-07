@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
-import { clientSupabaseServeur } from "@/lib/supabase/serveur";
+import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { libelleRole } from "@/lib/auth/roles";
+import { champLie } from "@/lib/supabase/relations";
+import { Chargement, PageEspace, Section } from "@/components/mise-en-page";
 import { seDeconnecter } from "../connexion/actions";
 
 export const metadata: Metadata = { title: "Mon espace" };
 
 // Le cadre de la page s'affiche tout de suite ; la partie propre à la personne
 // connectée arrive juste après (utile sur une connexion lente).
-export default function PageEspace() {
+export default function PageAccueilEspace() {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-10">
+    <PageEspace>
       <p className="text-sm font-semibold uppercase tracking-wide text-marque">e-Paie</p>
 
-      <Suspense fallback={<p className="text-foreground/60">Chargement de votre espace…</p>}>
+      <Suspense fallback={<Chargement />}>
         <ContenuEspace />
       </Suspense>
 
@@ -26,78 +28,101 @@ export default function PageEspace() {
           Se déconnecter
         </button>
       </form>
-    </main>
+    </PageEspace>
   );
 }
 
-type Acces = { cle: string; role: string; perimetre: string };
+type Acces = { cle: string; role: string; perimetre: string; lien?: string };
 
 async function ContenuEspace() {
-  const supabase = await clientSupabaseServeur();
-  // getUser() interroge Supabase : une session fermée est refusée même si
-  // un ancien cookie traînait encore dans le navigateur.
-  const { data } = await supabase.auth.getUser();
-  const idUtilisateur = data.user?.id;
-  if (!idUtilisateur) redirect("/connexion");
+  const { supabase, utilisateur } = await exigerUtilisateur();
 
   // Toutes ces lectures passent par les règles RLS de la base.
   const [{ data: profil }, { data: cabinets }, { data: affectations }] = await Promise.all([
     supabase
       .from("profils")
       .select("nom_complet, email, est_admin_plateforme")
-      .eq("id", idUtilisateur)
+      .eq("id", utilisateur.id)
       .single(),
-    supabase.from("membres_cabinet").select("role, cabinets(nom)").eq("profil_id", idUtilisateur),
+    supabase.from("membres_cabinet").select("role, cabinet_id, cabinets(nom)").eq("profil_id", utilisateur.id),
     supabase
       .from("affectations")
-      .select("role, entreprises(raison_sociale)")
-      .eq("profil_id", idUtilisateur)
+      .select("role, entreprise_id, entreprises(raison_sociale)")
+      .eq("profil_id", utilisateur.id)
       .eq("actif", true),
   ]);
 
+  const adminPlateforme = profil?.est_admin_plateforme === true;
+  const adminCabinet = (cabinets ?? []).length > 0;
+
   const acces: Acces[] = [
-    ...(profil?.est_admin_plateforme
+    ...(adminPlateforme
       ? [{ cle: "plateforme", role: "admin_plateforme", perimetre: "Toute la plateforme" }]
       : []),
-    ...(cabinets ?? []).map((m, i) => ({
-      cle: `cabinet-${i}`,
+    ...(cabinets ?? []).map((m) => ({
+      cle: `cabinet-${m.cabinet_id}`,
       role: m.role,
-      perimetre: nomLie(m.cabinets, "nom"),
+      perimetre: champLie(m.cabinets, "nom"),
+      lien: `/espace/cabinets/${m.cabinet_id}`,
     })),
-    ...(affectations ?? []).map((a, i) => ({
-      cle: `entreprise-${i}`,
+    ...(affectations ?? []).map((a) => ({
+      cle: `entreprise-${a.entreprise_id}-${a.role}`,
       role: a.role,
-      perimetre: nomLie(a.entreprises, "raison_sociale"),
+      perimetre: champLie(a.entreprises, "raison_sociale"),
+      lien: `/espace/entreprises/${a.entreprise_id}`,
     })),
+  ];
+
+  const menu = [
+    ...(adminPlateforme ? [{ href: "/espace/cabinets", libelle: "Cabinets", texte: "Créer et gérer les cabinets" }] : []),
+    ...(adminPlateforme || adminCabinet || acces.length > 0
+      ? [{ href: "/espace/entreprises", libelle: "Entreprises", texte: "Fiches entreprises et utilisateurs" }]
+      : []),
+    { href: "/espace/profil", libelle: "Mon profil", texte: "Nom et mot de passe" },
   ];
 
   return (
     <>
       <h1 className="text-2xl font-bold">Bonjour {profil?.nom_complet || profil?.email}</h1>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Mes accès</h2>
+      <nav aria-label="Menu" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {menu.map((m) => (
+          <Link key={m.href} href={m.href} className="rounded-xl border border-black/10 bg-white p-4">
+            <p className="font-semibold text-marque">{m.libelle}</p>
+            <p className="text-sm text-foreground/70">{m.texte}</p>
+          </Link>
+        ))}
+      </nav>
+
+      <Section titre="Mes accès">
         {acces.length === 0 ? (
           <p className="rounded-xl border border-black/10 bg-white p-4 text-sm text-foreground/70">
             Aucun accès pour le moment. Votre administrateur doit vous affecter à une entreprise.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {acces.map((a) => (
-              <li key={a.cle} className="rounded-xl border border-black/10 bg-white p-4">
-                <p className="font-medium">{libelleRole(a.role)}</p>
-                <p className="text-sm text-foreground/70">{a.perimetre}</p>
-              </li>
-            ))}
+            {acces.map((a) => {
+              const contenu = (
+                <>
+                  <p className="font-medium">{libelleRole(a.role)}</p>
+                  <p className="text-sm text-foreground/70">{a.perimetre}</p>
+                </>
+              );
+              return (
+                <li key={a.cle}>
+                  {a.lien ? (
+                    <Link href={a.lien} className="block rounded-xl border border-black/10 bg-white p-4">
+                      {contenu}
+                    </Link>
+                  ) : (
+                    <div className="rounded-xl border border-black/10 bg-white p-4">{contenu}</div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
-      </section>
+      </Section>
     </>
   );
-}
-
-// Supabase renvoie la table liée sous forme d'objet ou de liste selon le cas.
-function nomLie(lie: unknown, champ: string): string {
-  const objet = (Array.isArray(lie) ? lie[0] : lie) as Record<string, string> | null;
-  return objet?.[champ] ?? "—";
 }
