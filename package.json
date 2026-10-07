@@ -10,12 +10,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:securite": "vitest run --config vitest.securite.config.mts",
-    "db:migrer": "node --env-file=.env.local scripts/migrer.mjs"
+    "db:migrer": "node --env-file=.env.local scripts/migrer.mjs",
+    "admin:promouvoir": "node --env-file=.env.local scripts/promouvoir-admin.mjs"
   },
   "engines": {
     "node": ">=24"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"

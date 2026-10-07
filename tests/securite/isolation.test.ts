@@ -1,11 +1,14 @@
-import { describe, expect, test } from "vitest";
+import { afterAll, describe, expect, test } from "vitest";
 import {
   commeUtilisateur,
   creerJeuDeDonnees,
   dansUneTransaction,
   estRefusee,
+  fermerConnexion,
   idsVisibles,
 } from "./outils";
+
+afterAll(fermerConnexion);
 
 describe("Isolation entre entreprises", () => {
   test("un gestionnaire ne voit que l'entreprise à laquelle il est affecté", () =>
@@ -183,6 +186,23 @@ describe("Filet de sécurité", () => {
         from pg_class c
         join pg_namespace n on n.oid = c.relnamespace
         where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity
+      `);
+      expect(rows.map((ligne) => ligne.table)).toEqual([]);
+    }));
+
+  test("toutes les tables du schéma public (sauf le journal) sont journalisées", () =>
+    dansUneTransaction(async (client) => {
+      const { rows } = await client.query(`
+        select c.relname as table
+        from pg_class c
+        join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = 'public' and c.relkind = 'r' and c.relname <> 'journal_audit'
+          and not exists (
+            select 1 from pg_trigger t
+            join pg_proc p on p.oid = t.tgfoid
+            join pg_namespace pn on pn.oid = p.pronamespace
+            where t.tgrelid = c.oid and pn.nspname = 'prive' and p.proname = 'journaliser'
+          )
       `);
       expect(rows.map((ligne) => ligne.table)).toEqual([]);
     }));

@@ -2,17 +2,32 @@ import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import { nouvelleConnexion } from "../../scripts/base-de-donnees.mjs";
 
+// Une seule connexion par fichier de tests : s'il faut l'établir à chaque test,
+// l'aller-retour Libreville–Paris rend les tests très lents.
+let connexion: pg.Client | null = null;
+
+async function client() {
+  if (!connexion) {
+    connexion = nouvelleConnexion();
+    await connexion.connect();
+  }
+  return connexion;
+}
+
+export async function fermerConnexion() {
+  await connexion?.end();
+  connexion = null;
+}
+
 // Chaque test travaille dans une transaction annulée à la fin :
 // la base de développement n'est jamais modifiée par les tests.
 export async function dansUneTransaction(test: (client: pg.Client) => Promise<void>) {
-  const client = nouvelleConnexion();
-  await client.connect();
+  const c = await client();
   try {
-    await client.query("begin");
-    await test(client);
+    await c.query("begin");
+    await test(c);
   } finally {
-    await client.query("rollback").catch(() => {});
-    await client.end();
+    await c.query("rollback").catch(() => {});
   }
 }
 
@@ -61,13 +76,17 @@ export async function creerJeuDeDonnees(client: pg.Client): Promise<JeuDeDonnees
   const u = jeu.utilisateurs;
   const suffixe = randomUUID().slice(0, 8);
 
-  for (const [nom, id] of Object.entries(u)) {
-    await client.query(
-      `insert into auth.users (id, email, aud, role, raw_user_meta_data)
-       values ($1, $2, 'authenticated', 'authenticated', $3)`,
-      [id, `${nom.toLowerCase()}-${suffixe}@test.e-paie.local`, { nom_complet: nom }],
-    );
-  }
+  const comptes = Object.entries(u).map(([nom, id]) => ({
+    id,
+    email: `${nom.toLowerCase()}-${suffixe}@test.e-paie.local`,
+    nom,
+  }));
+  await client.query(
+    `insert into auth.users (id, email, aud, role, raw_user_meta_data)
+     select c.id, c.email, 'authenticated', 'authenticated', jsonb_build_object('nom_complet', c.nom)
+     from jsonb_to_recordset($1::jsonb) as c(id uuid, email text, nom text)`,
+    [JSON.stringify(comptes)],
+  );
 
   await client.query("update public.profils set est_admin_plateforme = true where id = $1", [
     u.adminPlateforme,
