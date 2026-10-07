@@ -57,7 +57,25 @@ npm run db:migrer
 Applique les fichiers de `supabase/migrations` qui ne l'ont pas encore été.
 À relancer après chaque mise à jour du projet. Sans danger si la base est déjà à jour.
 
-### 6. Démarrer l'application
+### 6. Configurer l'authentification et créer le premier administrateur (une seule fois)
+
+Dans `.env.local`, renseignez aussi :
+- `NEXT_PUBLIC_SUPABASE_URL` : `https://<Project ID>.supabase.co` (Project Settings → General)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` : Project Settings → API Keys → « Publishable key »
+
+Dans Supabase :
+1. **Authentication → Sign In / Providers** : désactivez « Allow new users to sign up »
+   (les comptes sont créés uniquement par les administrateurs).
+2. **Authentication → Users → Add user → Create new user** : email, mot de passe,
+   cochez « Auto Confirm User ».
+
+Puis donnez-lui le rôle d'administrateur plateforme :
+
+```bash
+npm run admin:promouvoir -- votre@email.com
+```
+
+### 7. Démarrer l'application
 
 ```bash
 npm run dev
@@ -66,7 +84,7 @@ npm run dev
 Ouvrez votre navigateur à l'adresse **http://localhost:3000**.
 Pour arrêter : revenez dans PowerShell et appuyez sur `Ctrl + C`.
 
-### 7. Lancer les tests automatiques
+### 8. Lancer les tests automatiques
 
 ```bash
 npm test
@@ -74,7 +92,7 @@ npm test
 
 Chaque test affiche une coche verte s'il réussit. Le résumé final doit indiquer `failed` à 0.
 
-### 8. Lancer les tests de sécurité (isolation entre entreprises)
+### 9. Lancer les tests de sécurité (isolation entre entreprises)
 
 ```bash
 npm run test:securite
@@ -95,6 +113,7 @@ n'est laissée. Comptez 1 à 2 minutes selon la connexion.
 | `npm run test:watch` | Relance les tests à chaque modification |
 | `npm run test:securite` | Lance les tests d'isolation sur la base |
 | `npm run db:migrer` | Crée ou met à jour les tables de la base |
+| `npm run admin:promouvoir -- email` | Donne le rôle d'administrateur plateforme à un compte |
 | `npm run lint` | Vérifie la qualité du code |
 | `npm run build` | Prépare la version de production |
 
