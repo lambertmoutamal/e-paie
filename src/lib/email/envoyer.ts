@@ -19,7 +19,15 @@ export async function envoyerEmail(destinataire: string, email: Email): Promise<
   const reponse = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${cle}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: expediteur, to: [destinataire], subject: email.sujet, html: email.html, text: email.texte }),
+    body: JSON.stringify({
+      from: expediteur,
+      to: [destinataire],
+      // Adresse réelle pour les réponses (facultative) : améliore la confiance des messageries.
+      ...(process.env.EMAIL_REPONSE ? { reply_to: process.env.EMAIL_REPONSE } : {}),
+      subject: email.sujet,
+      html: email.html,
+      text: email.texte,
+    }),
     signal: AbortSignal.timeout(15_000),
   });
   if (!reponse.ok) {
