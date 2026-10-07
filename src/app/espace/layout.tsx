@@ -23,7 +23,7 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
             <Menu variante="lateral" />
           </Suspense>
         </nav>
-        <p className="px-5 py-4 text-xs text-doux">La paie zéro papier · Gabon</p>
+        <p className="px-5 py-4 text-xs text-doux">La paie zéro papier</p>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">

@@ -25,7 +25,7 @@ export default function Accueil() {
       <main className="flex-1">
         <section className="bg-marque text-white">
           <div className="mx-auto max-w-6xl px-4 py-14 sm:py-20">
-            <p className="text-sm font-semibold uppercase tracking-widest text-white/70">Plateforme de paie · Gabon</p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-white/70">Plateforme de paie en ligne</p>
             <h1 className="mt-3 max-w-2xl text-3xl font-bold leading-tight sm:text-5xl">La paie zéro papier</h1>
             <p className="mt-4 max-w-xl text-lg text-white/85">
               Pour les cabinets comptables et les entreprises : bulletins, congés et échanges avec les
@@ -69,7 +69,7 @@ export default function Accueil() {
         </section>
       </main>
 
-      <footer className="border-t border-bordure py-6 text-center text-xs text-doux">e-Paie · Libreville, Gabon</footer>
+      <footer className="border-t border-bordure py-6 text-center text-xs text-doux">e-Paie · La paie zéro papier</footer>
     </div>
   );
 }

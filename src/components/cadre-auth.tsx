@@ -33,7 +33,7 @@ export function CadreAuth({ titre, description, children, pied }: { titre: strin
             ))}
           </ul>
         </div>
-        <p className="relative text-sm text-white/60">© e-Paie · Libreville</p>
+        <p className="relative text-sm text-white/60">© e-Paie</p>
       </aside>
 
       <main className="flex flex-col items-center justify-center px-4 py-10">

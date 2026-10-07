@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s · e-Paie",
   },
   description:
-    "Plateforme de paie zéro papier pour les cabinets comptables et les entreprises du Gabon.",
+    "Plateforme de paie zéro papier pour les cabinets comptables et les entreprises.",
 };
 
 export const viewport: Viewport = {

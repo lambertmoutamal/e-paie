@@ -45,7 +45,7 @@ function gabarit({ titre, paragraphes, bouton, note }: {
   ${corps}${action}${remarque}
 </td></tr>
 </table>
-<p style="margin:16px 0 0;font-size:12px;color:#8a978f">e-Paie · La paie zéro papier · Libreville, Gabon<br>Email automatique, merci de ne pas y répondre.</p>
+<p style="margin:16px 0 0;font-size:12px;color:#8a978f">e-Paie · La paie zéro papier<br>Email automatique, merci de ne pas y répondre.</p>
 </td></tr></table></body></html>`;
 }
 
