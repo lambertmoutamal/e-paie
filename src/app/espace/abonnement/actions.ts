@@ -1,11 +1,41 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
+import { lancerPaiement, synchroniserPaiement } from "@/lib/paiement/service";
+import type { StatutPaiement } from "@/lib/paiement/regles";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { alerterEquipe } from "@/lib/email/envoyer";
 import { emailAlerte } from "@/lib/email/modeles";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
-import { schemaActivationAbonnement, schemaFormule } from "@/lib/validation/schemas";
+import { schemaActivationAbonnement, schemaFormule, schemaPaiement } from "@/lib/validation/schemas";
+
+// Paiement Mobile Money : le client valide ensuite la demande sur son téléphone.
+export async function payerAbonnement(abonnementId: string, _etat: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+  const { supabase, utilisateur } = await exigerUtilisateur();
+  const lu = lireFormulaire(schemaPaiement, formulaire);
+  if (!lu.ok) return { erreurs: lu.erreurs, valeurs: lu.valeurs };
+
+  const resultat = await lancerPaiement(supabase, utilisateur, abonnementId, lu.donnees.duree, lu.donnees.telephone);
+  if ("erreur" in resultat) return { erreur: resultat.erreur, valeurs: lu.valeurs };
+
+  // Certains moyens de paiement passent par une page du prestataire ; sinon on suit le paiement ici.
+  redirect(resultat.urlRedirection ?? `/espace/abonnement?paiement=${resultat.paiementId}`);
+}
+
+// Vérifie où en est un paiement (appelé régulièrement pendant que le client valide sur son téléphone).
+// La lecture passe par le client de la personne : la RLS garantit qu'elle ne voit que ses paiements.
+export async function verifierPaiement(paiementId: string): Promise<StatutPaiement | null> {
+  const { supabase } = await exigerUtilisateur();
+  const { data } = await supabase.from("paiements").select("id").eq("id", paiementId).maybeSingle();
+  if (!data) return null;
+  try {
+    return await synchroniserPaiement(paiementId);
+  } catch (erreur) {
+    console.error("Vérification du paiement impossible :", erreur);
+    return null;
+  }
+}
 
 // Le client demande à passer à Pro (en attendant le paiement en ligne, l'équipe le contacte).
 export async function demanderPassagePro(abonnementId: string, titulaire: string): Promise<EtatFormulaire> {

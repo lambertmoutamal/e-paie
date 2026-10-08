@@ -4,9 +4,16 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 const dossier = path.resolve(".next/static");
-const cleSecrete = process.env.SUPABASE_SECRET_KEY;
-const motifs = ["sb_secret_", "SUPABASE_SECRET_KEY", "service_role", "DATABASE_URL"];
-if (cleSecrete) motifs.push(cleSecrete);
+const VARIABLES_SECRETES = [
+  "SUPABASE_SECRET_KEY",
+  "DATABASE_URL",
+  "RESEND_API_KEY",
+  "GENUKA_SECRET_KEY",
+  "GENUKA_WEBHOOK_SECRET",
+];
+const motifs = ["sb_secret_", "service_role", ...VARIABLES_SECRETES];
+const valeurs = VARIABLES_SECRETES.map((nom) => process.env[nom]).filter((v) => v && v.length >= 8);
+motifs.push(...valeurs);
 
 async function* fichiers(rep) {
   for (const entree of await readdir(rep, { withFileTypes: true })) {
@@ -22,7 +29,10 @@ for await (const fichier of fichiers(dossier)) {
   nombre++;
   const contenu = await readFile(fichier, "utf8");
   for (const motif of motifs) {
-    if (contenu.includes(motif)) fuites.push(`${path.relative(".", fichier)} contient « ${motif === cleSecrete ? "la clé secrète" : motif} »`);
+    if (contenu.includes(motif)) {
+      const description = valeurs.includes(motif) ? "la valeur d'une clé secrète" : `« ${motif} »`;
+      fuites.push(`${path.relative(".", fichier)} contient ${description}`);
+    }
   }
 }
 

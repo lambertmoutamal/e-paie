@@ -92,6 +92,11 @@ export const schemaActivationAbonnement = z.object({
   fin: z.iso.date({ error: "Indiquez une date de fin valide." }),
 });
 
+export const schemaPaiement = z.object({
+  duree: z.enum(["1", "12"], { error: "Choisissez une durée." }).transform((d) => (d === "12" ? 12 : 1) as 1 | 12),
+  telephone: obligatoire("Le numéro Mobile Money"),
+});
+
 export const schemaFormule = z.object({
   libelle: obligatoire("Le nom de la formule"),
   prix_mensuel: z.coerce
