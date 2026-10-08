@@ -33,3 +33,15 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   > À prévoir avec le module salariés : un email de prévenance aux salariés avant le blocage,
   > pour qu'ils téléchargent leurs bulletins.
 - Les structures créées par l'administrateur plateforme (sans abonnement) ne sont pas limitées.
+
+## 2026-10-08 — Paiement en ligne
+
+- Prestataire retenu : **Genuka Pay** (Mobile Money : Airtel, Moov, MTN, Orange ; 12 pays en
+  zones XAF et XOF ; 3 % + 25 FCFA par paiement réussi). Pas de carte bancaire : un second
+  prestataire pourra être ajouté plus tard grâce à un adaptateur.
+- Durées proposées : **mensuel** et **annuel**, l'annuel avec **2 mois offerts** (10 × le prix mensuel).
+
+## 2026-10-08 — Outils de design
+
+- Installation des skills **UI/UX Pro Max** (nextlevelbuilder, licence MIT) dans `.claude/skills`,
+  et de Python 3.13 pour leurs scripts. Inspectés avant ajout.
