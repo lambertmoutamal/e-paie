@@ -65,7 +65,7 @@ function MessageChamp({ id, erreur, aide }: { id: string; erreur?: string; aide?
 type ProprietesChamp = {
   nom: string;
   libelle: string;
-  type?: "text" | "email" | "tel" | "password";
+  type?: "text" | "email" | "tel" | "password" | "date";
   valeurInitiale?: string | null;
   requis?: boolean;
   aide?: string;

@@ -6,7 +6,7 @@ import { libelleRole } from "@/lib/auth/roles";
 import { champLie, valeurLiee } from "@/lib/supabase/relations";
 import { ROLES_ENTREPRISE } from "@/lib/validation/schemas";
 import { ActionEnLigne, Champ, ChoixListe, Formulaire } from "@/components/formulaire";
-import { Badge, Carte, classesBouton, EnTetePage, EtatVide, Ligne, ListeLignes, Page } from "@/components/ui";
+import { Badge, Carte, classesBouton, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
 import { ajouterUtilisateur, changerAcces, modifierEntreprise, renvoyerInvitationEntreprise } from "../actions";
 import { ChampsEntreprise } from "../champs-entreprise";
 
@@ -24,13 +24,14 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
     .maybeSingle();
   if (!entreprise) notFound();
 
-  const [{ data: gere }, { data: affectations }] = await Promise.all([
+  const [{ data: gere }, { data: affectations }, { count: nbSalaries }] = await Promise.all([
     supabase.rpc("peut_gerer_entreprise", { p_entreprise_id: id }),
     supabase
       .from("affectations")
       .select("profil_id, role, actif, profils(nom_complet, email, active_le)")
       .eq("entreprise_id", id)
       .order("actif", { ascending: false }),
+    supabase.from("salaries").select("id", { count: "exact", head: true }).eq("entreprise_id", id).eq("statut", "actif"),
   ]);
   const peutGerer = gere === true;
   const nomCabinet = entreprise.cabinets ? champLie(entreprise.cabinets, "nom") : null;
@@ -45,9 +46,14 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
           { href: "/espace/entreprises", libelle: "Entreprises" },
         ]}
         actions={
-          <Badge teinte={entreprise.mode === "autonome" ? "bleu" : "vert"}>
-            {entreprise.mode === "autonome" ? "Mode autonome" : "Mode cabinet"}
-          </Badge>
+          <>
+            <Badge teinte={entreprise.mode === "autonome" ? "bleu" : "vert"}>
+              {entreprise.mode === "autonome" ? "Mode autonome" : "Mode cabinet"}
+            </Badge>
+            <LienBouton href={`/espace/entreprises/${id}/salaries`} icone={Users}>
+              Salariés ({nbSalaries ?? 0})
+            </LienBouton>
+          </>
         }
       />
 
