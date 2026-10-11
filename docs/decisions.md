@@ -75,3 +75,17 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   publieur après approbation, gestionnaire après un refus), jamais chez les autres.
 - Si personne ne peut valider une étape (rôle non attribué), seul un avertissement apparaît sur la
   page de la période ; la personne qui reçoit ensuite ce rôle est prévenue à ce moment-là.
+
+## 2026-10-12 — Congés et absences
+
+- **Solde calculé automatiquement** : solde de départ (saisi par le RH, sinon 0 à l'embauche)
+  + jours acquis par mois complet (2 par défaut, réglable) − congés payés acceptés.
+- Décompte en jours ouvrables (lundi-samedi, par défaut) ou ouvrés (lundi-vendredi), hors jours fériés
+  saisis par l'entreprise ; demi-journées possibles.
+- Types d'absence par défaut (congé payé, permissions, maladie, absence injustifiée) : valeurs
+  indicatives, à adapter par chaque entreprise à sa convention collective.
+- Les demandes sont traitées par le **RH** ; s'il n'y a pas de RH, par les administrateurs. Seule
+  cette personne est alertée et voit la demande dans « À faire ». Le salarié est prévenu de la réponse.
+- Un refus ou une annulation doit être motivé. Une demande qui dépasse le solde n'est pas bloquée :
+  le RH voit l'avertissement et décide.
+

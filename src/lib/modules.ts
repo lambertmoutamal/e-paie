@@ -46,11 +46,13 @@ export const MODULES: Module[] = [
     id: "absences",
     nom: "Congés & absences",
     accroche: "Demandes, validation et soldes de congés, sans papier.",
-    statut: "bientot",
+    statut: "disponible",
+    lienEntreprise: (id) => `/espace/entreprises/${id}/absences`,
     fonctions: [
-      { libelle: "Demandes de congé et de permission", disponible: false },
-      { libelle: "Validation par le responsable RH", disponible: false },
-      { libelle: "Soldes de congés", disponible: false },
+      { libelle: "Demandes de congé et de permission depuis le téléphone, avec justificatif", disponible: true },
+      { libelle: "Validation par le RH, alertes email et WhatsApp", disponible: true },
+      { libelle: "Soldes calculés automatiquement, jours fériés, demi-journées", disponible: true },
+      { libelle: "Planning mensuel des absences", disponible: true },
     ],
   },
   {
