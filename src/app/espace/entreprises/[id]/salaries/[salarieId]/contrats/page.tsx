@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { FilePlus2, FileText, Paperclip } from "lucide-react";
+import Link from "next/link";
+import { FilePen, FilePlus2, FileText, Paperclip } from "lucide-react";
 import { formaterDate } from "@/lib/abonnements/phases";
 import { formaterMontant, libelleTypeContrat, STATUTS_CONTRAT, TYPES_CONTRAT } from "@/lib/contrats/regles";
 import { Champ, ChampFichier, ChoixListe, Formulaire } from "@/components/formulaire";
@@ -31,7 +32,11 @@ type Contrat = {
   motif_fin: string | null;
   fichier_chemin: string | null;
   fichier_nom: string | null;
+  contenu: string | null;
+  document_fige: boolean;
 };
+
+type Modele = { id: string; nom: string; categorie: string };
 
 const OPTIONS_TYPE = Object.entries(TYPES_CONTRAT).map(([valeur, libelle]) => ({ valeur, libelle }));
 
@@ -41,10 +46,22 @@ export default async function PageContrats({ params }: PageProps<"/espace/entrep
 
   const { data } = await supabase
     .from("contrats")
-    .select("id, contrat_parent_id, nature, type_contrat, poste, categorie, salaire_base, devise, heures_hebdo, lieu_travail, date_debut, date_fin_prevue, fin_periode_essai, objet, statut, date_fin_effective, motif_fin, fichier_chemin, fichier_nom")
+    .select("id, contrat_parent_id, nature, type_contrat, poste, categorie, salaire_base, devise, heures_hebdo, lieu_travail, date_debut, date_fin_prevue, fin_periode_essai, objet, statut, date_fin_effective, motif_fin, fichier_chemin, fichier_nom, contenu, document_fige")
     .eq("salarie_id", salarieId)
     .order("date_debut", { ascending: false });
   const tous = (data ?? []) as Contrat[];
+  const { data: modelesBruts } = await supabase
+    .from("modeles_contrat")
+    .select("id, nom, categorie")
+    .eq("actif", true)
+    .or(`entreprise_id.eq.${id},entreprise_id.is.null`)
+    .order("nom");
+  const modeles = (modelesBruts ?? []) as Modele[];
+  const choixModele = (categorie: string, sansModele: string) => [
+    { valeur: "aucun", libelle: sansModele },
+    ...modeles.filter((m) => m.categorie === categorie).map((m) => ({ valeur: m.id, libelle: `Rédiger avec : ${m.nom}` })),
+  ];
+  const lienModeles = `/espace/entreprises/${id}/modeles-contrat`;
   const principaux = tous.filter((c) => c.nature !== "avenant");
   const avenantsDe = (contratId: string) => tous.filter((c) => c.nature === "avenant" && c.contrat_parent_id === contratId);
   const enCours = principaux.find((c) => c.statut === "en_cours");
@@ -56,7 +73,15 @@ export default async function PageContrats({ params }: PageProps<"/espace/entrep
       <EnTeteSalarie entrepriseId={id} raisonSociale={entreprise.raison_sociale} salarie={salarie} onglet="contrats" />
 
       {enCours ? (
-        <CarteContrat contrat={enCours} avenants={avenantsDe(enCours.id)} entrepriseId={id} salarieId={salarieId} modifiable={modifiable} principal />
+        <CarteContrat
+          contrat={enCours}
+          avenants={avenantsDe(enCours.id)}
+          entrepriseId={id}
+          salarieId={salarieId}
+          modifiable={modifiable}
+          principal
+          choixAvenant={choixModele("avenant", "Aucun : je joins l'avenant signé (facultatif)")}
+        />
       ) : (
         !brouillons.length && (
           <Carte>
@@ -66,12 +91,26 @@ export default async function PageContrats({ params }: PageProps<"/espace/entrep
       )}
 
       {brouillons.map((c) => (
-        <CarteContrat key={c.id} contrat={c} avenants={[]} entrepriseId={id} salarieId={salarieId} modifiable={modifiable} />
+        <CarteContrat key={c.id} contrat={c} avenants={[]} entrepriseId={id} salarieId={salarieId} modifiable={modifiable} choixAvenant={[]} />
       ))}
 
       {modifiable && !enCours && (
-        <Carte titre="Nouveau contrat" description="Enregistrez-le « En cours », ou en « Brouillon » pour une embauche à venir.">
+        <Carte titre="Nouveau contrat" description="Deux possibilités : importer le contrat déjà signé, ou le rédiger dans e-Paie à partir d'un modèle.">
+          <ul className="mb-5 grid gap-2 text-sm sm:grid-cols-2">
+            <li className="rounded-lg bg-black/[.03] px-3 py-2">
+              <strong>Importer un contrat signé</strong> : remplissez les informations, laissez « Aucun » comme modèle et joignez le PDF ou la photo
+              du contrat.
+            </li>
+            <li className="rounded-lg bg-marque-claire/60 px-3 py-2">
+              <strong>Rédiger dans e-Paie</strong> : choisissez un modèle (statut « Brouillon » conseillé). Le texte est rempli automatiquement et
+              l&apos;éditeur s&apos;ouvre.{" "}
+              <Link href={lienModeles} className="font-medium text-marque hover:underline">
+                Gérer les modèles
+              </Link>
+            </li>
+          </ul>
           <Formulaire action={creerContrat.bind(null, id, salarieId)} libelleBouton="Enregistrer le contrat" colonnes={2}>
+            <ChoixListe nom="modele_id" libelle="Modèle" requis pleineLargeur valeurInitiale="aucun" options={choixModele("contrat", "Aucun : j'importe le contrat signé")} />
             <ChoixListe nom="type_contrat" libelle="Type de contrat" requis options={OPTIONS_TYPE} valeurInitiale="cdi" />
             <ChoixListe
               nom="statut"
@@ -91,7 +130,7 @@ export default async function PageContrats({ params }: PageProps<"/espace/entrep
             <Champ nom="date_debut" libelle="Date de début" type="date" requis valeurInitiale={salarie.date_embauche} />
             <Champ nom="date_fin_prevue" libelle="Date de fin prévue" type="date" aide="Obligatoire sauf pour un CDI." />
             <Champ nom="fin_periode_essai" libelle="Fin de la période d'essai" type="date" />
-            <ChampFichier libelle="Contrat signé (facultatif)" />
+            <ChampFichier libelle="Contrat signé (pour un import)" />
           </Formulaire>
         </Carte>
       )}
@@ -135,6 +174,7 @@ function CarteContrat({
   salarieId,
   modifiable,
   principal,
+  choixAvenant,
 }: {
   contrat: Contrat;
   avenants: Contrat[];
@@ -142,7 +182,9 @@ function CarteContrat({
   salarieId: string;
   modifiable: boolean;
   principal?: boolean;
+  choixAvenant: { valeur: string; libelle: string }[];
 }) {
+  const lienDocument = (contratId: string) => `/espace/entreprises/${entrepriseId}/salaries/${salarieId}/contrats/${contratId}/document`;
   const statut = STATUTS_CONTRAT[c.statut];
   const lignes: [string, string][] = [
     ["Poste", c.poste ?? "—"],
@@ -177,6 +219,7 @@ function CarteContrat({
         ) : (
           <span className="text-doux">Aucun contrat signé joint.</span>
         )}
+        <BoutonDocument contrat={c} href={lienDocument(c.id)} modifiable={modifiable} />
       </div>
 
       {avenants.length > 0 && (
@@ -192,6 +235,11 @@ function CarteContrat({
                   <a href={lienFichier(a.fichier_chemin)} target="_blank" rel="noopener" className="ml-2 font-medium text-marque">
                     PDF
                   </a>
+                )}
+                {(a.contenu || modifiable) && (
+                  <Link href={lienDocument(a.id)} className="ml-2 font-medium text-marque">
+                    {a.contenu ? (a.document_fige || !modifiable ? "Texte" : "Modifier le texte") : "Rédiger"}
+                  </Link>
                 )}
               </li>
             ))}
@@ -219,6 +267,7 @@ function CarteContrat({
             <>
               <Action titre="Ajouter un avenant" icone>
                 <Formulaire action={ajouterAvenant.bind(null, entrepriseId, salarieId, c.id)} libelleBouton="Enregistrer l'avenant" colonnes={2}>
+                  <ChoixListe nom="modele_id" libelle="Modèle" requis pleineLargeur valeurInitiale="aucun" options={choixAvenant} />
                   <Champ nom="date_debut" libelle="Date d'effet" type="date" requis />
                   <Champ nom="objet" libelle="Objet" requis aide="Exemple : promotion, augmentation, changement d'horaires" />
                   <Champ nom="poste" libelle="Nouveau poste" aide="Laisser vide si inchangé" />
@@ -260,6 +309,19 @@ function CarteContrat({
         </div>
       )}
     </Carte>
+  );
+}
+
+// Accès à la rédaction du contrat dans e-Paie (ou à son texte, une fois signé).
+function BoutonDocument({ contrat: c, href, modifiable }: { contrat: Contrat; href: string; modifiable: boolean }) {
+  const clos = c.statut === "termine" || c.statut === "rompu";
+  if (!c.contenu && (!modifiable || clos)) return null;
+  const libelle = !c.contenu ? "Rédiger le contrat dans e-Paie" : c.document_fige || !modifiable || clos ? "Voir le texte du contrat" : "Modifier le texte du contrat";
+  return (
+    <Link href={href} className={classesBouton(c.contenu ? "secondaire" : "discret", "petit")}>
+      <FilePen size={14} aria-hidden />
+      {libelle}
+    </Link>
   );
 }
 

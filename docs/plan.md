@@ -23,6 +23,7 @@ Organisation des modules inspirée des SIRH du marché (référence : Nibelis), 
 | 9 | Publication des bulletins, **portail salarié** : connexion par code SMS ou WhatsApp (Twilio Verify), bulletins et historique |
 | — | Alertes de paie par email et WhatsApp, actions « À faire » visibles par la seule personne qui doit agir |
 | 10 | Congés et permissions : demandes depuis le portail (justificatif), validation RH, soldes calculés automatiquement, jours fériés, planning, alertes |
+| — | Congés prévisionnels ; contrats : import du document signé ou rédaction dans e-Paie (modèles, import Word, champs automatiques, PDF) |
 
 ## À venir
 

@@ -177,3 +177,18 @@ export function cheminFichier(entrepriseId: string, salarieId: string, nomOrigin
     .slice(-80);
   return `${entrepriseId}/${salarieId}/${identifiant}-${propre || "fichier"}`;
 }
+
+// Modèle de contrat (rédaction dans e-Paie)
+export const CATEGORIES_MODELE = { contrat: "Contrat", avenant: "Avenant" } as const;
+
+export const schemaModele = z.object({
+  nom: z.string().trim().min(2, "Nom trop court.").max(120, "120 caractères maximum."),
+  categorie: z.enum(["contrat", "avenant"], "Choisissez la catégorie."),
+  type_contrat: z
+    .string()
+    .optional()
+    .transform((v) => (v ? v : null))
+    .refine((v) => v === null || v in TYPES_CONTRAT, "Type de contrat invalide."),
+  contenu: z.string().max(200_000, "Document trop long."),
+});
+
