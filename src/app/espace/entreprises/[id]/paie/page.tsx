@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CalendarRange } from "lucide-react";
+import { CalendarRange, Workflow } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { libellePeriode, moisProposes, STATUTS_PERIODE, type StatutPeriode } from "@/lib/bulletins/regles";
+import { libellePeriode, moisProposes, STATUTS_PERIODE, type EtapeCircuit, type StatutPeriode } from "@/lib/bulletins/regles";
 import { ChoixListe, Formulaire } from "@/components/formulaire";
-import { Badge, Carte, EnTetePage, EtatVide, Ligne, ListeLignes, Page } from "@/components/ui";
+import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
 import { creerPeriode } from "./actions";
 
 export const metadata: Metadata = { title: "Paie et bulletins" };
@@ -17,7 +17,7 @@ export default async function PagePeriodes({ params }: PageProps<"/espace/entrep
     supabase.from("entreprises").select("raison_sociale").eq("id", id).maybeSingle(),
     supabase
       .from("periodes_paie")
-      .select("id, annee, mois, statut, bulletins(count)")
+      .select("id, annee, mois, statut, circuit, etape_courante, bulletins(count)")
       .eq("entreprise_id", id)
       .order("annee", { ascending: false })
       .order("mois", { ascending: false }),
@@ -40,6 +40,11 @@ export default async function PagePeriodes({ params }: PageProps<"/espace/entrep
           { href: "/espace/entreprises", libelle: "Entreprises" },
           { href: `/espace/entreprises/${id}`, libelle: entreprise.raison_sociale },
         ]}
+        actions={
+          <LienBouton href={`/espace/entreprises/${id}/paie/circuit`} variante="secondaire" icone={Workflow}>
+            Circuit de validation
+          </LienBouton>
+        }
       />
 
       <Carte titre="Périodes de paie" description="Une période par mois. Les bulletins se déposent tant que la période est en brouillon." sansMarge>
@@ -54,13 +59,15 @@ export default async function PagePeriodes({ params }: PageProps<"/espace/entrep
             {periodes.map((p) => {
               const statut = STATUTS_PERIODE[p.statut as StatutPeriode];
               const nb = (p.bulletins as unknown as { count: number }[])[0]?.count ?? 0;
+              const circuit = (p.circuit as EtapeCircuit[] | null) ?? [];
+              const etape = p.etape_courante ? circuit[p.etape_courante - 1] : undefined;
               return (
                 <Ligne
                   key={p.id}
                   href={`/espace/entreprises/${id}/paie/${p.id}`}
                   icone={CalendarRange}
                   titre={libellePeriode(p.annee, p.mois)}
-                  sousTitre={`${nb} bulletin${nb > 1 ? "s" : ""} déposé${nb > 1 ? "s" : ""}`}
+                  sousTitre={`${nb} bulletin${nb > 1 ? "s" : ""} déposé${nb > 1 ? "s" : ""}${etape ? ` · étape ${p.etape_courante}/${circuit.length} : ${etape.libelle}` : ""}`}
                   fin={<Badge teinte={statut.teinte}>{statut.libelle}</Badge>}
                 />
               );

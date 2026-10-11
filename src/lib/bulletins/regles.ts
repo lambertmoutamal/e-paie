@@ -110,3 +110,54 @@ export function associerFichiers(
 export function estPdf(debut: Uint8Array): boolean {
   return debut.length >= 5 && debut[0] === 0x25 && debut[1] === 0x50 && debut[2] === 0x44 && debut[3] === 0x46 && debut[4] === 0x2d;
 }
+
+// ---------------------------------------------------------------------
+// Circuit de validation
+// ---------------------------------------------------------------------
+
+export const ROLES_CIRCUIT = {
+  controleur: "Contrôleur",
+  signataire: "Signataire final",
+  rh: "Responsable RH",
+  admin_entreprise: "Administrateur de l'entreprise",
+  administrateur: "Administrateurs (cabinet ou entreprise)",
+} as const;
+export type RoleCircuit = keyof typeof ROLES_CIRCUIT;
+export type EtapeCircuit = { libelle: string; role: RoleCircuit };
+
+export const MAX_ETAPES = 5;
+
+export const CIRCUIT_PAR_DEFAUT: EtapeCircuit[] = [
+  { libelle: "Contrôle", role: "controleur" },
+  { libelle: "Approbation", role: "signataire" },
+];
+
+const schemaEtape = z.object({
+  libelle: z.string().trim().min(2, "Nom trop court.").max(60, "60 caractères maximum."),
+  role: z.enum(Object.keys(ROLES_CIRCUIT) as [RoleCircuit, ...RoleCircuit[]], "Choisissez qui valide."),
+});
+
+// Lit les étapes envoyées par le formulaire (champs libelle_1, role_1, libelle_2…).
+export function lireCircuit(
+  formulaire: FormData,
+): { ok: true; etapes: EtapeCircuit[] } | { ok: false; erreurs: Record<string, string>; valeurs: Record<string, string> } {
+  const valeurs: Record<string, string> = {};
+  for (const [cle, valeur] of formulaire.entries()) if (typeof valeur === "string" && !cle.startsWith("$")) valeurs[cle] = valeur;
+
+  const nombre = Number(valeurs.nombre);
+  if (!Number.isInteger(nombre) || nombre < 1 || nombre > MAX_ETAPES) {
+    return { ok: false, erreurs: { _: `Le circuit doit compter de 1 à ${MAX_ETAPES} étapes.` }, valeurs };
+  }
+  const etapes: EtapeCircuit[] = [];
+  const erreurs: Record<string, string> = {};
+  for (let i = 1; i <= nombre; i++) {
+    const lu = schemaEtape.safeParse({ libelle: valeurs[`libelle_${i}`] ?? "", role: valeurs[`role_${i}`] ?? "" });
+    if (lu.success) etapes.push(lu.data);
+    else for (const p of lu.error.issues) erreurs[`${String(p.path[0])}_${i}`] ??= p.message;
+  }
+  return Object.keys(erreurs).length ? { ok: false, erreurs, valeurs } : { ok: true, etapes };
+}
+
+export function libelleRole(role: string): string {
+  return ROLES_CIRCUIT[role as RoleCircuit] ?? role;
+}

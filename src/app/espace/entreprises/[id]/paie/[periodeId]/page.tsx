@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CircleAlert, FileCheck2, FileText, Lock, Trash2, Users } from "lucide-react";
+import { CircleAlert, CircleCheck, FileCheck2, FileText, Lock, Send, Trash2, Undo2, Users } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { formaterDate } from "@/lib/abonnements/phases";
-import { libellePeriode, salariesAttendus, STATUTS_PERIODE, type StatutPeriode } from "@/lib/bulletins/regles";
+import { libellePeriode, libelleRole, salariesAttendus, STATUTS_PERIODE, type EtapeCircuit, type StatutPeriode } from "@/lib/bulletins/regles";
 import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, classesBouton, EnTetePage, EtatVide, Page, Statistique } from "@/components/ui";
-import { retirerBulletin, supprimerPeriode } from "../actions";
+import { deciderEtape, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
+import { DecisionEtape } from "./decision-etape";
 import { DepotEnMasse, DepotUnique } from "./depot-bulletins";
 
 export const metadata: Metadata = { title: "Période de paie" };
@@ -19,9 +21,23 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
   const { id, periodeId } = await params;
   const { supabase } = await exigerUtilisateur();
 
-  const [{ data: entreprise }, { data: periode }, { data: salaries }, { data: bulletins }, { data: peutDeposer }] = await Promise.all([
+  const [
+    { data: entreprise },
+    { data: periode },
+    { data: salaries },
+    { data: bulletins },
+    { data: peutDeposer },
+    { data: historique },
+    { data: circuitActuel },
+    { data: motifBlocage },
+  ] = await Promise.all([
     supabase.from("entreprises").select("raison_sociale").eq("id", id).maybeSingle(),
-    supabase.from("periodes_paie").select("id, annee, mois, statut").eq("id", periodeId).eq("entreprise_id", id).maybeSingle(),
+    supabase
+      .from("periodes_paie")
+      .select("id, annee, mois, statut, circuit, etape_courante, approuvee_le")
+      .eq("id", periodeId)
+      .eq("entreprise_id", id)
+      .maybeSingle(),
     supabase
       .from("salaries")
       .select("id, matricule, nom, prenoms, statut, date_embauche, date_sortie")
@@ -34,12 +50,25 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
       .eq("periode_id", periodeId)
       .eq("type", "normal"),
     supabase.rpc("peut_deposer_bulletins", { p_entreprise_id: id }),
+    supabase
+      .from("validations_periode")
+      .select("id, cycle, etape, libelle_etape, action, commentaire, cree_le, auteur:profils(nom_complet)")
+      .eq("periode_id", periodeId)
+      .order("cree_le", { ascending: false })
+      .order("etape", { ascending: false }),
+    supabase.rpc("circuit_entreprise", { p_entreprise_id: id }),
+    supabase.rpc("motif_blocage_validation", { p_periode_id: periodeId }),
   ]);
   if (!entreprise || !periode) notFound();
 
   const titre = libellePeriode(periode.annee, periode.mois);
   const statut = STATUTS_PERIODE[periode.statut as StatutPeriode];
   const modifiable = peutDeposer === true && periode.statut === "brouillon";
+  // Circuit figé à l'envoi ; avant l'envoi, on montre le circuit actuel de l'entreprise.
+  const circuit = ((periode.circuit ?? circuitActuel) as EtapeCircuit[] | null) ?? [];
+  const etapeCourante = periode.etape_courante as number | null;
+  const etapeEnCours = etapeCourante ? circuit[etapeCourante - 1] : undefined;
+  const peutDecider = periode.statut === "en_validation" && motifBlocage === null;
 
   const parSalarie = new Map((bulletins ?? []).map((b) => [b.salarie_id, b]));
   const attendus = salariesAttendus(salaries ?? [], periode.annee, periode.mois);
@@ -73,6 +102,68 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
         <Statistique icone={FileCheck2} libelle="Bulletins déposés" valeur={bulletins?.length ?? 0} />
         <Statistique icone={CircleAlert} libelle="Bulletins manquants" valeur={manquants} />
       </div>
+
+      <Carte
+        titre="Circuit de validation"
+        description={
+          periode.statut === "brouillon"
+            ? "Déposez les bulletins, puis envoyez la période en validation."
+            : etapeEnCours
+              ? `En attente : ${etapeEnCours.libelle} (${libelleRole(etapeEnCours.role)})`
+              : periode.approuvee_le
+                ? `Approuvée le ${formaterDate(periode.approuvee_le)}`
+                : undefined
+        }
+        action={
+          peutDeposer === true && periode.statut === "brouillon" ? (
+            <Link href={`/espace/entreprises/${id}/paie/circuit`} className="text-sm font-medium text-marque hover:underline">
+              Régler le circuit
+            </Link>
+          ) : undefined
+        }
+      >
+        <div className="flex flex-col gap-5">
+          <ol className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            {circuit.map((e, i) => {
+              const n = i + 1;
+              const faite = periode.statut === "approuvee" || periode.statut === "publiee" || (etapeCourante !== null && n < etapeCourante);
+              const enCours = etapeCourante === n;
+              return (
+                <li key={n} className="flex items-center gap-2">
+                  <span
+                    className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold ${
+                      faite ? "bg-marque text-white" : enCours ? "bg-amber-100 text-amber-800 ring-2 ring-amber-300" : "bg-black/[.05] text-doux"
+                    }`}
+                  >
+                    {faite ? <CircleCheck size={16} aria-label="Validée" /> : n}
+                  </span>
+                  <span className="text-sm">
+                    <span className="font-medium">{e.libelle}</span>
+                    <span className="block text-xs text-doux">{libelleRole(e.role)}</span>
+                  </span>
+                  {n < circuit.length && <span className="mx-2 hidden h-px w-8 bg-bordure sm:block" aria-hidden />}
+                </li>
+              );
+            })}
+          </ol>
+
+          {peutDeposer === true && periode.statut === "brouillon" && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-black/[.03] px-3 py-2">
+              <p className="text-sm text-doux">
+                {bulletins?.length
+                  ? `${manquants > 0 ? `Attention : ${manquants} bulletin(s) manquant(s). ` : "Tous les bulletins attendus sont déposés. "}Après l'envoi, les bulletins ne pourront plus être modifiés, sauf en cas de refus.`
+                  : "Déposez au moins un bulletin avant d'envoyer la période."}
+              </p>
+              {!!bulletins?.length && <ActionEnLigne action={soumettrePeriode.bind(null, periodeId)} libelle="Envoyer en validation" />}
+            </div>
+          )}
+
+          {peutDecider && etapeEnCours && (
+            <DecisionEtape action={deciderEtape.bind(null, periodeId)} libelleEtape={etapeEnCours.libelle} derniere={etapeCourante === circuit.length} />
+          )}
+          {periode.statut === "en_validation" && !peutDecider && motifBlocage && <p className="text-sm text-doux">{motifBlocage}</p>}
+        </div>
+      </Carte>
 
       {periode.statut !== "brouillon" && (
         <p className="flex items-start gap-2 rounded-lg border border-bordure bg-surface px-3 py-2 text-sm text-doux">
@@ -139,6 +230,34 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
           </ul>
         )}
       </Carte>
+
+      {!!historique?.length && (
+        <Carte titre="Historique de validation" sansMarge>
+          <ul className="divide-y divide-bordure">
+            {historique.map((h) => {
+              const Icone = h.action === "refus" ? Undo2 : h.action === "soumission" ? Send : CircleCheck;
+              const auteur = (h.auteur as unknown as { nom_complet: string | null } | null)?.nom_complet ?? "Utilisateur";
+              const heure = new Date(h.cree_le).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Libreville" });
+              return (
+                <li key={h.id} className="flex items-start gap-3 px-4 py-3 sm:px-5">
+                  <Icone size={18} className={`mt-0.5 shrink-0 ${h.action === "refus" ? "text-red-600" : "text-marque"}`} aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm">
+                      <span className="font-medium">
+                        {h.action === "soumission" ? "Envoi en validation" : `${h.action === "refus" ? "Refus" : "Validation"} : ${h.libelle_etape}`}
+                      </span>{" "}
+                      <span className="text-doux">
+                        par {auteur}, le {formaterDate(h.cree_le)} à {heure}
+                      </span>
+                    </p>
+                    {h.commentaire && <p className="mt-1 rounded-lg bg-black/[.03] px-3 py-2 text-sm">{h.commentaire}</p>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Carte>
+      )}
     </Page>
   );
 }
