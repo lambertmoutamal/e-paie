@@ -86,6 +86,21 @@ export const schemaInscription = z.object({
   conditions: z.literal("on", { error: "Vous devez accepter les conditions d'utilisation." }),
 });
 
+// Demande de démonstration (formulaire public du site vitrine)
+export const schemaDemandeDemo = z.object({
+  nom: obligatoire("Votre nom"),
+  structure: obligatoire("Le nom du cabinet ou de l'entreprise"),
+  type: z.enum(["cabinet", "entreprise", "autre"], { error: "Indiquez votre type de structure." }),
+  email: emailObligatoire,
+  telephone: telephoneFacultatif,
+  effectif: facultatif,
+  message: z
+    .string()
+    .trim()
+    .max(2000, { error: "Message trop long (2 000 caractères maximum)." })
+    .transform((v) => (v === "" ? null : v)),
+});
+
 // Activation ou prolongation d'un abonnement par l'administrateur plateforme
 export const schemaActivationAbonnement = z.object({
   formule_id: z.uuid({ error: "Choisissez une formule." }),

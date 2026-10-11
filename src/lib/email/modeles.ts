@@ -120,6 +120,22 @@ export function emailCompteExistant(p: { lienConnexion: string; lienMotDePasse: 
   };
 }
 
+export function emailAccuseDemo(p: { nom: string }): Email {
+  const nom = echapper(p.nom);
+  return {
+    sujet: "Votre demande de démonstration e-Paie",
+    html: gabarit({
+      titre: `Merci ${nom}`,
+      paragraphes: [
+        "Nous avons bien reçu votre demande de démonstration d'e-Paie.",
+        "Un membre de notre équipe vous contacte très prochainement pour convenir d'un rendez-vous.",
+      ],
+      note: "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.",
+    }),
+    texte: `Merci ${p.nom},\n\nNous avons bien reçu votre demande de démonstration d'e-Paie. Un membre de notre équipe vous contacte très prochainement.`,
+  };
+}
+
 // Alerte interne envoyée à l'équipe e-Paie
 export function emailAlerte(p: { titre: string; lignes: [string, string][] }): Email {
   const tableau = p.lignes

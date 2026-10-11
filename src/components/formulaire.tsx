@@ -220,6 +220,30 @@ export function CaseACocher({ nom, children }: { nom: string; children: ReactNod
   );
 }
 
+export function ZoneTexte({ nom, libelle, aide, max = 2000 }: { nom: string; libelle: string; aide?: string; max?: number }) {
+  const etat = use(ContexteFormulaire);
+  const erreur = etat?.erreurs?.[nom];
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1.5 sm:col-span-2">
+      <label htmlFor={id} className="text-sm font-medium">
+        {libelle}
+      </label>
+      <textarea
+        id={id}
+        name={nom}
+        rows={4}
+        maxLength={max}
+        defaultValue={etat?.valeurs?.[nom] ?? ""}
+        aria-invalid={erreur ? true : undefined}
+        aria-describedby={erreur || aide ? `${id}-message` : undefined}
+        className="w-full rounded-lg border border-bordure bg-surface px-3 py-2 text-base outline-none transition focus:border-marque focus:ring-2 focus:ring-marque/20"
+      />
+      <MessageChamp id={id} erreur={erreur} aide={aide} />
+    </div>
+  );
+}
+
 export function TitreGroupe({ children }: { children: ReactNode }) {
   return <p className="pt-2 text-sm font-semibold text-doux sm:col-span-2">{children}</p>;
 }
