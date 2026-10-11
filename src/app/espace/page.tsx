@@ -3,6 +3,8 @@ import { Briefcase, Building2, Plus, ShieldCheck, Users } from "lucide-react";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { libelleRole } from "@/lib/auth/roles";
 import { champLie } from "@/lib/supabase/relations";
+import { MODULES } from "@/lib/modules";
+import { CarteModule } from "@/components/carte-module";
 import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page, Statistique } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
@@ -69,6 +71,24 @@ export default async function TableauDeBord() {
           <Statistique icone={Briefcase} libelle="Entreprises" valeur={nbEntreprises} href="/espace/entreprises" />
           <Statistique icone={Users} libelle="Utilisateurs" valeur={nbUtilisateurs} />
         </div>
+      )}
+
+      {acces.length > 0 && (
+        <section aria-labelledby="titre-modules" className="flex flex-col gap-3">
+          <div className="flex items-end justify-between gap-2">
+            <h2 id="titre-modules" className="text-lg font-semibold">
+              Modules
+            </h2>
+            <LienBouton href="/espace/modules" variante="discret" taille="petit">
+              Tous les modules
+            </LienBouton>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {MODULES.slice(0, 3).map((m) => (
+              <CarteModule key={m.id} module={m} href={`/espace/modules/${m.id}`} />
+            ))}
+          </div>
+        </section>
       )}
 
       <Carte titre="Mes accès" description="Les espaces sur lesquels vous pouvez intervenir." sansMarge>

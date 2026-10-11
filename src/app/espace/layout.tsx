@@ -6,7 +6,8 @@ import { messageBandeau } from "@/lib/abonnements/phases";
 import { Logo } from "@/components/logo";
 import { Squelette } from "@/components/ui";
 import { seDeconnecter } from "../connexion/actions";
-import { BarreOnglets, MenuLateral, type ElementMenu } from "./navigation";
+import { MODULES } from "@/lib/modules";
+import { BarreOnglets, MenuLateral, type ElementMenu, type GroupeMenu } from "./navigation";
 
 // Structure commune de l'espace privé. Le cadre s'affiche immédiatement ;
 // le menu et le nom de la personne arrivent dès que la session est vérifiée.
@@ -19,7 +20,7 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
             <Logo />
           </Link>
         </div>
-        <nav aria-label="Menu principal" className="flex-1 px-3 py-2">
+        <nav aria-label="Menu principal" className="flex-1 overflow-y-auto px-3 py-2">
           <Suspense fallback={null}>
             <Menu variante="lateral" />
           </Suspense>
@@ -60,21 +61,55 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
 
 async function Menu({ variante }: { variante: "lateral" | "onglets" }) {
   const { adminPlateforme, cabinets, affectations, abonnements } = await droitsUtilisateur();
-  const elements: ElementMenu[] = [
-    { href: "/espace", libelle: "Tableau de bord", icone: "tableau" },
-    ...(adminPlateforme ? [{ href: "/espace/cabinets", libelle: "Cabinets", icone: "cabinets" as const }] : []),
-    ...(adminPlateforme || cabinets.length > 0 || affectations.length > 0
-      ? [{ href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const }]
+  const voitEntreprises = adminPlateforme || cabinets.length > 0 || affectations.length > 0;
+
+  const groupes: GroupeMenu[] = [
+    { titre: "Vue d'ensemble", elements: [{ href: "/espace", libelle: "Tableau de bord", icone: "tableau" }] },
+    ...(voitEntreprises
+      ? [
+          {
+            titre: "Structures",
+            elements: [
+              ...(adminPlateforme ? [{ href: "/espace/cabinets", libelle: "Cabinets", icone: "cabinets" as const }] : []),
+              { href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const },
+            ],
+          },
+          {
+            titre: "Modules",
+            elements: MODULES.map((m) => ({
+              href: `/espace/modules/${m.id}`,
+              libelle: m.nom,
+              icone: m.id,
+              bientot: m.statut === "bientot",
+            })),
+          },
+        ]
       : []),
-    ...(adminPlateforme || abonnements.length > 0
-      ? [{ href: "/espace/abonnement", libelle: adminPlateforme ? "Abonnements" : "Abonnement", icone: "abonnement" as const }]
-      : []),
-    { href: "/espace/profil", libelle: "Mon profil", icone: "profil" },
+    {
+      titre: "Compte",
+      elements: [
+        ...(adminPlateforme || abonnements.length > 0
+          ? [{ href: "/espace/abonnement", libelle: adminPlateforme ? "Abonnements" : "Abonnement", icone: "abonnement" as const }]
+          : []),
+        { href: "/espace/profil", libelle: "Mon profil", icone: "profil" },
+      ],
+    },
   ];
+
   if (variante === "onglets") {
-    return <BarreOnglets elements={elements.map((e) => (e.href === "/espace" ? { ...e, libelle: "Accueil" } : e))} />;
+    const onglets: ElementMenu[] = [
+      { href: "/espace", libelle: "Accueil", icone: "tableau" },
+      ...(voitEntreprises
+        ? [
+            { href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const },
+            { href: "/espace/modules", libelle: "Modules", icone: "modules" as const },
+          ]
+        : []),
+      { href: "/espace/profil", libelle: "Profil", icone: "profil" },
+    ];
+    return <BarreOnglets elements={onglets} />;
   }
-  return <MenuLateral elements={elements} />;
+  return <MenuLateral groupes={groupes} />;
 }
 
 // Bandeau d'information sur l'abonnement (essai, lecture seule, blocage).
