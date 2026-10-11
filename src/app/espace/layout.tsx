@@ -7,6 +7,8 @@ import { Logo } from "@/components/logo";
 import { Squelette } from "@/components/ui";
 import { seDeconnecter } from "../connexion/actions";
 import { MODULES } from "@/lib/modules";
+import { mesActionsPaie } from "@/lib/bulletins/actions-a-faire";
+import { BandeauActionsPaie } from "@/components/actions-paie";
 import { BarreOnglets, MenuLateral, type ElementMenu, type GroupeMenu } from "./navigation";
 
 // Structure commune de l'espace privé. Le cadre s'affiche immédiatement ;
@@ -41,6 +43,9 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
 
         <Suspense fallback={null}>
           <BandeauAbonnement />
+        </Suspense>
+        <Suspense fallback={null}>
+          <BandeauActions />
         </Suspense>
 
         <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-10">
@@ -119,6 +124,12 @@ async function Menu({ variante }: { variante: "lateral" | "onglets" }) {
 
 // Bandeau d'information sur l'abonnement (essai, lecture seule, blocage).
 // Non affiché pour l'administrateur plateforme, qui voit tous les abonnements.
+// Rappel permanent des validations et publications qui attendent la personne.
+async function BandeauActions() {
+  const actions = await mesActionsPaie();
+  return actions.length ? <BandeauActionsPaie nombre={actions.length} /> : null;
+}
+
 async function BandeauAbonnement() {
   const { adminPlateforme, abonnements } = await droitsUtilisateur();
   if (adminPlateforme) return null;

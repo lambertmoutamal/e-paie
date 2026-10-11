@@ -4,6 +4,8 @@ import { nouveauLienActivation, reserverEnvoi, supprimerCompteCree, trouverOuCre
 import { adresseSite, envoyerEmail } from "@/lib/email/envoyer";
 import { emailAccesAjoute, emailInvitation } from "@/lib/email/modeles";
 import { libelleRole } from "@/lib/auth/roles";
+import { after } from "next/server";
+import { alerterNouveauRole } from "@/lib/notifications/alertes-paie";
 
 export type Resultat = { erreur: string } | { message: string };
 
@@ -63,6 +65,8 @@ export async function affecterPersonne(
     return { erreur: "La personne n'a pas pu être affectée." };
   }
   const perimetre = `${libelleRole(role)} · ${entreprise?.raison_sociale ?? ""}`;
+  // Des paies attendent peut-être déjà ce rôle (ex. aucun signataire jusqu'ici)
+  after(() => alerterNouveauRole(entrepriseId, compte.id));
   return { message: await prevenir(compte, email, nomComplet, perimetre) };
 }
 

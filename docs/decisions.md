@@ -65,3 +65,11 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   Changer le numéro sur la fiche détache l’ancien compte. Un salarié avec plusieurs employeurs voit tout.
 - Le salarié garde l’accès à ses bulletins après son départ ; tout est coupé si l’abonnement est bloqué.
 - Publication d’une période approuvée : administrateurs ou signataire.
+
+## 2026-10-11 — Alertes de paie
+
+- À chaque étape du circuit, les personnes qui doivent agir reçoivent un **email** et, si elles ont
+  saisi leur numéro dans leur profil, un **message WhatsApp** (Twilio).
+- Les actions en attente sont affichées en tête du tableau de bord et dans un bandeau sur toutes les pages.
+- Si personne ne peut valider une étape (rôle non attribué), les administrateurs sont prévenus ;
+  la personne qui reçoit ensuite ce rôle est prévenue à son tour.

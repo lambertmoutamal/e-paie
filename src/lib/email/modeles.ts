@@ -160,3 +160,20 @@ export function emailRecuperation(p: { lien: string }): Email {
     texte: `Vous avez demandé à réinitialiser votre mot de passe e-Paie.\nOuvrez ce lien (valable 24 heures) :\n${p.lien}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.`,
   };
 }
+
+// Alerte de paie : une action attend la personne (valider, publier, corriger).
+export function emailActionPaie(
+  c: { sujet: string; titre: string; paragraphes: string[]; bouton: string },
+  lien: string,
+): Email {
+  return {
+    sujet: c.sujet,
+    html: gabarit({
+      titre: echapper(c.titre),
+      paragraphes: c.paragraphes.map(echapper),
+      bouton: { libelle: c.bouton, lien },
+      note: "Vous recevez cet email car votre rôle sur e-Paie vous permet d'agir sur cette paie.",
+    }),
+    texte: `${c.titre},\n\n${c.paragraphes.join("\n\n")}\n\n${c.bouton} : ${lien}\n`,
+  };
+}

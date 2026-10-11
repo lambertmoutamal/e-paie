@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normaliserTelephoneSalarie } from "@/lib/salaries/regles";
 
 const FORMAT_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FORMAT_TELEPHONE = /^\+?[0-9 .-]{8,20}$/;
@@ -123,6 +124,16 @@ export const schemaFormule = z.object({
 
 export const schemaProfil = z.object({
   nom_complet: obligatoire("Le nom complet"),
+  // Numéro WhatsApp facultatif pour les alertes (« 077 12 34 56 » ou « +241… »)
+  whatsapp: z
+    .string()
+    .trim()
+    .transform((v, ctx) => {
+      if (v === "") return null;
+      const numero = normaliserTelephoneSalarie(v, "+241");
+      if (!numero) ctx.addIssue({ code: "custom", message: "Numéro invalide (exemple : +241 77 12 34 56)." });
+      return numero;
+    }),
 });
 
 export const schemaMotDePasse = z

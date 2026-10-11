@@ -6,6 +6,8 @@ import { champLie } from "@/lib/supabase/relations";
 import { MODULES } from "@/lib/modules";
 import { CarteModule } from "@/components/carte-module";
 import { CarteEcheances, type Echeance } from "@/components/echeances";
+import { CarteActionsPaie } from "@/components/actions-paie";
+import { mesActionsPaie } from "@/lib/bulletins/actions-a-faire";
 import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page, Statistique } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
@@ -26,6 +28,7 @@ export default async function TableauDeBord() {
   // Fins de contrat et de période d'essai à venir (la base limite aux entreprises accessibles)
   const { data: echeancesBrutes } = await supabase.rpc("echeances_contrats", { p_jours: 30 });
   const echeances = (echeancesBrutes ?? []) as Echeance[];
+  const actionsPaie = await mesActionsPaie();
 
   const prenom = (profil?.nom_complet || "").split(" ")[0];
   const acces = [
@@ -68,6 +71,8 @@ export default async function TableauDeBord() {
           )
         }
       />
+
+      {actionsPaie.length > 0 && <CarteActionsPaie actions={actionsPaie} />}
 
       {administrateur && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

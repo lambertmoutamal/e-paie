@@ -2,8 +2,10 @@
 
 import { createHash, randomUUID } from "node:crypto";
 import { refresh } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { alerterPaie } from "@/lib/notifications/alertes-paie";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import { estPdf, libellePeriode, lireCircuit, schemaPeriode, TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
 
@@ -144,6 +146,7 @@ export async function soumettrePeriode(periodeId: string): Promise<EtatFormulair
   const { supabase } = await exigerUtilisateur();
   const { error } = await supabase.rpc("soumettre_periode", { p_periode_id: periodeId });
   if (error) return { erreur: messageCircuit(error, "L'envoi en validation a échoué.") };
+  after(() => alerterPaie(periodeId)); // prévient les validateurs de la 1re étape
   refresh();
   return { succes: "Période envoyée en validation." };
 }
@@ -159,6 +162,7 @@ export async function deciderEtape(periodeId: string, _e: EtatFormulaire, formul
     if (commentaire.length < 5) return { erreurs: { commentaire: "Expliquez le motif du refus (5 caractères au moins)." }, valeurs };
     const { data, error } = await supabase.rpc("refuser_etape", { p_periode_id: periodeId, p_commentaire: commentaire });
     if (error) return { erreur: messageCircuit(error, "Le refus n'a pas pu être enregistré."), valeurs };
+    after(() => alerterPaie(periodeId)); // prévient l'étape précédente ou le gestionnaire
     refresh();
     return { succes: data === "brouillon" ? "Période refusée : elle revient en brouillon pour correction." : "Refus enregistré : la période revient à l'étape précédente." };
   }
@@ -166,6 +170,7 @@ export async function deciderEtape(periodeId: string, _e: EtatFormulaire, formul
 
   const { data, error } = await supabase.rpc("valider_etape", { p_periode_id: periodeId, p_commentaire: commentaire || null });
   if (error) return { erreur: messageCircuit(error, "La validation n'a pas pu être enregistrée."), valeurs };
+  after(() => alerterPaie(periodeId)); // prévient l'étape suivante, ou les publieurs si approuvée
   refresh();
   return { succes: data === "approuvee" ? "Période approuvée : elle est désormais verrouillée." : "Étape validée : la période passe à l'étape suivante." };
 }

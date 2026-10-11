@@ -145,6 +145,25 @@ Sécurité : un code n'est envoyé (et facturé) que pour un numéro enregistré
 l'abonnement est actif, au plus un code par minute et par numéro. Le message affiché est le même
 que le numéro soit connu ou non. Le salarié ne voit que **ses** bulletins **publiés**.
 
+## Alertes de paie (email et WhatsApp)
+
+À chaque étape du circuit, les personnes qui doivent agir sont prévenues : validateurs de
+l'étape en cours, publieurs une fois la période approuvée, gestionnaire après un refus.
+Elles voient aussi un bandeau et une carte « À faire » dès qu'elles se connectent.
+
+- **Email** : automatique (Resend, déjà configuré).
+- **WhatsApp** : chaque personne saisit son numéro dans **Mon profil**. Côté plateforme :
+  1. Dans Twilio : **Messaging → Try it out → Send a WhatsApp message** (bac à sable gratuit).
+     Chaque testeur envoie le mot indiqué (ex. `join xxx-yyy`) au +1 415 523 8886 depuis son WhatsApp.
+  2. Dans `.env.local` : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
+     `TWILIO_WHATSAPP_FROM=whatsapp:+14155238886`, puis redémarrez l'application.
+  3. En production : faites approuver un numéro WhatsApp Business et un modèle de message
+     (Twilio → **Content Template Builder**, catégorie « Utility ») avec ce texte :
+     `Bonjour {{1}}, une action vous attend sur e-Paie : {{2}}. Ouvrir : {{3}}`
+     puis mettez son identifiant (`HX…`) dans `TWILIO_WHATSAPP_MODELE`.
+
+Sans configuration Twilio, en développement, les messages WhatsApp s'affichent dans la console.
+
 ## Commandes utiles
 
 | Commande | Rôle |

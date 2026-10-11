@@ -25,6 +25,13 @@ export default async function PageProfil() {
               desactive
               aide="L'email ne peut être changé que par un administrateur."
             />
+            <Champ
+              nom="whatsapp"
+              libelle="Numéro WhatsApp (alertes)"
+              type="tel"
+              valeurInitiale={profil?.whatsapp}
+              aide="Facultatif. Pour recevoir aussi sur WhatsApp les validations à faire. Exemple : +241 77 12 34 56"
+            />
           </Formulaire>
         </Carte>
         <Carte titre="Sécurité" description="Choisissez un mot de passe que vous n'utilisez nulle part ailleurs.">

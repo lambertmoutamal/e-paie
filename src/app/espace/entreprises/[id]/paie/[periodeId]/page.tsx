@@ -32,6 +32,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
     { data: circuitActuel },
     { data: motifBlocage },
     { data: peutPublier },
+    { data: nbValidateurs },
   ] = await Promise.all([
     supabase.from("entreprises").select("raison_sociale").eq("id", id).maybeSingle(),
     supabase
@@ -61,6 +62,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
     supabase.rpc("circuit_entreprise", { p_entreprise_id: id }),
     supabase.rpc("motif_blocage_validation", { p_periode_id: periodeId }),
     supabase.rpc("peut_publier", { p_entreprise_id: id }),
+    supabase.rpc("nb_validateurs_possibles", { p_periode_id: periodeId }),
   ]);
   if (!entreprise || !periode) notFound();
 
@@ -165,7 +167,20 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
           {peutDecider && etapeEnCours && (
             <DecisionEtape action={deciderEtape.bind(null, periodeId)} libelleEtape={etapeEnCours.libelle} derniere={etapeCourante === circuit.length} />
           )}
-          {periode.statut === "en_validation" && !peutDecider && motifBlocage && <p className="text-sm text-doux">{motifBlocage}</p>}
+          {periode.statut === "en_validation" && nbValidateurs === 0 && etapeEnCours && (
+            <p role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+              <CircleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
+              <span>
+                Période bloquée : personne ne peut valider l&apos;étape « {etapeEnCours.libelle} ». Attribuez le rôle «{" "}
+                {libelleRole(etapeEnCours.role)} » à une personne qui n&apos;a ni préparé ni déjà validé cette paie, dans les{" "}
+                <Link href={`/espace/entreprises/${id}`} className="font-semibold underline">
+                  utilisateurs de l&apos;entreprise
+                </Link>
+                .
+              </span>
+            </p>
+          )}
+          {periode.statut === "en_validation" && !peutDecider && motifBlocage && nbValidateurs !== 0 && <p className="text-sm text-doux">{motifBlocage}</p>}
 
           {periode.statut === "approuvee" && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-marque-claire/60 px-3 py-2">

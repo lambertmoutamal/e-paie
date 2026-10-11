@@ -13,10 +13,10 @@ export async function modifierProfil(_etat: EtatFormulaire, formulaire: FormData
   const lu = lireFormulaire(schemaProfil, formulaire);
   if (!lu.ok) return { erreurs: lu.erreurs, valeurs: lu.valeurs };
 
-  // Seule la colonne nom_complet est modifiable par l'utilisateur (droit défini en base).
+  // Seuls le nom et le numéro WhatsApp sont modifiables par l'utilisateur (droits définis en base).
   const { error } = await supabase
     .from("profils")
-    .update({ nom_complet: lu.donnees.nom_complet })
+    .update({ nom_complet: lu.donnees.nom_complet, whatsapp: lu.donnees.whatsapp })
     .eq("id", utilisateur.id);
   if (error) return { erreur: "Le profil n'a pas pu être enregistré.", valeurs: lu.valeurs };
 
