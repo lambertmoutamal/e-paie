@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { clientSupabaseServeur } from "@/lib/supabase/serveur";
 import { formaterJours } from "@/lib/absences/regles";
-import { CaseACocher, Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
+import { Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
 import { Carte, Page } from "@/components/ui";
 import { demanderAbsence } from "../actions";
 
@@ -67,8 +67,6 @@ export default async function PageNouvelleDemande({ searchParams }: PageProps<"/
           />
           <Champ nom="debut" libelle="Du" type="date" requis valeurInitiale={demain.toISOString().slice(0, 10)} />
           <Champ nom="fin" libelle="Au" type="date" requis valeurInitiale={demain.toISOString().slice(0, 10)} />
-          <CaseACocher nom="debut_apres_midi">Je commence l&apos;après-midi du premier jour</CaseACocher>
-          <CaseACocher nom="fin_midi">Je reviens l&apos;après-midi du dernier jour</CaseACocher>
           <ZoneTexte nom="motif" libelle="Message pour le RH (facultatif)" max={500} />
           <ChampFichier libelle="Justificatif" aide="Obligatoire pour certaines permissions (acte de mariage, certificat…). PDF ou photo, 5 Mo maximum." />
         </Formulaire>
