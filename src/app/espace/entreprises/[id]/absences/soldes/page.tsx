@@ -9,7 +9,17 @@ import { chargerContexte, EnTeteAbsences } from "../commun";
 
 export const metadata: Metadata = { title: "Soldes de congés" };
 
-type Solde = { salarie_id: string; date_reference: string; solde_initial: number; acquis: number; pris: number; en_attente: number; disponible: number };
+type Solde = {
+  salarie_id: string;
+  date_reference: string;
+  solde_initial: number;
+  acquis: number;
+  anciennete: number;
+  pris: number;
+  perdu: number;
+  en_attente: number;
+  disponible: number;
+};
 
 export default async function PageSoldes({ params }: PageProps<"/espace/entreprises/[id]/absences/soldes">) {
   const { id } = await params;
@@ -29,8 +39,9 @@ export default async function PageSoldes({ params }: PageProps<"/espace/entrepri
       <p className="flex items-start gap-2 rounded-lg border border-bordure bg-surface px-3 py-2 text-sm text-doux">
         <Info size={16} className="mt-0.5 shrink-0 text-marque" aria-hidden />
         <span>
-          Solde = solde de départ + {formaterJours(parametres?.jours_par_mois ?? 2)} acquis par mois complet − congés pris depuis la date de départ. Sans
-          solde saisi, le calcul part de la date d&apos;embauche, avec 0 jour.
+          Solde = solde de départ + {formaterJours(parametres?.jours_par_mois ?? 2)} acquis par mois complet + jours d&apos;ancienneté − congés pris − jours
+          perdus (au-delà du report autorisé). Sans solde saisi, le calcul part de la date d&apos;embauche, avec 0 jour. Ces règles se modifient dans
+          l&apos;onglet Réglages.
         </span>
       </p>
 
@@ -42,7 +53,9 @@ export default async function PageSoldes({ params }: PageProps<"/espace/entrepri
                 <th scope="col" className="px-4 py-2 font-semibold">Salarié</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Départ</th>
                 <th scope="col" className="px-3 py-2 text-right font-semibold">Acquis</th>
+                <th scope="col" className="px-3 py-2 text-right font-semibold">Ancienneté</th>
                 <th scope="col" className="px-3 py-2 text-right font-semibold">Pris</th>
+                <th scope="col" className="px-3 py-2 text-right font-semibold">Perdus</th>
                 <th scope="col" className="px-3 py-2 text-right font-semibold">En attente</th>
                 <th scope="col" className="px-4 py-2 text-right font-semibold">Disponible</th>
               </tr>
@@ -80,7 +93,9 @@ export default async function PageSoldes({ params }: PageProps<"/espace/entrepri
                       )}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">{solde ? `+${formaterJours(solde.acquis)}` : "—"}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{solde && Number(solde.anciennete) > 0 ? `+${formaterJours(solde.anciennete)}` : "—"}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{solde ? `−${formaterJours(solde.pris)}` : "—"}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-doux">{solde && Number(solde.perdu) > 0 ? `−${formaterJours(solde.perdu)}` : "—"}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-amber-700">{solde && Number(solde.en_attente) > 0 ? formaterJours(solde.en_attente) : "—"}</td>
                     <td className={`px-4 py-2 text-right font-semibold tabular-nums ${solde && Number(solde.disponible) < 0 ? "text-red-700" : ""}`}>
                       {solde ? formaterJours(solde.disponible) : "—"}

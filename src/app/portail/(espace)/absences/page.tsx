@@ -10,7 +10,7 @@ import { annulerMaDemande } from "./actions";
 export const metadata: Metadata = { title: "Mes absences" };
 
 type Emploi = { salarie_id: string; raison_sociale: string; statut: string };
-type Solde = { acquis: number; pris: number; en_attente: number; disponible: number };
+type Solde = { acquis: number; anciennete: number; pris: number; perdu: number; en_attente: number; disponible: number };
 type Demande = {
   id: string;
   raison_sociale: string;
@@ -77,7 +77,8 @@ export default async function PageMesAbsences({ searchParams }: PageProps<"/port
               </div>
             </div>
             <p className="mt-3 text-xs text-doux">
-              Acquis : {formaterJours(solde.acquis)} · Pris : {formaterJours(solde.pris)}
+              Acquis : {formaterJours(Number(solde.acquis) + Number(solde.anciennete))} · Pris : {formaterJours(solde.pris)}
+              {Number(solde.perdu) > 0 ? ` · Non reportés : ${formaterJours(solde.perdu)}` : ""}
               {Number(solde.en_attente) > 0 ? ` · En attente de réponse : ${formaterJours(solde.en_attente)}` : ""}
             </p>
           </section>

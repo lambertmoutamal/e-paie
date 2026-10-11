@@ -12,7 +12,7 @@ import { AnnulationAbsence, DecisionDemande } from "./formulaires";
 export const metadata: Metadata = { title: "Congés et absences" };
 
 const CHAMPS =
-  "id, salarie_id, debut, fin, debut_apres_midi, fin_midi, nb_jours, statut, motif, justificatif_chemin, saisie_rh, commentaire_decision, cree_le, decide_le, salaries(nom, prenoms, matricule), types_absence(libelle, nature, deduit_solde)";
+  "id, salarie_id, prevalidee_le, debut, fin, debut_apres_midi, fin_midi, nb_jours, statut, motif, justificatif_chemin, saisie_rh, commentaire_decision, cree_le, decide_le, salaries(nom, prenoms, matricule), types_absence(libelle, nature, deduit_solde)";
 
 export default async function PageDemandes({ params }: PageProps<"/espace/entreprises/[id]/absences">) {
   const { id } = await params;
@@ -65,6 +65,11 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
                       </a>
                     )}
                     <p className="mt-1 text-xs text-doux">Demandée le {formaterDate(d.cree_le)}</p>
+                    {d.prevalidee_le && (
+                      <p className="mt-1">
+                        <Badge teinte="bleu">Premier accord du RH le {formaterDate(d.prevalidee_le)}</Badge>
+                      </p>
+                    )}
                   </div>
                   {peutGerer && <DecisionDemande action={deciderDemande.bind(null, d.id)} />}
                 </li>

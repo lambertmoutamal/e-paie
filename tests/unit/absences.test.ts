@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formaterJours, libelleDates, schemaDemande, schemaPrevision, schemaParametresConges, schemaSoldeInitial, schemaTypeAbsence } from "@/lib/absences/regles";
+import { formaterJours, libelleDates, schemaDemande, schemaModeValidation, schemaModifTypeAbsence, schemaPrevision, schemaParametresConges, schemaReglesDemandes, schemaSoldeInitial, schemaTypeAbsence } from "@/lib/absences/regles";
 import { contenuDecision, contenuNouvelleDemande } from "@/lib/notifications/messages-absences";
 
 const TYPE = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b";
@@ -21,7 +21,13 @@ describe("demande d'absence", () => {
 describe("réglages et soldes", () => {
   test("accepte la virgule décimale et contrôle les bornes", () => {
     expect(schemaSoldeInitial.parse({ date_reference: "2026-10-01", jours: "12,5" }).jours).toBe(12.5);
-    expect(schemaParametresConges.parse({ jours_par_mois: "2,5", decompte: "ouvres" })).toEqual({ jours_par_mois: 2.5, decompte: "ouvres" });
+    expect(schemaParametresConges.parse({ jours_par_mois: "2,5", decompte: "ouvres" })).toEqual({
+      jours_par_mois: 2.5,
+      decompte: "ouvres",
+      anciennete_tranche_ans: null,
+      anciennete_jours_par_tranche: 0,
+      anciennete_plafond: null,
+    });
     expect(schemaParametresConges.safeParse({ jours_par_mois: "9", decompte: "ouvres" }).success).toBe(false);
     expect(schemaTypeAbsence.parse({ libelle: "Formation", nature: "autre", jours_max: "", demandable: "on" })).toMatchObject({
       jours_max: null,
@@ -63,6 +69,32 @@ describe("congé prévisionnel", () => {
     expect(schemaPrevision.parse(base)).toEqual({ ...base, motif: null });
     expect(schemaPrevision.safeParse({ ...base, fin: "2026-12-01" }).success).toBe(false);
     expect(schemaPrevision.safeParse({ ...base, salarie_id: "" }).success).toBe(false);
+  });
+});
+
+describe("réglages personnalisés des congés", () => {
+  test("ancienneté, règles des demandes et mode de validation", () => {
+    expect(schemaParametresConges.parse({ jours_par_mois: "2", decompte: "ouvrables", anciennete_tranche_ans: "5", anciennete_jours_par_tranche: "1", anciennete_plafond: "" })).toMatchObject({
+      anciennete_tranche_ans: 5,
+      anciennete_jours_par_tranche: 1,
+      anciennete_plafond: null,
+    });
+    expect(schemaParametresConges.safeParse({ jours_par_mois: "2", decompte: "ouvrables", anciennete_tranche_ans: "2,5" }).success).toBe(false);
+    expect(schemaReglesDemandes.parse({ delai_prevenance_jours: "15", report_max_jours: "10", mois_debut_reference: "6" })).toEqual({
+      delai_prevenance_jours: 15,
+      solde_negatif_autorise: false,
+      report_max_jours: 10,
+      mois_debut_reference: 6,
+    });
+    expect(schemaModeValidation.safeParse({ validation_absences: "rh_puis_administrateur" }).success).toBe(true);
+    expect(schemaModeValidation.safeParse({ validation_absences: "personne" }).success).toBe(false);
+    expect(schemaModifTypeAbsence.parse({ libelle: "Mariage", jours_max: "4", demandable: "on" })).toEqual({
+      libelle: "Mariage",
+      jours_max: 4,
+      deduit_solde: false,
+      justificatif_requis: false,
+      demandable: true,
+    });
   });
 });
 

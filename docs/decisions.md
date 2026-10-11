@@ -106,3 +106,15 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - Le document est **figé** (non modifiable) dès que le contrat signé est joint, que le contrat passe
   « En cours » ou sur demande ; toute modification passe ensuite par un avenant.
 
+## 2026-10-12 — Réglages personnalisables des congés
+
+- **Types d'absence** modifiables (nom, jours maximum, justificatif, déduit du solde, demandable).
+- **Jours d'ancienneté** : X jours par an par tranche de N années de présence (plafond facultatif),
+  acquis chaque mois (1/12 par mois).
+- **Règles des demandes** : délai de prévenance (congés décomptés seulement, pas les permissions),
+  solde négatif autorisé ou non (vérifié à la demande, à la décision, à la saisie RH et à la confirmation
+  d'une prévision), report maximum à l'ouverture de chaque année de congés (mois réglable), l'excédent
+  étant perdu.
+- **Qui valide** : le RH (par défaut), les administrateurs, ou le RH puis un administrateur (deux
+  personnes différentes). Seul un administrateur peut changer ce réglage.
+

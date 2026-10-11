@@ -5,11 +5,14 @@ import { after } from "next/server";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import { deposerFichier, supprimerFichier } from "@/lib/stockage/fichiers";
-import { informerSalarie } from "@/lib/notifications/alertes-absences";
+import { alerterNouvelleDemande, informerSalarie } from "@/lib/notifications/alertes-absences";
 import {
   schemaJourFerie,
+  schemaModeValidation,
+  schemaModifTypeAbsence,
   schemaPrevision,
   schemaParametresConges,
+  schemaReglesDemandes,
   schemaSaisieRh,
   schemaSoldeInitial,
   schemaTypeAbsence,
@@ -30,10 +33,15 @@ export async function deciderDemande(demandeId: string, _e: EtatFormulaire, form
   if (!accepter && commentaire.length < 5) {
     return { erreurs: { commentaire: "Expliquez le motif du refus (5 caractères au moins)." }, valeurs: { commentaire } };
   }
-  const { error } = await supabase.rpc("decider_demande", { p_demande_id: demandeId, p_accepter: accepter, p_commentaire: commentaire || null });
+  const { data, error } = await supabase.rpc("decider_demande", { p_demande_id: demandeId, p_accepter: accepter, p_commentaire: commentaire || null });
   if (error) return { erreur: message(error, "La réponse n'a pas pu être enregistrée."), valeurs: { commentaire } };
-  after(() => informerSalarie(demandeId));
   refresh();
+  // Premier accord du RH (deux validations) : c'est maintenant à un administrateur de décider
+  if (data === "prevalidee") {
+    after(() => alerterNouvelleDemande(demandeId));
+    return { succes: "Premier accord donné. Un administrateur va maintenant valider la demande." };
+  }
+  after(() => informerSalarie(demandeId));
   return { succes: accepter ? "Demande acceptée. Le salarié est prévenu." : "Demande refusée. Le salarié est prévenu." };
 }
 
@@ -93,18 +101,47 @@ export async function definirSoldeInitial(salarieId: string, _e: EtatFormulaire,
   return { succes: "Solde de départ enregistré." };
 }
 
-export async function modifierParametres(entrepriseId: string, _e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+// Enregistre une partie des réglages (chaque carte de la page a son formulaire)
+async function enregistrerReglages(entrepriseId: string, champs: Record<string, unknown>, valeurs: Record<string, string>, succes: string): Promise<EtatFormulaire> {
   const { supabase } = await exigerUtilisateur();
-  const lu = lireFormulaire(schemaParametresConges, formulaire);
-  if (!lu.ok) return { erreurs: lu.erreurs, valeurs: lu.valeurs };
   const { data, error } = await supabase
     .from("parametres_conges")
-    .update({ ...lu.donnees, modifie_le: new Date().toISOString() })
+    .update({ ...champs, modifie_le: new Date().toISOString() })
     .eq("entreprise_id", entrepriseId)
     .select("entreprise_id");
-  if (error || !data?.length) return { erreur: "Vous ne pouvez pas modifier ces réglages.", valeurs: lu.valeurs };
+  if (error?.code === "42501") return { erreur: "Seul un administrateur peut modifier ce réglage.", valeurs };
+  if (error || !data?.length) return { erreur: "Vous ne pouvez pas modifier ces réglages.", valeurs };
   refresh();
-  return { succes: "Réglages enregistrés. Les soldes sont recalculés." };
+  return { succes };
+}
+
+export async function modifierParametres(entrepriseId: string, _e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+  const lu = lireFormulaire(schemaParametresConges, formulaire);
+  if (!lu.ok) return { erreurs: lu.erreurs, valeurs: lu.valeurs };
+  return enregistrerReglages(entrepriseId, lu.donnees, lu.valeurs, "Réglages enregistrés. Les soldes sont recalculés.");
+}
+
+export async function modifierRegles(entrepriseId: string, _e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+  const lu = lireFormulaire(schemaReglesDemandes, formulaire);
+  if (!lu.ok) return { erreurs: lu.erreurs, valeurs: lu.valeurs };
+  return enregistrerReglages(entrepriseId, lu.donnees, lu.valeurs, "Règles des demandes enregistrées.");
+}
+
+export async function modifierModeValidation(entrepriseId: string, _e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+  const lu = lireFormulaire(schemaModeValidation, formulaire);
+  if (!lu.ok) return { erreurs: lu.erreurs, valeurs: lu.valeurs };
+  return enregistrerReglages(entrepriseId, lu.donnees, lu.valeurs, "Circuit de validation des demandes enregistré.");
+}
+
+export async function modifierTypeAbsence(typeId: string, _e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const lu = lireFormulaire(schemaModifTypeAbsence, formulaire);
+  if (!lu.ok) return { erreurs: lu.erreurs, valeurs: lu.valeurs };
+  const { data, error } = await supabase.from("types_absence").update(lu.donnees).eq("id", typeId).select("id");
+  if (error?.code === "23505") return { erreur: "Un autre type porte déjà ce nom.", valeurs: lu.valeurs };
+  if (error || !data?.length) return { erreur: "Le type n'a pas pu être modifié.", valeurs: lu.valeurs };
+  refresh();
+  return { succes: "Type d'absence modifié." };
 }
 
 export async function ajouterTypeAbsence(entrepriseId: string, _e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
