@@ -173,6 +173,14 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
   RH, administrateurs). Le RH les confirme ensuite d'un clic.
 - Côté salarié : onglet **Absences** de son espace (`/portail/absences`).
 
+## Contrats : importer ou rédiger
+
+- Fiche du salarié → onglet **Contrats** → « Nouveau contrat » : choisissez « Aucun » comme modèle pour
+  **importer** le contrat signé, ou un modèle pour le **rédiger** dans e-Paie (l'éditeur s'ouvre).
+- **Modèles de contrat** : lien « Gérer les modèles » (adresse `/espace/entreprises/<id>/modeles-contrat`).
+  Personnalisez un modèle standard ou importez votre modèle Word, et utilisez « + Insérer un champ ».
+- Le PDF est généré par le serveur (police Roboto incluse, aucun accès Internet).
+
 ## Commandes utiles
 
 | Commande | Rôle |

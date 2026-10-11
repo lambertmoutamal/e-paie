@@ -1,6 +1,8 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
+import { preparerContenu } from "@/lib/contrats/redaction";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { deposerFichier, supprimerFichier } from "@/lib/stockage/fichiers";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
@@ -36,24 +38,43 @@ export async function creerContrat(entrepriseId: string, salarieId: string, _e: 
   const depot = await fichierFacultatif(supabase, entrepriseId, salarieId, formulaire);
   if (depot && "erreur" in depot) return { erreurs: { fichier: depot.erreur }, valeurs: lu.valeurs };
 
-  const { error } = await supabase.from("contrats").insert({
-    ...lu.donnees,
-    entreprise_id: entrepriseId,
-    salarie_id: salarieId,
-    fichier_chemin: depot?.chemin ?? null,
-    fichier_nom: depot?.nom ?? null,
-  });
+  const { data: cree, error } = await supabase
+    .from("contrats")
+    .insert({
+      ...lu.donnees,
+      entreprise_id: entrepriseId,
+      salarie_id: salarieId,
+      fichier_chemin: depot?.chemin ?? null,
+      fichier_nom: depot?.nom ?? null,
+    })
+    .select("id")
+    .single();
   if (error) {
     if (depot) await supprimerFichier(supabase, depot.chemin);
     return { erreur: erreurBase(error.code), valeurs: lu.valeurs };
+  }
+  // Rédaction dans e-Paie : le texte est préparé à partir du modèle choisi, puis l'éditeur s'ouvre
+  if (await initialiserDepuisModele(supabase, cree.id, formulaire)) {
+    redirect(`/espace/entreprises/${entrepriseId}/salaries/${salarieId}/contrats/${cree.id}/document`);
   }
   refresh();
   return { succes: "Contrat enregistré." };
 }
 
+async function initialiserDepuisModele(supabase: Awaited<ReturnType<typeof exigerUtilisateur>>["supabase"], contratId: string, formulaire: FormData) {
+  const modeleId = String(formulaire.get("modele_id") ?? "");
+  if (!/^[0-9a-f-]{36}$/.test(modeleId)) return false;
+  const contenu = await preparerContenu(supabase, contratId, modeleId);
+  if (contenu === null) return false;
+  const { error } = await supabase.from("contrats").update({ contenu, modele_id: modeleId }).eq("id", contratId);
+  return !error;
+}
+
 export async function activerContrat(entrepriseId: string, contratId: string) {
   const { supabase } = await exigerUtilisateur();
   await supabase.from("contrats").update({ statut: "en_cours" }).eq("id", contratId).eq("entreprise_id", entrepriseId).eq("statut", "brouillon");
+  // Contrat signé : son document rédigé n'est plus modifiable (les changements passent par avenant)
+  await supabase.from("contrats").update({ document_fige: true }).eq("id", contratId).not("contenu", "is", null);
   refresh();
 }
 
@@ -79,17 +100,21 @@ export async function ajouterAvenant(
   const depot = await fichierFacultatif(supabase, entrepriseId, salarieId, formulaire);
   if (depot && "erreur" in depot) return { erreurs: { fichier: depot.erreur }, valeurs: lu.valeurs };
 
-  const { error } = await supabase.from("contrats").insert({
-    ...lu.donnees,
-    entreprise_id: entrepriseId,
-    salarie_id: salarieId,
-    contrat_parent_id: parent.id,
-    nature: "avenant",
-    type_contrat: parent.type_contrat,
-    statut: "en_cours",
-    fichier_chemin: depot?.chemin ?? null,
-    fichier_nom: depot?.nom ?? null,
-  });
+  const { data: avenant, error } = await supabase
+    .from("contrats")
+    .insert({
+      ...lu.donnees,
+      entreprise_id: entrepriseId,
+      salarie_id: salarieId,
+      contrat_parent_id: parent.id,
+      nature: "avenant",
+      type_contrat: parent.type_contrat,
+      statut: "en_cours",
+      fichier_chemin: depot?.chemin ?? null,
+      fichier_nom: depot?.nom ?? null,
+    })
+    .select("id")
+    .single();
   if (error) {
     if (depot) await supprimerFichier(supabase, depot.chemin);
     return { erreur: erreurBase(error.code), valeurs: lu.valeurs };
@@ -107,6 +132,10 @@ export async function ajouterAvenant(
   );
   await supabase.from("contrats").update(changements).eq("id", parent.id);
 
+  // Rédaction de l'avenant dans e-Paie (après la mise à jour du contrat : le texte reprend les nouvelles conditions)
+  if (await initialiserDepuisModele(supabase, avenant.id, formulaire)) {
+    redirect(`/espace/entreprises/${entrepriseId}/salaries/${salarieId}/contrats/${avenant.id}/document`);
+  }
   refresh();
   return { succes: "Avenant enregistré et conditions du contrat mises à jour." };
 }
@@ -194,7 +223,7 @@ export async function joindreContratSigne(
   const { supabase } = await exigerUtilisateur();
   const { data: contrat } = await supabase
     .from("contrats")
-    .select("fichier_chemin")
+    .select("fichier_chemin, contenu")
     .eq("id", contratId)
     .eq("entreprise_id", entrepriseId)
     .maybeSingle();
@@ -205,7 +234,7 @@ export async function joindreContratSigne(
 
   const { data, error } = await supabase
     .from("contrats")
-    .update({ fichier_chemin: depot.chemin, fichier_nom: depot.nom })
+    .update({ fichier_chemin: depot.chemin, fichier_nom: depot.nom, ...(contrat.contenu !== null && { document_fige: true }) })
     .eq("id", contratId)
     .select("id");
   if (error || !data?.length) {

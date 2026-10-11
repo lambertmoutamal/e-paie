@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "6mb" },
   },
   partialPrefetching: true,
+  // Générateur de PDF des contrats : chargé tel quel par Node (il lit ses fichiers de police)
+  serverExternalPackages: ["pdfmake"],
+  outputFileTracingIncludes: { "/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"] },
   turbopack: {
     rules: {
       "*.css": {

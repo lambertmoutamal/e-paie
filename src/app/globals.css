@@ -37,3 +37,17 @@ body {
   outline: 2px solid var(--marque);
   outline-offset: 2px;
 }
+
+/* Texte des contrats dans l'éditeur (proche du rendu PDF) */
+.document-contrat {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #1f2933;
+}
+.document-contrat h1 { font-size: 1.35rem; font-weight: 700; margin: 0 0 1rem; }
+.document-contrat h2 { font-size: 1.05rem; font-weight: 700; margin: 1rem 0 0.35rem; }
+.document-contrat h3 { font-size: 1rem; font-weight: 700; margin: 0.8rem 0 0.3rem; }
+.document-contrat p { margin: 0 0 0.6rem; }
+.document-contrat ul { list-style: disc; padding-left: 1.5rem; margin: 0 0 0.6rem; }
+.document-contrat ol { list-style: decimal; padding-left: 1.5rem; margin: 0 0 0.6rem; }
+.document-contrat li p { margin: 0; }
