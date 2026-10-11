@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { bornesMois, libellePeriode, salariesAttendus } from "@/lib/bulletins/regles";
-import { NATURES_ABSENCE, type NatureAbsence } from "@/lib/absences/regles";
-import { Carte, classesBouton, Page } from "@/components/ui";
+import { formaterJours, libelleDates, NATURES_ABSENCE, type NatureAbsence } from "@/lib/absences/regles";
+import { champLie } from "@/lib/supabase/relations";
+import { ActionEnLigne, Champ, ChoixListe, Formulaire } from "@/components/formulaire";
+import { Carte, classesBouton, EtatVide, Page } from "@/components/ui";
+import { confirmerPrevision, prevoirConge, supprimerPrevision } from "../actions";
 import { chargerContexte, EnTeteAbsences } from "../commun";
 
 export const metadata: Metadata = { title: "Planning des absences" };
@@ -31,19 +34,29 @@ export default async function PagePlanning({ params, searchParams }: PageProps<"
   const { debut, fin } = bornesMois(annee, mois);
   const nbJours = Number(fin.slice(8, 10));
 
-  const { supabase, entreprise } = await chargerContexte(id);
-  const [{ data: salaries }, { data: demandes }, { data: feries }, { data: parametres }] = await Promise.all([
+  const { supabase, entreprise, peutGerer, peutPrevoir } = await chargerContexte(id);
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const [{ data: salaries }, { data: demandes }, { data: feries }, { data: parametres }, { data: previsions }, { data: types }] = await Promise.all([
     supabase.from("salaries").select("id, matricule, nom, prenoms, statut, date_embauche, date_sortie").eq("entreprise_id", id).order("nom"),
     supabase
       .from("demandes_absence")
       .select("salarie_id, debut, fin, debut_apres_midi, fin_midi, statut, types_absence(libelle, nature)")
       .eq("entreprise_id", id)
-      .in("statut", ["acceptee", "en_attente"])
+      .in("statut", ["acceptee", "en_attente", "prevue"])
       .lte("debut", fin)
       .gte("fin", debut),
     supabase.from("jours_feries").select("jour, libelle").eq("entreprise_id", id).gte("jour", debut).lte("jour", fin),
     supabase.from("parametres_conges").select("decompte").eq("entreprise_id", id).maybeSingle(),
+    supabase
+      .from("demandes_absence")
+      .select("id, debut, fin, nb_jours, motif, salaries(nom, prenoms, matricule), types_absence(libelle)")
+      .eq("entreprise_id", id)
+      .eq("statut", "prevue")
+      .gte("fin", aujourdhui)
+      .order("debut"),
+    supabase.from("types_absence").select("id, libelle, nature").eq("entreprise_id", id).eq("actif", true).order("ordre"),
   ]);
+  const congePaye = (types ?? []).find((t) => t.nature === "conge");
 
   const presents = salariesAttendus(salaries ?? [], annee, mois);
   const ferie = new Map((feries ?? []).map((f) => [f.jour, f.libelle]));
@@ -96,12 +109,16 @@ export default async function PagePlanning({ params, searchParams }: PageProps<"
                       {s.nom} {s.prenoms}
                     </th>
                     {jours.map((j) => {
-                      const a = absences.find((x) => x.debut <= j.date && x.fin >= j.date);
+                      // Une absence réelle passe avant une prévision sur le même jour
+                      const duJour = absences.filter((x) => x.debut <= j.date && x.fin >= j.date);
+                      const a = duJour.find((x) => x.statut !== "prevue") ?? duJour[0];
+                      const prevue = a?.statut === "prevue";
                       const type = a?.types_absence as unknown as { libelle: string; nature: NatureAbsence } | undefined;
                       const demi = a && ((a.debut === j.date && a.debut_apres_midi) || (a.fin === j.date && a.fin_midi));
                       return (
-                        <td key={j.date} className={`h-8 p-0.5 ${j.repos ? "bg-black/[.04]" : ""}`} title={type ? `${type.libelle}${a?.statut === "en_attente" ? " (en attente)" : ""}` : j.ferie}>
-                          {type && !j.repos && (
+                        <td key={j.date} className={`h-8 p-0.5 ${j.repos ? "bg-black/[.04]" : ""}`} title={type ? `${type.libelle}${a?.statut === "en_attente" ? " (en attente)" : prevue ? " (prévisionnel)" : ""}` : j.ferie}>
+                          {type && !j.repos && prevue && <span className="block h-full w-full rounded-sm border-2 border-dashed border-marque/70 bg-marque/10" />}
+                          {type && !j.repos && !prevue && (
                             <span
                               className={`block h-full rounded-sm ${COULEURS[type.nature]} ${demi ? "w-1/2" : "w-full"} ${
                                 a?.statut === "en_attente" ? "bg-[repeating-linear-gradient(45deg,transparent_0_3px,rgba(255,255,255,.6)_3px_6px)] opacity-70" : ""
@@ -125,10 +142,76 @@ export default async function PagePlanning({ params, searchParams }: PageProps<"
             </span>
           ))}
           <span className="inline-flex items-center gap-1.5">
+            <span className="size-3 rounded-sm border-2 border-dashed border-marque/70 bg-marque/10" aria-hidden />
+            Congé prévisionnel
+          </span>
+          <span className="inline-flex items-center gap-1.5">
             <span className="size-3 rounded-sm bg-black/[.08]" aria-hidden />
             Repos ou jour férié
           </span>
         </div>
+      </Carte>
+
+      <Carte
+        titre="Congés prévisionnels"
+        description="Dates prévues, pas encore validées : elles ne sont pas déduites du solde. Le RH les confirme le moment venu."
+        sansMarge
+      >
+        {!previsions?.length ? (
+          <EtatVide icone={CalendarClock} titre="Aucun congé prévu" />
+        ) : (
+          <ul className="divide-y divide-bordure">
+            {previsions.map((p) => (
+              <li key={p.id} className="flex flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:px-5">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">
+                    {champLie(p.salaries, "nom")} {champLie(p.salaries, "prenoms")}{" "}
+                    <span className="font-normal text-doux">· {champLie(p.salaries, "matricule")}</span>
+                  </p>
+                  <p className="text-doux">
+                    {champLie(p.types_absence, "libelle")} · {libelleDates(p)} · {formaterJours(p.nb_jours)}
+                    {p.motif ? ` · ${p.motif}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  {peutGerer && <ActionEnLigne action={confirmerPrevision.bind(null, p.id)} libelle="Confirmer" />}
+                  {peutPrevoir && (
+                    <form action={supprimerPrevision.bind(null, p.id)}>
+                      <button type="submit" className={classesBouton("danger", "petit")} aria-label="Supprimer la prévision" title="Supprimer">
+                        <Trash2 size={14} aria-hidden />
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {peutPrevoir && (
+          <div className="border-t border-bordure p-4 sm:p-5">
+            <p className="mb-3 text-sm font-semibold">Ajouter un congé prévisionnel</p>
+            <Formulaire action={prevoirConge} libelleBouton="Enregistrer la prévision" colonnes={2}>
+              <ChoixListe
+                nom="salarie_id"
+                libelle="Salarié"
+                requis
+                options={(salaries ?? [])
+                  .filter((s) => s.statut === "actif")
+                  .map((s) => ({ valeur: s.id, libelle: `${s.nom} ${s.prenoms} (${s.matricule})` }))}
+              />
+              <ChoixListe
+                nom="type_id"
+                libelle="Type"
+                requis
+                valeurInitiale={congePaye?.id}
+                options={(types ?? []).map((t) => ({ valeur: t.id, libelle: t.libelle }))}
+              />
+              <Champ nom="debut" libelle="Du" type="date" requis />
+              <Champ nom="fin" libelle="Au" type="date" requis />
+              <Champ nom="motif" libelle="Commentaire (facultatif)" />
+            </Formulaire>
+          </div>
+        )}
       </Carte>
     </Page>
   );

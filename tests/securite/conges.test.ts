@@ -157,3 +157,53 @@ describe("Traitement par le RH", () => {
       }
     }));
 });
+
+describe("Congés prévisionnels", () => {
+  const PREVOIR = "select public.prevoir_conge($1, $2, $3, $4) as id";
+
+  test("le gestionnaire de paie prévoit les congés de son entreprise seulement ; ni solde déduit, ni alerte", () =>
+    dansUneTransaction(async (client) => {
+      const jeu = await creerJeuDeDonnees(client);
+      const d = await preparer(client, jeu);
+      await commeUtilisateur(client, jeu.utilisateurs.gestionnaireA1);
+      const id = (await client.query(PREVOIR, [d.awa, d.conge, d.lundi, plus(d.lundi, 4)])).rows[0].id;
+      // Pas deux prévisions sur les mêmes dates
+      expect(await estRefusee(client, PREVOIR, [d.awa, d.conge, plus(d.lundi, 2), plus(d.lundi, 6)])).toBe(true);
+
+      // Autres entreprises et autres rôles : refusé
+      await commeUtilisateur(client, jeu.utilisateurs.gestionnaireB1);
+      expect(await estRefusee(client, PREVOIR, [d.awa, d.conge, plus(d.lundi, 14), plus(d.lundi, 15)])).toBe(true);
+      await commeUtilisateur(client, d.compteAwa);
+      expect(await estRefusee(client, PREVOIR, [d.awa, d.conge, plus(d.lundi, 14), plus(d.lundi, 15)])).toBe(true);
+
+      // Le salarié voit sa prévision, sans effet sur son solde ; le RH n'a rien « à traiter »
+      const { rows } = await client.query("select id, statut from public.mes_demandes_absence()");
+      expect(rows).toEqual([{ id, statut: "prevue" }]);
+      const { rows: solde } = await client.query("select pris, en_attente from public.mon_solde_conges($1)", [d.awa]);
+      expect(solde[0]).toEqual({ pris: "0", en_attente: "0" });
+      await commeUtilisateur(client, d.rhA);
+      expect((await client.query("select * from public.mes_demandes_a_traiter()")).rows).toEqual([]);
+    }));
+
+  test("seuls le RH et les administrateurs confirment ; la prévision devient une absence acceptée", () =>
+    dansUneTransaction(async (client) => {
+      const jeu = await creerJeuDeDonnees(client);
+      const d = await preparer(client, jeu);
+      await commeUtilisateur(client, jeu.utilisateurs.gestionnaireA1);
+      const id = (await client.query(PREVOIR, [d.awa, d.conge, d.lundi, plus(d.lundi, 1)])).rows[0].id;
+      expect(await estRefusee(client, "select public.confirmer_prevision($1)", [id])).toBe(true);
+      await commeUtilisateur(client, d.rhB);
+      expect(await estRefusee(client, "select public.confirmer_prevision($1)", [id])).toBe(true);
+      expect(await estRefusee(client, "select public.supprimer_prevision($1)", [id])).toBe(true);
+
+      await commeUtilisateur(client, d.rhA);
+      await client.query("select public.confirmer_prevision($1)", [id]);
+      const { rows } = await client.query("select statut, pris from public.demandes_absence, public.soldes_entreprise($1) s where id = $2 and s.salarie_id = $3", [
+        jeu.entreprises.A1, id, d.awa,
+      ]);
+      expect(rows).toEqual([{ statut: "acceptee", pris: "2.0" }]);
+      // Une fois confirmée, ce n'est plus une prévision : le gestionnaire ne peut plus la supprimer
+      await commeUtilisateur(client, jeu.utilisateurs.gestionnaireA1);
+      expect(await estRefusee(client, "select public.supprimer_prevision($1)", [id])).toBe(true);
+    }));
+});

@@ -169,6 +169,8 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
 - Côté entreprise : ouvrez l'entreprise, puis le module **Congés & absences** (onglets
   Demandes, Planning, Soldes, Réglages). Commencez par **Réglages** : jours acquis par mois,
   jours fériés de l'année, types d'absence ; puis **Soldes** : solde de départ de chaque salarié.
+- Congés prévisionnels : onglet **Planning**, carte « Congés prévisionnels » (gestionnaire de paie,
+  RH, administrateurs). Le RH les confirme ensuite d'un clic.
 - Côté salarié : onglet **Absences** de son espace (`/portail/absences`).
 
 ## Commandes utiles

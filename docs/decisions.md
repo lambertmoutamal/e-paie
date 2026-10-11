@@ -88,4 +88,7 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   cette personne est alertée et voit la demande dans « À faire ». Le salarié est prévenu de la réponse.
 - Un refus ou une annulation doit être motivé. Une demande qui dépasse le solde n'est pas bloquée :
   le RH voit l'avertissement et décide.
+- **Congés prévisionnels** : le gestionnaire de paie (ainsi que le RH et les administrateurs) inscrit
+  les dates de congé prévues. Statut « Prévu » : visible au planning et par le salarié, non déduit du
+  solde, sans alerte. Le RH ou un administrateur les confirme : ils deviennent des absences acceptées.
 

@@ -3,7 +3,7 @@ import { CalendarCheck2, Inbox, Paperclip } from "lucide-react";
 import { formaterDate } from "@/lib/abonnements/phases";
 import { formaterJours, libelleDates, NATURES_ABSENCE, STATUTS_DEMANDE, type NatureAbsence, type StatutDemande } from "@/lib/absences/regles";
 import { champLie } from "@/lib/supabase/relations";
-import { CaseACocher, Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
+import { Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
 import { Badge, Carte, EtatVide, Page } from "@/components/ui";
 import { annulerAbsence, deciderDemande, saisirAbsence } from "./actions";
 import { chargerContexte, EnTeteAbsences, lienJustificatif } from "./commun";
@@ -21,7 +21,7 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
 
   const [{ data: enAttente }, { data: historique }, { data: soldes }, { data: salaries }, { data: types }] = await Promise.all([
     supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).eq("statut", "en_attente").order("cree_le"),
-    supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).neq("statut", "en_attente").order("debut", { ascending: false }).limit(60),
+    supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).in("statut", ["acceptee", "refusee", "annulee"]).order("debut", { ascending: false }).limit(60),
     supabase.rpc("soldes_entreprise", { p_entreprise_id: id }),
     supabase.from("salaries").select("id, nom, prenoms, matricule").eq("entreprise_id", id).eq("statut", "actif").order("nom"),
     supabase.from("types_absence").select("id, libelle").eq("entreprise_id", id).eq("actif", true).order("ordre"),
@@ -86,8 +86,6 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
             <ChoixListe nom="type_id" libelle="Type d'absence" requis options={(types ?? []).map((t) => ({ valeur: t.id, libelle: t.libelle }))} />
             <Champ nom="debut" libelle="Du" type="date" requis valeurInitiale={aujourdhui} />
             <Champ nom="fin" libelle="Au" type="date" requis valeurInitiale={aujourdhui} />
-            <CaseACocher nom="debut_apres_midi">Le premier jour commence l&apos;après-midi</CaseACocher>
-            <CaseACocher nom="fin_midi">Le dernier jour s&apos;arrête à midi</CaseACocher>
             <ZoneTexte nom="motif" libelle="Commentaire (facultatif)" max={500} />
             <ChampFichier libelle="Justificatif (facultatif)" />
           </Formulaire>
