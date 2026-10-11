@@ -3,7 +3,7 @@ import { CalendarCheck2, Inbox, Paperclip } from "lucide-react";
 import { formaterDate } from "@/lib/abonnements/phases";
 import { formaterJours, libelleDates, NATURES_ABSENCE, STATUTS_DEMANDE, type NatureAbsence, type StatutDemande } from "@/lib/absences/regles";
 import { champLie } from "@/lib/supabase/relations";
-import { CaseACocher, Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
+import { Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
 import { Badge, Carte, EtatVide, Page } from "@/components/ui";
 import { annulerAbsence, deciderDemande, saisirAbsence } from "./actions";
 import { chargerContexte, EnTeteAbsences, lienJustificatif } from "./commun";
@@ -86,8 +86,6 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
             <ChoixListe nom="type_id" libelle="Type d'absence" requis options={(types ?? []).map((t) => ({ valeur: t.id, libelle: t.libelle }))} />
             <Champ nom="debut" libelle="Du" type="date" requis valeurInitiale={aujourdhui} />
             <Champ nom="fin" libelle="Au" type="date" requis valeurInitiale={aujourdhui} />
-            <CaseACocher nom="debut_apres_midi">Le premier jour commence l&apos;après-midi</CaseACocher>
-            <CaseACocher nom="fin_midi">Le dernier jour s&apos;arrête à midi</CaseACocher>
             <ZoneTexte nom="motif" libelle="Commentaire (facultatif)" max={500} />
             <ChampFichier libelle="Justificatif (facultatif)" />
           </Formulaire>
