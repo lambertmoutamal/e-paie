@@ -14,7 +14,7 @@ export function contenuNouvelleDemande(p: Periode & { nom: string; salarie: stri
     titre: `Bonjour ${prenom}`,
     paragraphes: [`${p.salarie} (${p.entreprise}) demande : ${p.type}, ${quand}.`, "Acceptez ou refusez la demande (un refus doit être motivé)."],
     bouton: "Répondre à la demande",
-    whatsapp: `e-Paie — Bonjour ${prenom}, une action vous attend : ${action}. ${p.lien}`,
+    whatsapp: `DématPaie — Bonjour ${prenom}, une action vous attend : ${action}. ${p.lien}`,
     variables: { "1": prenom, "2": action, "3": p.lien },
   };
 }
@@ -32,7 +32,7 @@ export function contenuDecision(p: Periode & { prenoms: string; type: string; en
     titre: `Bonjour ${prenom}`,
     paragraphes: [texte],
     bouton: "Voir mes absences",
-    whatsapp: `e-Paie — Bonjour ${prenom}. ${texte} ${p.lien}`,
+    whatsapp: `DématPaie — Bonjour ${prenom}. ${texte} ${p.lien}`,
     variables: { "1": prenom, "2": `consulter la réponse à votre demande « ${p.type} » ${quand} : elle ${resultat}`, "3": p.lien },
   };
 }

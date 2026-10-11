@@ -1,4 +1,4 @@
-# Plan de développement — e-Paie, phase 1
+# Plan de développement — DématPaie, phase 1
 
 Chaque étape se termine par : explication, procédure de test, tests automatiques, commit.
 Les décisions métier sont consignées dans [decisions.md](decisions.md).
@@ -23,7 +23,7 @@ Organisation des modules inspirée des SIRH du marché (référence : Nibelis), 
 | 9 | Publication des bulletins, **portail salarié** : connexion par code SMS ou WhatsApp (Twilio Verify), bulletins et historique |
 | — | Alertes de paie par email et WhatsApp, actions « À faire » visibles par la seule personne qui doit agir |
 | 10 | Congés et permissions : demandes depuis le portail (justificatif), validation RH, soldes calculés automatiquement, jours fériés, planning, alertes |
-| — | Congés prévisionnels ; contrats : import du document signé ou rédaction dans e-Paie (modèles, import Word, champs automatiques, PDF) |
+| — | Congés prévisionnels ; contrats : import du document signé ou rédaction dans DématPaie (modèles, import Word, champs automatiques, PDF) |
 
 ## À venir
 

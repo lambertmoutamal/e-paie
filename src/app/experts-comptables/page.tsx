@@ -6,7 +6,7 @@ import { PagePublique, TitreSection } from "@/components/vitrine";
 
 export const metadata: Metadata = {
   title: "Experts-comptables",
-  description: "e-Paie pour les cabinets comptables : gérez la paie de toutes vos entreprises clientes dans des espaces isolés.",
+  description: "DématPaie pour les cabinets comptables : gérez la paie de toutes vos entreprises clientes dans des espaces isolés.",
 };
 
 const ATOUTS = [
@@ -35,7 +35,7 @@ export default function PageExpertsComptables() {
             Gérez la paie de tous vos clients, sans papier et sans risque de mélange.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-doux">
-            e-Paie a été conçu d&apos;abord pour les cabinets : un espace par client, des rôles clairs, un circuit de validation
+            DématPaie a été conçu d&apos;abord pour les cabinets : un espace par client, des rôles clairs, un circuit de validation
             et la distribution des bulletins directement aux salariés.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -50,7 +50,7 @@ export default function PageExpertsComptables() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <TitreSection surtitre="Pourquoi e-Paie" titre="Pensé pour le quotidien d'un cabinet" />
+        <TitreSection surtitre="Pourquoi DématPaie" titre="Pensé pour le quotidien d'un cabinet" />
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {ATOUTS.map(({ icone: Icone, titre, texte }) => (
             <div key={titre} className="rounded-xl border border-bordure bg-surface p-5">
@@ -80,7 +80,7 @@ export default function PageExpertsComptables() {
       </section>
 
       <section className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <h2 className="text-2xl font-bold sm:text-3xl">Voyons ensemble comment e-Paie s&apos;adapte à votre cabinet</h2>
+        <h2 className="text-2xl font-bold sm:text-3xl">Voyons ensemble comment DématPaie s&apos;adapte à votre cabinet</h2>
         <ul className="mx-auto mt-6 flex max-w-md flex-col gap-2 text-left text-sm">
           {["Démonstration de 30 minutes, en ligne", "Sur vos cas réels : nombre de clients, circuit de validation", "Sans engagement"].map((t) => (
             <li key={t} className="flex items-center gap-2">

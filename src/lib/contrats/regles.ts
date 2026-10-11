@@ -178,7 +178,7 @@ export function cheminFichier(entrepriseId: string, salarieId: string, nomOrigin
   return `${entrepriseId}/${salarieId}/${identifiant}-${propre || "fichier"}`;
 }
 
-// Modèle de contrat (rédaction dans e-Paie)
+// Modèle de contrat (rédaction dans DématPaie)
 export const CATEGORIES_MODELE = { contrat: "Contrat", avenant: "Avenant" } as const;
 
 export const schemaModele = z.object({

@@ -1,4 +1,4 @@
-# e-Paie
+# DématPaie
 
 Plateforme SaaS de paie zéro papier pour les cabinets comptables et les entreprises du Gabon.
 
@@ -132,14 +132,14 @@ Le code à 6 chiffres est envoyé par **Twilio Verify**, configuré **dans Supab
 aucune clé Twilio n'est à mettre dans `.env.local`.
 
 1. Créez un compte sur [twilio.com](https://www.twilio.com) (l'essai gratuit suffit pour les tests).
-2. Dans Twilio : **Verify → Services → Create new** (nom : `e-Paie`), cochez **SMS** et **WhatsApp**.
+2. Dans Twilio : **Verify → Services → Create new** (nom : `DématPaie`), cochez **SMS** et **WhatsApp**.
    Notez le **Service SID** (commence par `VA…`).
 3. Dans Twilio, page d'accueil de la console : notez l'**Account SID** (`AC…`) et l'**Auth Token**.
 4. Dans Supabase : **Authentication → Sign In / Providers → Phone** :
    activez-le, choisissez **Twilio Verify**, collez les trois valeurs, enregistrez.
 5. Pour tester sans SMS réel : même page, **Test Phone Numbers and OTPs**, ajoutez par exemple
    `24177000001=123456` (numéro sans « + », puis le code). Donnez ce numéro (`+241 77 00 00 01`)
-   à un salarié de test dans e-Paie.
+   à un salarié de test dans DématPaie.
 
 Sécurité : un code n'est envoyé (et facturé) que pour un numéro enregistré par un employeur dont
 l'abonnement est actif, au plus un code par minute et par numéro. Le message affiché est le même
@@ -159,7 +159,7 @@ Elles seules voient aussi un bandeau et une carte « À faire » dès qu'elles s
      `TWILIO_WHATSAPP_FROM=whatsapp:+14155238886`, puis redémarrez l'application.
   3. En production : faites approuver un numéro WhatsApp Business et un modèle de message
      (Twilio → **Content Template Builder**, catégorie « Utility ») avec ce texte :
-     `Bonjour {{1}}, une action vous attend sur e-Paie : {{2}}. Ouvrir : {{3}}`
+     `Bonjour {{1}}, une action vous attend sur DématPaie : {{2}}. Ouvrir : {{3}}`
      puis mettez son identifiant (`HX…`) dans `TWILIO_WHATSAPP_MODELE`.
 
 Sans configuration Twilio, en développement, les messages WhatsApp s'affichent dans la console.
@@ -176,7 +176,7 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
 ## Contrats : importer ou rédiger
 
 - Fiche du salarié → onglet **Contrats** → « Nouveau contrat » : choisissez « Aucun » comme modèle pour
-  **importer** le contrat signé, ou un modèle pour le **rédiger** dans e-Paie (l'éditeur s'ouvre).
+  **importer** le contrat signé, ou un modèle pour le **rédiger** dans DématPaie (l'éditeur s'ouvre).
 - **Modèles de contrat** : lien « Gérer les modèles » (adresse `/espace/entreprises/<id>/modeles-contrat`).
   Personnalisez un modèle standard ou importez votre modèle Word, et utilisez « + Insérer un champ ».
 - Le PDF est généré par le serveur (police Roboto incluse, aucun accès Internet).

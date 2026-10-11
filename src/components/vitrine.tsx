@@ -17,7 +17,7 @@ export function EnTetePublic() {
   return (
     <header className="sticky top-0 z-20 border-b border-bordure bg-surface/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/" aria-label="e-Paie, accueil">
+        <Link href="/" aria-label="DématPaie, accueil">
           <Logo />
         </Link>
 
@@ -90,7 +90,7 @@ export function PiedPublic() {
           <Link href="/conditions" className="text-doux hover:text-foreground">Conditions d&apos;utilisation</Link>
         </div>
       </div>
-      <p className="border-t border-bordure py-4 text-center text-xs text-doux">© e-Paie</p>
+      <p className="border-t border-bordure py-4 text-center text-xs text-doux">© DématPaie</p>
     </footer>
   );
 }

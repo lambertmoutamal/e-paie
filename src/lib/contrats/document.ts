@@ -1,4 +1,4 @@
-// Documents de contrat rédigés dans e-Paie : champs automatiques, nettoyage du texte
+// Documents de contrat rédigés dans DématPaie : champs automatiques, nettoyage du texte
 // et conversion en PDF. Le texte est conservé en HTML simple (titres, paragraphes,
 // gras, italique, souligné, listes, alignement).
 
@@ -180,7 +180,7 @@ function blocs(noeuds: Node[]): Bloc[] {
 
 export function htmlVersPdf(html: string, titre: string) {
   return {
-    info: { title: titre, creator: "e-Paie" },
+    info: { title: titre, creator: "DématPaie" },
     pageSize: "A4",
     pageMargins: [56, 56, 56, 64],
     defaultStyle: { font: "Roboto", fontSize: 10.5, lineHeight: 1.25, color: "#1f2933" },

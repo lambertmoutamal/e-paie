@@ -9,7 +9,7 @@ const ARTICLES = [
   {
     titre: "1. Objet",
     texte:
-      "e-Paie est une plateforme en ligne de gestion et de distribution dématérialisée des bulletins de paie, destinée aux cabinets comptables et aux entreprises.",
+      "DématPaie est une plateforme en ligne de gestion et de distribution dématérialisée des bulletins de paie, destinée aux cabinets comptables et aux entreprises.",
   },
   {
     titre: "2. Essai gratuit et abonnement",

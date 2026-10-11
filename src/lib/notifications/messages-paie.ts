@@ -74,7 +74,7 @@ export function contenuAlerte(i: InfosAlerte): ContenuAlerte {
     titre: `Bonjour ${prenom}`,
     paragraphes: m.paragraphes,
     bouton: m.bouton,
-    whatsapp: `e-Paie — Bonjour ${prenom}, une action vous attend : ${m.action}.${motifRefus ? ` ${motifRefus}.` : ""} ${i.lien}`,
+    whatsapp: `DématPaie — Bonjour ${prenom}, une action vous attend : ${m.action}.${motifRefus ? ` ${motifRefus}.` : ""} ${i.lien}`,
     variables: { "1": prenom, "2": m.action, "3": i.lien },
   };
 }

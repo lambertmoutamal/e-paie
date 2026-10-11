@@ -97,7 +97,7 @@ export default async function PageDocument({ params }: PageProps<"/espace/entrep
                         <FileText size={18} className="mt-0.5 shrink-0 text-marque" aria-hidden />
                         <span className="min-w-0">
                           <span className="block font-medium">{m.nom}</span>
-                          <span className="block text-xs text-doux">{m.entreprise_id ? "Modèle de l'entreprise" : "Modèle standard e-Paie"}</span>
+                          <span className="block text-xs text-doux">{m.entreprise_id ? "Modèle de l'entreprise" : "Modèle standard DématPaie"}</span>
                         </span>
                       </button>
                     </form>
@@ -114,7 +114,7 @@ export default async function PageDocument({ params }: PageProps<"/espace/entrep
               </ul>
             </div>
           ) : (
-            <p className="text-sm text-doux">Aucun document rédigé dans e-Paie pour ce {categorie}.</p>
+            <p className="text-sm text-doux">Aucun document rédigé dans DématPaie pour ce {categorie}.</p>
           )
         ) : editable ? (
           <div className="flex flex-col gap-4">

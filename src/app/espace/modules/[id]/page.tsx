@@ -79,7 +79,7 @@ export default async function PageModule({ params }: PageProps<"/espace/modules/
               <EtatVide
                 icone={Icone}
                 titre="Ce module arrive bientôt"
-                texte="Il fait partie des prochaines étapes de développement d'e-Paie. Vous serez informé dès sa mise en service."
+                texte="Il fait partie des prochaines étapes de développement d'DématPaie. Vous serez informé dès sa mise en service."
               />
             </Carte>
           )}

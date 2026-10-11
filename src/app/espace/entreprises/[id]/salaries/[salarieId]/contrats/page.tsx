@@ -95,14 +95,14 @@ export default async function PageContrats({ params }: PageProps<"/espace/entrep
       ))}
 
       {modifiable && !enCours && (
-        <Carte titre="Nouveau contrat" description="Deux possibilités : importer le contrat déjà signé, ou le rédiger dans e-Paie à partir d'un modèle.">
+        <Carte titre="Nouveau contrat" description="Deux possibilités : importer le contrat déjà signé, ou le rédiger dans DématPaie à partir d'un modèle.">
           <ul className="mb-5 grid gap-2 text-sm sm:grid-cols-2">
             <li className="rounded-lg bg-black/[.03] px-3 py-2">
               <strong>Importer un contrat signé</strong> : remplissez les informations, laissez « Aucun » comme modèle et joignez le PDF ou la photo
               du contrat.
             </li>
             <li className="rounded-lg bg-marque-claire/60 px-3 py-2">
-              <strong>Rédiger dans e-Paie</strong> : choisissez un modèle (statut « Brouillon » conseillé). Le texte est rempli automatiquement et
+              <strong>Rédiger dans DématPaie</strong> : choisissez un modèle (statut « Brouillon » conseillé). Le texte est rempli automatiquement et
               l&apos;éditeur s&apos;ouvre.{" "}
               <Link href={lienModeles} className="font-medium text-marque hover:underline">
                 Gérer les modèles
@@ -312,11 +312,11 @@ function CarteContrat({
   );
 }
 
-// Accès à la rédaction du contrat dans e-Paie (ou à son texte, une fois signé).
+// Accès à la rédaction du contrat dans DématPaie (ou à son texte, une fois signé).
 function BoutonDocument({ contrat: c, href, modifiable }: { contrat: Contrat; href: string; modifiable: boolean }) {
   const clos = c.statut === "termine" || c.statut === "rompu";
   if (!c.contenu && (!modifiable || clos)) return null;
-  const libelle = !c.contenu ? "Rédiger le contrat dans e-Paie" : c.document_fige || !modifiable || clos ? "Voir le texte du contrat" : "Modifier le texte du contrat";
+  const libelle = !c.contenu ? "Rédiger le contrat dans DématPaie" : c.document_fige || !modifiable || clos ? "Voir le texte du contrat" : "Modifier le texte du contrat";
   return (
     <Link href={href} className={classesBouton(c.contenu ? "secondaire" : "discret", "petit")}>
       <FilePen size={14} aria-hidden />

@@ -10,7 +10,7 @@ export default function PageModules() {
     <Page>
       <EnTetePage
         titre="Modules"
-        description="Les briques d'e-Paie. Les modules « Bientôt » arrivent au fil des prochaines mises à jour."
+        description="Les briques d'DématPaie. Les modules « Bientôt » arrivent au fil des prochaines mises à jour."
         fil={[{ href: "/espace", libelle: "Tableau de bord" }]}
       />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

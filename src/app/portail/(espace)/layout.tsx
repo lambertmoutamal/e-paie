@@ -29,7 +29,7 @@ export default function MiseEnPagePortail({ children }: LayoutProps<"/portail">)
           <Suspense fallback={<Squelette />}>{children}</Suspense>
         </div>
       </main>
-      <footer className="px-4 py-6 text-center text-xs text-doux">e-Paie · vos bulletins, toujours disponibles</footer>
+      <footer className="px-4 py-6 text-center text-xs text-doux">DématPaie · vos bulletins, toujours disponibles</footer>
     </div>
   );
 }

@@ -122,7 +122,7 @@ export async function renvoyerInvitation(
   try {
     await envoyerEmail(
       resultat.email,
-      emailInvitation({ nom: resultat.nom || resultat.email, perimetre: "votre espace e-Paie", lien: resultat.lien }),
+      emailInvitation({ nom: resultat.nom || resultat.email, perimetre: "votre espace DématPaie", lien: resultat.lien }),
     );
   } catch (erreur) {
     console.error("Renvoi d'invitation impossible :", erreur);

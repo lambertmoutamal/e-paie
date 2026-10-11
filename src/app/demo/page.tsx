@@ -7,7 +7,7 @@ import { demanderDemo } from "./actions";
 
 export const metadata: Metadata = {
   title: "Demander une démo",
-  description: "Découvrez e-Paie lors d'une démonstration de 30 minutes adaptée à votre organisation.",
+  description: "Découvrez DématPaie lors d'une démonstration de 30 minutes adaptée à votre organisation.",
 };
 
 const AVANTAGES = [
@@ -23,7 +23,7 @@ export default function PageDemo({ searchParams }: PageProps<"/demo">) {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 lg:grid-cols-2">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wider text-marque">Démonstration</p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Voyez e-Paie en action</h1>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Voyez DématPaie en action</h1>
           <p className="mt-4 text-lg text-doux">
             Un membre de notre équipe vous présente la plateforme et répond à vos questions, sur la base de votre organisation.
           </p>

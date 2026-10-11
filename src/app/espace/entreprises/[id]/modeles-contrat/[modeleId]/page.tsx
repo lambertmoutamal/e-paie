@@ -25,7 +25,7 @@ export default async function PageModele({ params }: PageProps<"/espace/entrepri
     <Page>
       <EnTetePage
         titre={modele.nom}
-        description={standard ? "Modèle standard e-Paie (lecture seule)" : entreprise.raison_sociale}
+        description={standard ? "Modèle standard DématPaie (lecture seule)" : entreprise.raison_sociale}
         fil={[
           { href: `/espace/entreprises/${id}`, libelle: entreprise.raison_sociale },
           { href: `/espace/entreprises/${id}/modeles-contrat`, libelle: "Modèles de contrat" },
