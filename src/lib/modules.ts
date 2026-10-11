@@ -37,7 +37,7 @@ export const MODULES: Module[] = [
     lienEntreprise: (id) => `/espace/entreprises/${id}/paie`,
     fonctions: [
       { libelle: "Périodes de paie mensuelles", disponible: true },
-      { libelle: "Dépôt des bulletins PDF, un par salarié et par mois, un par un ou en masse", disponible: true },
+      { libelle: "Dépôt des bulletins PDF : un par un, en masse, ou un seul PDF découpé automatiquement par matricule", disponible: true },
       { libelle: "Circuit de validation configurable (1 à 5 étapes, refus commenté, verrouillage)", disponible: true },
       { libelle: "Coffre-fort numérique du salarié", disponible: false },
     ],

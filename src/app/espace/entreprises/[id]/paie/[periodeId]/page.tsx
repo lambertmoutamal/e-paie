@@ -9,7 +9,8 @@ import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, classesBouton, EnTetePage, EtatVide, Page, Statistique } from "@/components/ui";
 import { deciderEtape, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
 import { DecisionEtape } from "./decision-etape";
-import { DepotEnMasse, DepotUnique } from "./depot-bulletins";
+import { DepotUnique } from "./depot-bulletins";
+import { ModesDepot } from "./modes-depot";
 
 export const metadata: Metadata = { title: "Période de paie" };
 
@@ -174,7 +175,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
 
       {modifiable && (
         <Carte titre="Déposer les bulletins en masse" description="Tous les bulletins du mois en une seule fois.">
-          <DepotEnMasse
+          <ModesDepot
             entrepriseId={id}
             periodeId={periodeId}
             annee={periode.annee}

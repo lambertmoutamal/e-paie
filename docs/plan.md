@@ -18,7 +18,7 @@ Organisation des modules inspirée des SIRH du marché (référence : Nibelis), 
 | 5 | Salariés et import Excel |
 | — | Organisation par modules, site vitrine (accueil, experts-comptables, demande de démo) |
 | 6 | Contrats, avenants, renouvellements, documents du salarié (stockage privé), échéances, salariés prévisionnels, import Excel des contrats |
-| 7 | Périodes de paie, dépôt des bulletins PDF un par un ou en masse (reconnaissance par matricule), contrôle du contenu, empreinte SHA-256, stockage privé |
+| 7 | Périodes de paie, dépôt des bulletins PDF un par un, en masse, ou en un seul PDF découpé automatiquement (reconnaissance du matricule sur chaque page), contrôle du contenu, empreinte SHA-256, stockage privé |
 | 8 | Circuit de validation configurable par entreprise (1 à 5 étapes), séparation des tâches, refus commenté, approbation et verrouillage, historique |
 
 ## À venir
