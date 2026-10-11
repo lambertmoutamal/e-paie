@@ -10,6 +10,7 @@ const VARIABLES_SECRETES = [
   "RESEND_API_KEY",
   "GENUKA_SECRET_KEY",
   "GENUKA_WEBHOOK_SECRET",
+  "TWILIO_AUTH_TOKEN",
 ];
 const motifs = ["sb_secret_", "service_role", ...VARIABLES_SECRETES];
 const valeurs = VARIABLES_SECRETES.map((nom) => process.env[nom]).filter((v) => v && v.length >= 8);

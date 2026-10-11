@@ -27,7 +27,7 @@ export const droitsUtilisateur = cache(async () => {
   const [{ data: profil }, { data: cabinets }, { data: affectations }, { data: abonnements }] = await Promise.all([
     supabase
       .from("profils")
-      .select("nom_complet, email, est_admin_plateforme")
+      .select("nom_complet, email, whatsapp, est_admin_plateforme")
       .eq("id", utilisateur.id)
       .single(),
     supabase.from("membres_cabinet").select("role, cabinet_id, cabinets(nom)").eq("profil_id", utilisateur.id),
