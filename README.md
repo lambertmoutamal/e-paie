@@ -149,7 +149,7 @@ que le numéro soit connu ou non. Le salarié ne voit que **ses** bulletins **pu
 
 À chaque étape du circuit, les personnes qui doivent agir sont prévenues : validateurs de
 l'étape en cours, publieurs une fois la période approuvée, gestionnaire après un refus.
-Elles voient aussi un bandeau et une carte « À faire » dès qu'elles se connectent.
+Elles seules voient aussi un bandeau et une carte « À faire » dès qu'elles se connectent.
 
 - **Email** : automatique (Resend, déjà configuré).
 - **WhatsApp** : chaque personne saisit son numéro dans **Mon profil**. Côté plateforme :

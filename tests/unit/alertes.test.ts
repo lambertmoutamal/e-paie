@@ -38,15 +38,6 @@ describe("contenu des alertes de paie", () => {
   });
 });
 
-describe("étape sans validateur possible", () => {
-  test("le message nomme le rôle manquant et ne parle pas de refus", () => {
-    const c = contenuAlerte({ ...base, motif: "sans_validateur", etape: "Approbation", commentaire: "signataire" });
-    expect(c.sujet).toContain("rôle à attribuer");
-    expect(c.paragraphes.join(" ")).toContain("signataire final");
-    expect(c.whatsapp).not.toContain("refus");
-  });
-});
-
 describe("numéro WhatsApp du profil", () => {
   test("facultatif, normalisé au format international, refusé s'il est invalide", () => {
     expect(schemaProfil.parse({ nom_complet: "Awa", whatsapp: "" }).whatsapp).toBeNull();

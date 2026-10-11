@@ -1,8 +1,8 @@
 // Contenu des alertes de paie (email et WhatsApp), sans dépendance : facile à tester.
 
-import { libellePeriode, libelleRole } from "@/lib/bulletins/regles";
+import { libellePeriode } from "@/lib/bulletins/regles";
 
-export type MotifAlerte = "a_valider" | "a_publier" | "a_corriger" | "sans_validateur";
+export type MotifAlerte = "a_valider" | "a_publier" | "a_corriger";
 
 export type InfosAlerte = {
   motif: MotifAlerte;
@@ -29,15 +29,12 @@ export const LIBELLES_ACTION: Record<MotifAlerte, string> = {
   a_valider: "Validation",
   a_publier: "Publication",
   a_corriger: "Correction",
-  sans_validateur: "Rôle à attribuer",
 };
 
 export function contenuAlerte(i: InfosAlerte): ContenuAlerte {
   const periode = libellePeriode(i.annee, i.mois);
   const prenom = i.nom.trim().split(/\s+/)[0] || "Bonjour";
-  // Pour « sans_validateur », le commentaire porte le rôle manquant (ex. signataire)
-  const motifRefus = i.commentaire && i.motif !== "sans_validateur" ? `Motif du refus : « ${i.commentaire} »` : null;
-  const roleManquant = libelleRole(i.commentaire ?? "").toLowerCase();
+  const motifRefus = i.commentaire ? `Motif du refus : « ${i.commentaire} »` : null;
 
   const parMotif: Record<MotifAlerte, { sujet: string; action: string; paragraphes: string[]; bouton: string }> = {
     a_valider: {
@@ -58,15 +55,6 @@ export function contenuAlerte(i: InfosAlerte): ContenuAlerte {
         "Vous pouvez maintenant la publier : chaque salarié verra son bulletin dans son espace.",
       ],
       bouton: "Publier aux salariés",
-    },
-    sans_validateur: {
-      sujet: `Paie bloquée, rôle à attribuer : ${periode} — ${i.entreprise}`,
-      action: `attribuer le rôle « ${roleManquant} » dans ${i.entreprise} : personne ne peut valider l'étape « ${i.etape} » de la paie de ${periode}`,
-      paragraphes: [
-        `La paie de ${periode} de ${i.entreprise} est bloquée à l'étape « ${i.etape} » : aucune personne ne peut la valider.`,
-        `Cette étape doit être validée par : ${roleManquant}. Attribuez ce rôle à une personne (autre que celles qui ont préparé ou déjà validé la paie) dans les utilisateurs de l'entreprise, ou modifiez le circuit de validation.`,
-      ],
-      bouton: "Gérer les utilisateurs",
     },
     a_corriger: {
       sujet: `Refusée, à corriger : paie de ${periode} — ${i.entreprise}`,

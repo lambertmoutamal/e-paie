@@ -71,5 +71,7 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - À chaque étape du circuit, les personnes qui doivent agir reçoivent un **email** et, si elles ont
   saisi leur numéro dans leur profil, un **message WhatsApp** (Twilio).
 - Les actions en attente sont affichées en tête du tableau de bord et dans un bandeau sur toutes les pages.
-- Si personne ne peut valider une étape (rôle non attribué), les administrateurs sont prévenus ;
-  la personne qui reçoit ensuite ce rôle est prévenue à son tour.
+- Le message ne s'affiche que chez **la personne qui doit agir** (validateur de l'étape en cours,
+  publieur après approbation, gestionnaire après un refus), jamais chez les autres.
+- Si personne ne peut valider une étape (rôle non attribué), seul un avertissement apparaît sur la
+  page de la période ; la personne qui reçoit ensuite ce rôle est prévenue à ce moment-là.

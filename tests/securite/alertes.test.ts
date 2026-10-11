@@ -113,7 +113,7 @@ describe("Alertes de validation", () => {
       expect(await estRefusee(client, "update public.profils set whatsapp = 'pas un numero' where id = $1", [g])).toBe(true);
     }));
 
-  test("personne ne peut valider l'étape : les administrateurs de l'entreprise sont prévenus", () =>
+  test("personne ne peut valider l'étape : aucune alerte à d'autres personnes, seul l'avertissement de la page", () =>
     dansUneTransaction(async (client) => {
       const jeu = await creerJeuDeDonnees(client);
       const d = await preparer(client, jeu);
@@ -126,8 +126,8 @@ describe("Alertes de validation", () => {
         await client.query("reset role");
         return client.query("select motif, profil_id, commentaire from public.destinataires_alerte($1)", [d.periode]);
       })();
-      expect(rows).toEqual([{ motif: "sans_validateur", profil_id: jeu.utilisateurs.adminCabinetA, commentaire: "signataire" }]);
-      expect(await mesActions(client, jeu.utilisateurs.adminCabinetA)).toEqual([{ periode_id: d.periode, action: "sans_validateur" }]);
+      expect(rows).toEqual([]);
+      expect(await mesActions(client, jeu.utilisateurs.adminCabinetA)).toEqual([]);
       expect(await mesActions(client, jeu.utilisateurs.gestionnaireA1)).toEqual([]);
       expect(await mesActions(client, jeu.utilisateurs.adminCabinetB)).toEqual([]);
       await commeUtilisateur(client, d.controleur);
