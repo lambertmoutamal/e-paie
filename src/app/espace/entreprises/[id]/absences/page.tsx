@@ -19,13 +19,15 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
   const { supabase, entreprise, peutGerer } = await chargerContexte(id);
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
-  const [{ data: enAttente }, { data: historique }, { data: soldes }, { data: salaries }, { data: types }] = await Promise.all([
+  const [{ data: enAttente }, { data: historique }, { data: soldes }, { data: salaries }, { data: types }, { data: derniers }] = await Promise.all([
     supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).eq("statut", "en_attente").order("cree_le"),
     supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).in("statut", ["acceptee", "refusee", "annulee"]).order("debut", { ascending: false }).limit(60),
     supabase.rpc("soldes_entreprise", { p_entreprise_id: id }),
     supabase.from("salaries").select("id, nom, prenoms, matricule").eq("entreprise_id", id).eq("statut", "actif").order("nom"),
     supabase.from("types_absence").select("id, libelle").eq("entreprise_id", id).eq("actif", true).order("ordre"),
+    supabase.rpc("derniers_conges_entreprise", { p_entreprise_id: id }),
   ]);
+  const dernierDe = new Map(((derniers ?? []) as { salarie_id: string; debut: string; fin: string }[]).map((d) => [d.salarie_id, d]));
   const soldeDe = new Map(((soldes ?? []) as { salarie_id: string; disponible: number }[]).map((s) => [s.salarie_id, Number(s.disponible)]));
 
   return (
@@ -57,6 +59,9 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
                         {depasse ? " — la demande dépasse le solde" : ""}
                       </p>
                     )}
+                    <p className="text-doux">
+                      Dernier congé : {dernierDe.get(d.salarie_id) ? libelleDates(dernierDe.get(d.salarie_id)!) : "aucun enregistré"}
+                    </p>
                     {d.motif && <p className="mt-1 rounded-lg bg-black/[.03] px-3 py-2">{d.motif}</p>}
                     {d.justificatif_chemin && (
                       <a href={lienJustificatif(d.justificatif_chemin)} target="_blank" rel="noopener" className="mt-1 inline-flex items-center gap-1 text-marque hover:underline">

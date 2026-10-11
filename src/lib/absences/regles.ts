@@ -85,14 +85,29 @@ export const schemaPrevision = z
   })
   .refine((v) => v.fin >= v.debut, { path: ["fin"], message: "La fin doit être après le début." });
 
-export const schemaSoldeInitial = z.object({
-  date_reference: date("Date du solde"),
-  jours: z
-    .string()
-    .trim()
-    .transform((v) => Number(v.replace(",", ".")))
-    .refine((n) => Number.isFinite(n) && n >= -100 && n <= 1000, "Nombre de jours invalide."),
-});
+const dateFacultative = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v : null))
+  .refine((v) => v === null || FORMAT_DATE.test(v), "Date invalide.");
+
+export const schemaSoldeInitial = z
+  .object({
+    date_reference: date("Date du solde"),
+    jours: z
+      .string()
+      .trim()
+      .transform((v) => Number(v.replace(",", ".")))
+      .refine((n) => Number.isFinite(n) && n >= -100 && n <= 1000, "Nombre de jours invalide."),
+    // Dernier congé pris avant DématPaie (facultatif)
+    dernier_conge_debut: dateFacultative,
+    dernier_conge_fin: dateFacultative,
+  })
+  .refine((v) => !v.dernier_conge_fin || (v.dernier_conge_debut !== null && v.dernier_conge_fin >= v.dernier_conge_debut), {
+    path: ["dernier_conge_fin"],
+    message: "La fin doit être après le début.",
+  });
 
 // Nombre saisi en français (« 2,5 ») ; vide → null pour les champs facultatifs
 const nombre = (min: number, max: number, message: string) =>

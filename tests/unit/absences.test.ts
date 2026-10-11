@@ -98,3 +98,15 @@ describe("réglages personnalisés des congés", () => {
   });
 });
 
+describe("dernier congé saisi avec le solde de départ", () => {
+  test("facultatif, et la fin doit suivre le début", () => {
+    expect(schemaSoldeInitial.parse({ date_reference: "2026-10-01", jours: "10" })).toMatchObject({ dernier_conge_debut: null, dernier_conge_fin: null });
+    expect(schemaSoldeInitial.parse({ date_reference: "2026-10-01", jours: "10", dernier_conge_debut: "2026-07-01", dernier_conge_fin: "2026-07-20" })).toMatchObject({
+      dernier_conge_debut: "2026-07-01",
+      dernier_conge_fin: "2026-07-20",
+    });
+    expect(schemaSoldeInitial.safeParse({ date_reference: "2026-10-01", jours: "10", dernier_conge_debut: "2026-07-20", dernier_conge_fin: "2026-07-01" }).success).toBe(false);
+    expect(schemaSoldeInitial.safeParse({ date_reference: "2026-10-01", jours: "10", dernier_conge_fin: "2026-07-01" }).success).toBe(false);
+  });
+});
+

@@ -95,6 +95,8 @@ export async function definirSoldeInitial(salarieId: string, _e: EtatFormulaire,
     p_salarie_id: salarieId,
     p_date_reference: lu.donnees.date_reference,
     p_jours: lu.donnees.jours,
+    p_dernier_debut: lu.donnees.dernier_conge_debut,
+    p_dernier_fin: lu.donnees.dernier_conge_fin,
   });
   if (error) return { erreur: message(error, "Le solde n'a pas pu être enregistré."), valeurs: lu.valeurs };
   refresh();

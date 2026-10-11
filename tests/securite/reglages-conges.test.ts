@@ -145,3 +145,31 @@ describe("Calcul du solde", () => {
       expect(rows[0].perdu).toBe("19.00"); // 24 jours acquis l'an dernier, 5 reportés
     }));
 });
+
+describe("Date du dernier congé", () => {
+  test("saisie par le RH, puis remplacée par le dernier congé enregistré ; visible seulement par qui y a droit", () =>
+    dansUneTransaction(async (client) => {
+      const jeu = await creerJeuDeDonnees(client);
+      const d = await preparer(client, jeu);
+      await commeUtilisateur(client, d.rh);
+      await client.query("select public.definir_solde_initial($1, current_date, 10, '2026-07-01', '2026-07-20')", [d.awa]);
+      const dernier = async () =>
+        (await client.query("select debut::text, fin::text, source from public.derniers_conges_entreprise($1) where salarie_id = $2", [jeu.entreprises.A1, d.awa])).rows[0];
+      expect(await dernier()).toEqual({ debut: "2026-07-01", fin: "2026-07-20", source: "saisie" });
+
+      // Un congé accepté dans DématPaie devient le dernier congé
+      await client.query("reset role");
+      await client.query(
+        "insert into public.demandes_absence (entreprise_id, salarie_id, type_id, debut, fin, nb_jours, statut) values ($1, $2, $3, current_date - 3, current_date - 2, 1, 'acceptee')",
+        [jeu.entreprises.A1, d.awa, d.conge],
+      );
+      await commeUtilisateur(client, d.rh);
+      expect((await dernier()).source).toBe("dematpaie");
+
+      await commeUtilisateur(client, d.compte);
+      expect((await client.query("select source from public.mon_dernier_conge($1)", [d.awa])).rows).toEqual([{ source: "dematpaie" }]);
+      await commeUtilisateur(client, jeu.utilisateurs.gestionnaireB1);
+      expect((await client.query("select * from public.derniers_conges_entreprise($1)", [jeu.entreprises.A1])).rows).toEqual([]);
+    }));
+});
+
