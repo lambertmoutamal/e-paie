@@ -9,12 +9,13 @@ export type Onglet = "demandes" | "planning" | "soldes" | "reglages";
 // Données communes aux pages « Congés et absences » (la RLS filtre l'accès).
 export async function chargerContexte(entrepriseId: string) {
   const { supabase } = await exigerUtilisateur();
-  const [{ data: entreprise }, { data: peutGerer }] = await Promise.all([
+  const [{ data: entreprise }, { data: peutGerer }, { data: peutPrevoir }] = await Promise.all([
     supabase.from("entreprises").select("raison_sociale").eq("id", entrepriseId).maybeSingle(),
     supabase.rpc("peut_gerer_absences", { p_entreprise_id: entrepriseId }),
+    supabase.rpc("peut_prevoir_conges", { p_entreprise_id: entrepriseId }),
   ]);
   if (!entreprise) notFound();
-  return { supabase, entreprise, peutGerer: peutGerer === true };
+  return { supabase, entreprise, peutGerer: peutGerer === true, peutPrevoir: peutPrevoir === true };
 }
 
 export function EnTeteAbsences({ entrepriseId, raisonSociale, onglet }: { entrepriseId: string; raisonSociale: string; onglet: Onglet }) {

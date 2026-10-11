@@ -8,6 +8,7 @@ import { deposerFichier, supprimerFichier } from "@/lib/stockage/fichiers";
 import { informerSalarie } from "@/lib/notifications/alertes-absences";
 import {
   schemaJourFerie,
+  schemaPrevision,
   schemaParametresConges,
   schemaSaisieRh,
   schemaSoldeInitial,
@@ -140,4 +141,39 @@ export async function retirerJourFerie(ferieId: string) {
   const { supabase } = await exigerUtilisateur();
   await supabase.from("jours_feries").delete().eq("id", ferieId);
   refresh();
+}
+
+// ---------------------------------------------------------------------
+// Congés prévisionnels (gestionnaire de paie, RH, administrateurs)
+// ---------------------------------------------------------------------
+
+export async function prevoirConge(_e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const lu = lireFormulaire(schemaPrevision, formulaire);
+  if (!lu.ok) return { erreurs: lu.erreurs, valeurs: lu.valeurs };
+  const { error } = await supabase.rpc("prevoir_conge", {
+    p_salarie_id: lu.donnees.salarie_id,
+    p_type_id: lu.donnees.type_id,
+    p_debut: lu.donnees.debut,
+    p_fin: lu.donnees.fin,
+    p_motif: lu.donnees.motif,
+  });
+  if (error) return { erreur: message(error, "Le congé prévisionnel n'a pas pu être enregistré."), valeurs: lu.valeurs };
+  refresh();
+  return { succes: "Congé prévisionnel enregistré." };
+}
+
+export async function supprimerPrevision(demandeId: string) {
+  const { supabase } = await exigerUtilisateur();
+  await supabase.rpc("supprimer_prevision", { p_demande_id: demandeId });
+  refresh();
+}
+
+export async function confirmerPrevision(demandeId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const { error } = await supabase.rpc("confirmer_prevision", { p_demande_id: demandeId });
+  if (error) return { erreur: message(error, "La confirmation a échoué.") };
+  after(() => informerSalarie(demandeId));
+  refresh();
+  return { succes: "Congé confirmé." };
 }

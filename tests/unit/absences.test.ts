@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formaterJours, libelleDates, schemaDemande, schemaParametresConges, schemaSoldeInitial, schemaTypeAbsence } from "@/lib/absences/regles";
+import { formaterJours, libelleDates, schemaDemande, schemaPrevision, schemaParametresConges, schemaSoldeInitial, schemaTypeAbsence } from "@/lib/absences/regles";
 import { contenuDecision, contenuNouvelleDemande } from "@/lib/notifications/messages-absences";
 
 const TYPE = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b";
@@ -56,3 +56,13 @@ describe("alertes de congés", () => {
     expect(c.variables["3"]).toBe(base.lien);
   });
 });
+
+describe("congé prévisionnel", () => {
+  test("salarié, type et dates obligatoires, fin après le début", () => {
+    const base = { salarie_id: TYPE, type_id: TYPE, debut: "2026-12-21", fin: "2026-12-31" };
+    expect(schemaPrevision.parse(base)).toEqual({ ...base, motif: null });
+    expect(schemaPrevision.safeParse({ ...base, fin: "2026-12-01" }).success).toBe(false);
+    expect(schemaPrevision.safeParse({ ...base, salarie_id: "" }).success).toBe(false);
+  });
+});
+

@@ -15,6 +15,7 @@ export const STATUTS_DEMANDE = {
   acceptee: { libelle: "Acceptée", teinte: "vert" },
   refusee: { libelle: "Refusée", teinte: "rouge" },
   annulee: { libelle: "Annulée", teinte: "gris" },
+  prevue: { libelle: "Prévu", teinte: "bleu" },
 } as const;
 export type StatutDemande = keyof typeof STATUTS_DEMANDE;
 
@@ -72,6 +73,17 @@ export const schemaDemande = z
   });
 
 export const schemaSaisieRh = z.intersection(schemaDemande, z.object({ salarie_id: identifiant("Choisissez le salarié.") }));
+
+// Congé prévisionnel (gestionnaire de paie, RH, administrateur) : journées entières
+export const schemaPrevision = z
+  .object({
+    salarie_id: identifiant("Choisissez le salarié."),
+    type_id: identifiant("Choisissez le type d'absence."),
+    debut: date("Début"),
+    fin: date("Fin"),
+    motif: texteFacultatif(500),
+  })
+  .refine((v) => v.fin >= v.debut, { path: ["fin"], message: "La fin doit être après le début." });
 
 export const schemaSoldeInitial = z.object({
   date_reference: date("Date du solde"),

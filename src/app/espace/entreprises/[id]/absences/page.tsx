@@ -21,7 +21,7 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
 
   const [{ data: enAttente }, { data: historique }, { data: soldes }, { data: salaries }, { data: types }] = await Promise.all([
     supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).eq("statut", "en_attente").order("cree_le"),
-    supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).neq("statut", "en_attente").order("debut", { ascending: false }).limit(60),
+    supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).in("statut", ["acceptee", "refusee", "annulee"]).order("debut", { ascending: false }).limit(60),
     supabase.rpc("soldes_entreprise", { p_entreprise_id: id }),
     supabase.from("salaries").select("id, nom, prenoms, matricule").eq("entreprise_id", id).eq("statut", "actif").order("nom"),
     supabase.from("types_absence").select("id, libelle").eq("entreprise_id", id).eq("actif", true).order("ordre"),
