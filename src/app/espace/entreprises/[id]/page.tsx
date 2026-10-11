@@ -11,6 +11,7 @@ import { ajouterUtilisateur, changerAcces, modifierEntreprise, renvoyerInvitatio
 import { ChampsEntreprise } from "../champs-entreprise";
 import { MODULES } from "@/lib/modules";
 import { CarteModule } from "@/components/carte-module";
+import { CarteEcheances, type Echeance } from "@/components/echeances";
 
 export const metadata: Metadata = { title: "Entreprise" };
 
@@ -26,7 +27,7 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
     .maybeSingle();
   if (!entreprise) notFound();
 
-  const [{ data: gere }, { data: affectations }, { count: nbSalaries }] = await Promise.all([
+  const [{ data: gere }, { data: affectations }, { count: nbSalaries }, { data: echeances }] = await Promise.all([
     supabase.rpc("peut_gerer_entreprise", { p_entreprise_id: id }),
     supabase
       .from("affectations")
@@ -34,6 +35,7 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
       .eq("entreprise_id", id)
       .order("actif", { ascending: false }),
     supabase.from("salaries").select("id", { count: "exact", head: true }).eq("entreprise_id", id).eq("statut", "actif"),
+    supabase.rpc("echeances_contrats", { p_jours: 30 }),
   ]);
   const peutGerer = gere === true;
   const nomCabinet = entreprise.cabinets ? champLie(entreprise.cabinets, "nom") : null;
@@ -73,6 +75,8 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
           ))}
         </div>
       </section>
+
+      <CarteEcheances echeances={((echeances ?? []) as Echeance[]).filter((e) => e.entreprise_id === id)} />
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="flex flex-col gap-6 lg:col-span-3">

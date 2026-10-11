@@ -87,6 +87,8 @@ export function ImportSalaries({ entrepriseId }: { entrepriseId: string }) {
         </p>
         <p>
           <strong>{resultat.crees}</strong> salarié(s) créé(s), <strong>{resultat.misAJour}</strong> mis à jour.
+          {resultat.contratsCrees > 0 && <> <strong>{resultat.contratsCrees}</strong> contrat(s) créé(s).</>}
+          {resultat.contratsIgnores > 0 && <> {resultat.contratsIgnores} salarié(s) avaient déjà un contrat en cours : leur contrat n&apos;a pas été modifié.</>}
         </p>
         <Link href={`/espace/entreprises/${entrepriseId}/salaries`} className={classesBouton("principal")}>
           Voir la liste des salariés
@@ -197,6 +199,7 @@ export function ImportSalaries({ entrepriseId }: { entrepriseId: string }) {
                         <th className="px-3 py-2 font-medium">Nom et prénoms</th>
                         <th className="px-3 py-2 font-medium">Embauche</th>
                         <th className="px-3 py-2 font-medium">Téléphone</th>
+                        <th className="px-3 py-2 font-medium">Contrat</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-bordure">
@@ -207,6 +210,7 @@ export function ImportSalaries({ entrepriseId }: { entrepriseId: string }) {
                           <td className="px-3 py-2">{l.donnees!.nom} {l.donnees!.prenoms}</td>
                           <td className="px-3 py-2">{l.donnees!.date_embauche.split("-").reverse().join("/")}</td>
                           <td className="px-3 py-2">{l.donnees!.telephone ?? "—"}</td>
+                          <td className="px-3 py-2">{l.donnees!.type_contrat ? l.donnees!.type_contrat.toUpperCase() : "—"}</td>
                         </tr>
                       ))}
                     </tbody>

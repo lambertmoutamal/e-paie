@@ -4,7 +4,8 @@ import { LogOut, RotateCcw } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { formaterDate } from "@/lib/abonnements/phases";
 import { Champ, Formulaire } from "@/components/formulaire";
-import { Badge, Carte, classesBouton, EnTetePage, Page } from "@/components/ui";
+import { Carte, classesBouton, Page } from "@/components/ui";
+import { EnTeteSalarie } from "./en-tete-salarie";
 import { enregistrerSortie, modifierSalarie, reintegrerSalarie } from "../actions";
 import { ChampsSalarie } from "../champs-salarie";
 
@@ -31,15 +32,7 @@ export default async function PageSalarie({ params }: PageProps<"/espace/entrepr
 
   return (
     <Page>
-      <EnTetePage
-        titre={`${salarie.nom} ${salarie.prenoms}`}
-        description={`Matricule ${salarie.matricule}${salarie.poste ? ` · ${salarie.poste}` : ""} · mis à jour le ${formaterDate(salarie.modifie_le)}`}
-        fil={[
-          { href: `/espace/entreprises/${id}`, libelle: entreprise.raison_sociale },
-          { href: `/espace/entreprises/${id}/salaries`, libelle: "Salariés" },
-        ]}
-        actions={sorti ? <Badge>Sorti(e) le {formaterDate(salarie.date_sortie!)}</Badge> : <Badge teinte="vert">En poste</Badge>}
-      />
+      <EnTeteSalarie entrepriseId={id} raisonSociale={entreprise.raison_sociale} salarie={salarie} onglet="fiche" />
 
       {sorti && (
         <p className="rounded-lg border border-bordure bg-surface px-4 py-3 text-sm">
@@ -47,7 +40,10 @@ export default async function PageSalarie({ params }: PageProps<"/espace/entrepr
         </p>
       )}
 
-      <Carte titre="Fiche salarié" description={modifiable ? undefined : "Consultation seule."}>
+      <Carte
+        titre="Fiche salarié"
+        description={`${modifiable ? "" : "Consultation seule · "}Mise à jour le ${formaterDate(salarie.modifie_le)}.`}
+      >
         {modifiable ? (
           <Formulaire action={modifierSalarie.bind(null, id, salarie.id)} libelleBouton="Enregistrer" colonnes={2}>
             <ChampsSalarie fiche={salarie} />

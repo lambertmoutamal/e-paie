@@ -244,6 +244,28 @@ export function ZoneTexte({ nom, libelle, aide, max = 2000 }: { nom: string; lib
   );
 }
 
+// Envoi d'un fichier (PDF ou photo). Le champ s'appelle toujours « fichier ».
+export function ChampFichier({ libelle, requis, aide }: { libelle: string; requis?: boolean; aide?: string }) {
+  const etat = use(ContexteFormulaire);
+  const erreur = etat?.erreurs?.fichier;
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1.5 sm:col-span-2">
+      <Etiquette id={id} libelle={libelle} requis={requis} />
+      <input
+        id={id}
+        name="fichier"
+        type="file"
+        accept="application/pdf,image/jpeg,image/png"
+        aria-invalid={erreur ? true : undefined}
+        aria-describedby={`${id}-message`}
+        className="block w-full rounded-lg border border-bordure bg-surface text-sm file:mr-3 file:h-11 file:cursor-pointer file:border-0 file:bg-marque-claire file:px-4 file:font-semibold file:text-marque"
+      />
+      <MessageChamp id={id} erreur={erreur} aide={aide ?? "PDF, JPEG ou PNG, 5 Mo maximum. Sur téléphone, vous pouvez prendre une photo."} />
+    </div>
+  );
+}
+
 export function TitreGroupe({ children }: { children: ReactNode }) {
   return <p className="pt-2 text-sm font-semibold text-doux sm:col-span-2">{children}</p>;
 }

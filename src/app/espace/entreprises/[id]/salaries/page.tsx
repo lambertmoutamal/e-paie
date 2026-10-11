@@ -14,7 +14,8 @@ export default async function PageSalaries({ params, searchParams }: PageProps<"
   const { id } = await params;
   const { q, statut, page } = await searchParams;
   const recherche = typeof q === "string" ? q.trim().slice(0, 60) : "";
-  const filtre = statut === "sorti" || statut === "tous" ? statut : "actif";
+  const filtre = statut === "sorti" || statut === "tous" || statut === "a_venir" ? statut : "actif";
+  const aujourdhui = new Date().toISOString().slice(0, 10);
   const numeroPage = Math.max(1, Number(page) || 1);
   const { supabase } = await exigerUtilisateur();
 
@@ -28,7 +29,10 @@ export default async function PageSalaries({ params, searchParams }: PageProps<"
     .order("nom")
     .order("prenoms")
     .range((numeroPage - 1) * PAR_PAGE, numeroPage * PAR_PAGE - 1);
-  if (filtre !== "tous") requete = requete.eq("statut", filtre);
+  // « En poste » : embauche passée ; « À venir » : salariés prévisionnels (embauche future)
+  if (filtre === "actif") requete = requete.eq("statut", "actif").lte("date_embauche", aujourdhui);
+  if (filtre === "a_venir") requete = requete.eq("statut", "actif").gt("date_embauche", aujourdhui);
+  if (filtre === "sorti") requete = requete.eq("statut", "sorti");
   if (recherche) {
     // Les caractères spéciaux sont neutralisés pour ne pas perturber le filtre.
     const motif = `%${recherche.replace(/[%_,()\\]/g, " ")}%`;
@@ -86,6 +90,7 @@ export default async function PageSalaries({ params, searchParams }: PageProps<"
           className="h-11 rounded-lg border border-bordure bg-surface px-3 outline-none focus:border-marque"
         >
           <option value="actif">En poste</option>
+          <option value="a_venir">À venir (prévisionnels)</option>
           <option value="sorti">Sortis</option>
           <option value="tous">Tous</option>
         </select>
@@ -109,7 +114,7 @@ export default async function PageSalaries({ params, searchParams }: PageProps<"
                 href={`/espace/entreprises/${id}/salaries/${s.id}`}
                 titre={`${s.nom} ${s.prenoms}`}
                 sousTitre={[`Matricule ${s.matricule}`, s.poste, `embauché(e) le ${formaterDate(s.date_embauche)}`].filter(Boolean).join(" · ")}
-                fin={s.statut === "sorti" ? <Badge>Sorti(e) le {formaterDate(s.date_sortie!)}</Badge> : !s.telephone ? <Badge teinte="ambre">Sans téléphone</Badge> : null}
+                fin={s.statut === "sorti" ? <Badge>Sorti(e) le {formaterDate(s.date_sortie!)}</Badge> : s.date_embauche > aujourdhui ? <Badge teinte="bleu">Arrive le {formaterDate(s.date_embauche)}</Badge> : !s.telephone ? <Badge teinte="ambre">Sans téléphone</Badge> : null}
               />
             ))}
           </ListeLignes>
