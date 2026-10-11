@@ -67,6 +67,7 @@ export function CarteActionsPaie({ actions, demandes = [] }: { actions: ActionPa
                 </span>
                 <span className="block truncate text-sm text-doux">
                   {d.type_libelle} · {libelleDates(d)} · {formaterJours(d.nb_jours)}
+                  {d.prevalidee ? " · premier accord du RH donné" : ""}
                 </span>
               </span>
               <ChevronRight size={18} className="shrink-0 text-doux" aria-hidden />

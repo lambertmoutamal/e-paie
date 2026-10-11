@@ -12,20 +12,22 @@ import { AnnulationAbsence, DecisionDemande } from "./formulaires";
 export const metadata: Metadata = { title: "Congés et absences" };
 
 const CHAMPS =
-  "id, salarie_id, debut, fin, debut_apres_midi, fin_midi, nb_jours, statut, motif, justificatif_chemin, saisie_rh, commentaire_decision, cree_le, decide_le, salaries(nom, prenoms, matricule), types_absence(libelle, nature, deduit_solde)";
+  "id, salarie_id, prevalidee_le, debut, fin, debut_apres_midi, fin_midi, nb_jours, statut, motif, justificatif_chemin, saisie_rh, commentaire_decision, cree_le, decide_le, salaries(nom, prenoms, matricule), types_absence(libelle, nature, deduit_solde)";
 
 export default async function PageDemandes({ params }: PageProps<"/espace/entreprises/[id]/absences">) {
   const { id } = await params;
   const { supabase, entreprise, peutGerer } = await chargerContexte(id);
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
-  const [{ data: enAttente }, { data: historique }, { data: soldes }, { data: salaries }, { data: types }] = await Promise.all([
+  const [{ data: enAttente }, { data: historique }, { data: soldes }, { data: salaries }, { data: types }, { data: derniers }] = await Promise.all([
     supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).eq("statut", "en_attente").order("cree_le"),
     supabase.from("demandes_absence").select(CHAMPS).eq("entreprise_id", id).in("statut", ["acceptee", "refusee", "annulee"]).order("debut", { ascending: false }).limit(60),
     supabase.rpc("soldes_entreprise", { p_entreprise_id: id }),
     supabase.from("salaries").select("id, nom, prenoms, matricule").eq("entreprise_id", id).eq("statut", "actif").order("nom"),
     supabase.from("types_absence").select("id, libelle").eq("entreprise_id", id).eq("actif", true).order("ordre"),
+    supabase.rpc("derniers_conges_entreprise", { p_entreprise_id: id }),
   ]);
+  const dernierDe = new Map(((derniers ?? []) as { salarie_id: string; debut: string; fin: string }[]).map((d) => [d.salarie_id, d]));
   const soldeDe = new Map(((soldes ?? []) as { salarie_id: string; disponible: number }[]).map((s) => [s.salarie_id, Number(s.disponible)]));
 
   return (
@@ -57,6 +59,9 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
                         {depasse ? " — la demande dépasse le solde" : ""}
                       </p>
                     )}
+                    <p className="text-doux">
+                      Dernier congé : {dernierDe.get(d.salarie_id) ? libelleDates(dernierDe.get(d.salarie_id)!) : "aucun enregistré"}
+                    </p>
                     {d.motif && <p className="mt-1 rounded-lg bg-black/[.03] px-3 py-2">{d.motif}</p>}
                     {d.justificatif_chemin && (
                       <a href={lienJustificatif(d.justificatif_chemin)} target="_blank" rel="noopener" className="mt-1 inline-flex items-center gap-1 text-marque hover:underline">
@@ -65,6 +70,11 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
                       </a>
                     )}
                     <p className="mt-1 text-xs text-doux">Demandée le {formaterDate(d.cree_le)}</p>
+                    {d.prevalidee_le && (
+                      <p className="mt-1">
+                        <Badge teinte="bleu">Premier accord du RH le {formaterDate(d.prevalidee_le)}</Badge>
+                      </p>
+                    )}
                   </div>
                   {peutGerer && <DecisionDemande action={deciderDemande.bind(null, d.id)} />}
                 </li>

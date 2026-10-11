@@ -33,6 +33,7 @@ export type DemandeATraiter = {
   fin: string;
   nb_jours: number;
   cree_le: string;
+  prevalidee: boolean;
 };
 
 // Demandes d'absence que la personne connectée doit traiter (RH, ou administrateur s'il n'y a pas de RH).

@@ -10,7 +10,7 @@ import { annulerMaDemande } from "./actions";
 export const metadata: Metadata = { title: "Mes absences" };
 
 type Emploi = { salarie_id: string; raison_sociale: string; statut: string };
-type Solde = { acquis: number; pris: number; en_attente: number; disponible: number };
+type Solde = { acquis: number; anciennete: number; pris: number; perdu: number; en_attente: number; disponible: number };
 type Demande = {
   id: string;
   raison_sociale: string;
@@ -35,8 +35,11 @@ export default async function PageMesAbsences({ searchParams }: PageProps<"/port
   const actifs = ((emplois ?? []) as Emploi[]).filter((e) => e.statut === "actif");
   const soldes = await Promise.all(
     actifs.map(async (e) => {
-      const { data } = await supabase.rpc("mon_solde_conges", { p_salarie_id: e.salarie_id });
-      return { emploi: e, solde: (data?.[0] ?? null) as Solde | null };
+      const [{ data }, { data: dernier }] = await Promise.all([
+        supabase.rpc("mon_solde_conges", { p_salarie_id: e.salarie_id }),
+        supabase.rpc("mon_dernier_conge", { p_salarie_id: e.salarie_id }),
+      ]);
+      return { emploi: e, solde: (data?.[0] ?? null) as Solde | null, dernier: (dernier?.[0] ?? null) as { debut: string; fin: string } | null };
     }),
   );
   const liste = (demandes ?? []) as Demande[];
@@ -63,7 +66,7 @@ export default async function PageMesAbsences({ searchParams }: PageProps<"/port
         </p>
       )}
 
-      {soldes.map(({ emploi, solde }) =>
+      {soldes.map(({ emploi, solde, dernier }) =>
         solde ? (
           <section key={emploi.salarie_id} className="rounded-xl border border-bordure bg-surface p-4">
             {soldes.length > 1 && <p className="mb-2 text-sm font-semibold">{emploi.raison_sociale}</p>}
@@ -77,9 +80,11 @@ export default async function PageMesAbsences({ searchParams }: PageProps<"/port
               </div>
             </div>
             <p className="mt-3 text-xs text-doux">
-              Acquis : {formaterJours(solde.acquis)} · Pris : {formaterJours(solde.pris)}
+              Acquis : {formaterJours(Number(solde.acquis) + Number(solde.anciennete))} · Pris : {formaterJours(solde.pris)}
+              {Number(solde.perdu) > 0 ? ` · Non reportés : ${formaterJours(solde.perdu)}` : ""}
               {Number(solde.en_attente) > 0 ? ` · En attente de réponse : ${formaterJours(solde.en_attente)}` : ""}
             </p>
+            {dernier && <p className="mt-1 text-xs text-doux">Dernier congé : {libelleDates(dernier)}</p>}
           </section>
         ) : null,
       )}

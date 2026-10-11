@@ -85,22 +85,78 @@ export const schemaPrevision = z
   })
   .refine((v) => v.fin >= v.debut, { path: ["fin"], message: "La fin doit être après le début." });
 
-export const schemaSoldeInitial = z.object({
-  date_reference: date("Date du solde"),
-  jours: z
+const dateFacultative = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v : null))
+  .refine((v) => v === null || FORMAT_DATE.test(v), "Date invalide.");
+
+export const schemaSoldeInitial = z
+  .object({
+    date_reference: date("Date du solde"),
+    jours: z
+      .string()
+      .trim()
+      .transform((v) => Number(v.replace(",", ".")))
+      .refine((n) => Number.isFinite(n) && n >= -100 && n <= 1000, "Nombre de jours invalide."),
+    // Dernier congé pris avant DématPaie (facultatif)
+    dernier_conge_debut: dateFacultative,
+    dernier_conge_fin: dateFacultative,
+  })
+  .refine((v) => !v.dernier_conge_fin || (v.dernier_conge_debut !== null && v.dernier_conge_fin >= v.dernier_conge_debut), {
+    path: ["dernier_conge_fin"],
+    message: "La fin doit être après le début.",
+  });
+
+// Nombre saisi en français (« 2,5 ») ; vide → null pour les champs facultatifs
+const nombre = (min: number, max: number, message: string) =>
+  z
     .string()
     .trim()
     .transform((v) => Number(v.replace(",", ".")))
-    .refine((n) => Number.isFinite(n) && n >= -100 && n <= 1000, "Nombre de jours invalide."),
+    .refine((n) => Number.isFinite(n) && n >= min && n <= max, message);
+const nombreFacultatif = (min: number, max: number, message: string) =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? Number(v.replace(",", ".")) : null))
+    .refine((n) => n === null || (Number.isFinite(n) && n >= min && n <= max), message);
+
+// Acquisition : jours par mois, décompte, jours d'ancienneté
+export const schemaParametresConges = z.object({
+  jours_par_mois: nombre(0, 5, "Entre 0 et 5 jours par mois."),
+  decompte: z.enum(["ouvrables", "ouvres"], "Choisissez le mode de décompte."),
+  anciennete_tranche_ans: nombreFacultatif(1, 40, "Entre 1 et 40 ans.").refine((n) => n === null || Number.isInteger(n), "Nombre entier d'années."),
+  anciennete_jours_par_tranche: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? Number(v.replace(",", ".")) : 0))
+    .refine((n) => Number.isFinite(n) && n >= 0 && n <= 10, "Entre 0 et 10 jours."),
+  anciennete_plafond: nombreFacultatif(0, 100, "Plafond invalide."),
 });
 
-export const schemaParametresConges = z.object({
-  jours_par_mois: z
-    .string()
-    .trim()
-    .transform((v) => Number(v.replace(",", ".")))
-    .refine((n) => Number.isFinite(n) && n >= 0 && n <= 5, "Entre 0 et 5 jours par mois."),
-  decompte: z.enum(["ouvrables", "ouvres"], "Choisissez le mode de décompte."),
+// Règles des demandes
+export const schemaReglesDemandes = z.object({
+  delai_prevenance_jours: nombre(0, 365, "Entre 0 et 365 jours.").refine((n) => Number.isInteger(n), "Nombre entier de jours."),
+  solde_negatif_autorise: caseACocher,
+  report_max_jours: nombreFacultatif(0, 365, "Nombre de jours invalide."),
+  mois_debut_reference: nombre(1, 12, "Choisissez un mois."),
+});
+
+export const MODES_VALIDATION = {
+  rh: { libelle: "Le RH", aide: "Le RH accepte ou refuse. S'il n'y a pas de RH, les administrateurs s'en chargent." },
+  administrateurs: { libelle: "Les administrateurs", aide: "Seuls les administrateurs (cabinet ou entreprise) accepteront ou refuseront." },
+  rh_puis_administrateur: {
+    libelle: "Le RH, puis un administrateur",
+    aide: "Deux validations : le RH donne un premier accord, puis un administrateur (une autre personne) décide.",
+  },
+} as const;
+
+export const schemaModeValidation = z.object({
+  validation_absences: z.enum(["rh", "administrateurs", "rh_puis_administrateur"], "Choisissez qui valide."),
 });
 
 export const schemaTypeAbsence = z.object({
@@ -121,3 +177,7 @@ export const schemaJourFerie = z.object({
   jour: date("Date"),
   libelle: z.string().trim().min(2, "Nom trop court.").max(80, "80 caractères maximum."),
 });
+
+// Modification d'un type existant (sa nature ne change pas)
+export const schemaModifTypeAbsence = schemaTypeAbsence.omit({ nature: true });
+
