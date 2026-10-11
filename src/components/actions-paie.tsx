@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { BellRing, ChevronRight, CircleCheck, Send, Undo2, UserX } from "lucide-react";
-import { libellePeriode, libelleRole } from "@/lib/bulletins/regles";
+import { BellRing, ChevronRight, CircleCheck, Send, Undo2 } from "lucide-react";
+import { libellePeriode } from "@/lib/bulletins/regles";
 import type { ActionPaie } from "@/lib/bulletins/actions-a-faire";
 import { formaterDate } from "@/lib/abonnements/phases";
 
@@ -8,7 +8,6 @@ const APPARENCE = {
   a_valider: { libelle: "À valider", icone: CircleCheck, classes: "bg-amber-100 text-amber-800" },
   a_publier: { libelle: "À publier", icone: Send, classes: "bg-sky-100 text-sky-800" },
   a_corriger: { libelle: "À corriger", icone: Undo2, classes: "bg-red-100 text-red-800" },
-  sans_validateur: { libelle: "Rôle à attribuer", icone: UserX, classes: "bg-red-100 text-red-800" },
 } as const;
 
 // Carte « À faire » du tableau de bord : très visible, en tête de page.
@@ -32,7 +31,7 @@ export function CarteActionsPaie({ actions }: { actions: ActionPaie[] }) {
           return (
             <li key={a.periode_id}>
               <Link
-                href={a.action === "sans_validateur" ? `/espace/entreprises/${a.entreprise_id}` : `/espace/entreprises/${a.entreprise_id}/paie/${a.periode_id}`}
+                href={`/espace/entreprises/${a.entreprise_id}/paie/${a.periode_id}`}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-black/[.02] sm:px-5">
                 <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${classes}`}>
                   <Icone size={14} aria-hidden />
@@ -43,13 +42,9 @@ export function CarteActionsPaie({ actions }: { actions: ActionPaie[] }) {
                     Paie de {libellePeriode(a.annee, a.mois)} · {a.raison_sociale}
                   </span>
                   <span className="block truncate text-sm text-doux">
-                    {a.action === "sans_validateur"
-                      ? `Étape « ${a.libelle_etape} » bloquée : personne n'a le rôle « ${libelleRole(a.commentaire ?? "")} » · `
-                      : a.action === "a_valider"
-                        ? `Étape « ${a.libelle_etape} » · `
-                        : ""}
+                    {a.action === "a_valider" ? `Étape « ${a.libelle_etape} » · ` : ""}
                     depuis le {formaterDate(a.depuis)}
-                    {a.commentaire && a.action !== "sans_validateur" ? ` · motif du refus : « ${a.commentaire} »` : ""}
+                    {a.commentaire ? ` · motif du refus : « ${a.commentaire} »` : ""}
                   </span>
                 </span>
                 <ChevronRight size={18} className="shrink-0 text-doux" aria-hidden />

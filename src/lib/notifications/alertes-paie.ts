@@ -31,11 +31,7 @@ export async function alerterPaie(periodeId: string, seulementPour?: string): Pr
 
     await Promise.allSettled(
       destinataires.map(async (d) => {
-        // Rôle manquant : on mène à la gestion des utilisateurs de l'entreprise
-        const lien =
-          d.motif === "sans_validateur"
-            ? `${adresseSite()}/espace/entreprises/${d.entreprise_id}`
-            : `${adresseSite()}/espace/entreprises/${d.entreprise_id}/paie/${periodeId}`;
+        const lien = `${adresseSite()}/espace/entreprises/${d.entreprise_id}/paie/${periodeId}`;
         const contenu = contenuAlerte({
           motif: d.motif,
           nom: d.nom_complet,
