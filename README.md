@@ -125,6 +125,26 @@ n'est laissée. Comptez 1 à 2 minutes selon la connexion.
   demande Pro (adresse `EMAIL_ALERTES`).
 - Les décisions métier sont consignées dans [`docs/decisions.md`](docs/decisions.md) et le plan dans [`docs/plan.md`](docs/plan.md).
 
+## Portail salarié : connexion par SMS ou WhatsApp (Twilio)
+
+Les salariés se connectent sur `/portail/connexion` avec le numéro saisi sur leur fiche.
+Le code à 6 chiffres est envoyé par **Twilio Verify**, configuré **dans Supabase** :
+aucune clé Twilio n'est à mettre dans `.env.local`.
+
+1. Créez un compte sur [twilio.com](https://www.twilio.com) (l'essai gratuit suffit pour les tests).
+2. Dans Twilio : **Verify → Services → Create new** (nom : `e-Paie`), cochez **SMS** et **WhatsApp**.
+   Notez le **Service SID** (commence par `VA…`).
+3. Dans Twilio, page d'accueil de la console : notez l'**Account SID** (`AC…`) et l'**Auth Token**.
+4. Dans Supabase : **Authentication → Sign In / Providers → Phone** :
+   activez-le, choisissez **Twilio Verify**, collez les trois valeurs, enregistrez.
+5. Pour tester sans SMS réel : même page, **Test Phone Numbers and OTPs**, ajoutez par exemple
+   `24177000001=123456` (numéro sans « + », puis le code). Donnez ce numéro (`+241 77 00 00 01`)
+   à un salarié de test dans e-Paie.
+
+Sécurité : un code n'est envoyé (et facturé) que pour un numéro enregistré par un employeur dont
+l'abonnement est actif, au plus un code par minute et par numéro. Le message affiché est le même
+que le numéro soit connu ou non. Le salarié ne voit que **ses** bulletins **publiés**.
+
 ## Commandes utiles
 
 | Commande | Rôle |

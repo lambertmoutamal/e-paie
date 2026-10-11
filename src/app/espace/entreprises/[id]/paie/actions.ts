@@ -169,3 +169,11 @@ export async function deciderEtape(periodeId: string, _e: EtatFormulaire, formul
   refresh();
   return { succes: data === "approuvee" ? "Période approuvée : elle est désormais verrouillée." : "Étape validée : la période passe à l'étape suivante." };
 }
+
+export async function publierPeriode(periodeId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const { data, error } = await supabase.rpc("publier_periode", { p_periode_id: periodeId });
+  if (error) return { erreur: messageCircuit(error, "La publication a échoué.") };
+  refresh();
+  return { succes: `${data} bulletin(s) publié(s) : les salariés peuvent les consulter.` };
+}

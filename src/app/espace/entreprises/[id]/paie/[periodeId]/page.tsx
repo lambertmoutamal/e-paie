@@ -7,7 +7,7 @@ import { formaterDate } from "@/lib/abonnements/phases";
 import { libellePeriode, libelleRole, salariesAttendus, STATUTS_PERIODE, type EtapeCircuit, type StatutPeriode } from "@/lib/bulletins/regles";
 import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, classesBouton, EnTetePage, EtatVide, Page, Statistique } from "@/components/ui";
-import { deciderEtape, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
+import { deciderEtape, publierPeriode, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
 import { DecisionEtape } from "./decision-etape";
 import { DepotUnique } from "./depot-bulletins";
 import { ModesDepot } from "./modes-depot";
@@ -31,17 +31,18 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
     { data: historique },
     { data: circuitActuel },
     { data: motifBlocage },
+    { data: peutPublier },
   ] = await Promise.all([
     supabase.from("entreprises").select("raison_sociale").eq("id", id).maybeSingle(),
     supabase
       .from("periodes_paie")
-      .select("id, annee, mois, statut, circuit, etape_courante, approuvee_le")
+      .select("id, annee, mois, statut, circuit, etape_courante, approuvee_le, publiee_le")
       .eq("id", periodeId)
       .eq("entreprise_id", id)
       .maybeSingle(),
     supabase
       .from("salaries")
-      .select("id, matricule, nom, prenoms, statut, date_embauche, date_sortie")
+      .select("id, matricule, nom, prenoms, statut, date_embauche, date_sortie, telephone")
       .eq("entreprise_id", id)
       .order("nom")
       .order("prenoms"),
@@ -59,6 +60,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
       .order("etape", { ascending: false }),
     supabase.rpc("circuit_entreprise", { p_entreprise_id: id }),
     supabase.rpc("motif_blocage_validation", { p_periode_id: periodeId }),
+    supabase.rpc("peut_publier", { p_entreprise_id: id }),
   ]);
   if (!entreprise || !periode) notFound();
 
@@ -78,6 +80,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
   const horsListe = (salaries ?? []).filter((s) => !idsAttendus.has(s.id) && parSalarie.has(s.id));
   const lignes = [...attendus, ...horsListe].sort((a, b) => Number(parSalarie.has(a.id)) - Number(parSalarie.has(b.id)));
   const manquants = attendus.filter((s) => !parSalarie.has(s.id)).length;
+  const sansTelephone = (salaries ?? []).filter((s) => parSalarie.has(s.id) && !s.telephone).length;
 
   return (
     <Page>
@@ -163,6 +166,27 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
             <DecisionEtape action={deciderEtape.bind(null, periodeId)} libelleEtape={etapeEnCours.libelle} derniere={etapeCourante === circuit.length} />
           )}
           {periode.statut === "en_validation" && !peutDecider && motifBlocage && <p className="text-sm text-doux">{motifBlocage}</p>}
+
+          {periode.statut === "approuvee" && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-marque-claire/60 px-3 py-2">
+              <p className="text-sm">
+                Période approuvée. La publication rend chaque bulletin visible par son salarié dans son espace.
+                {sansTelephone > 0 && (
+                  <span className="mt-1 block text-amber-800">
+                    {sansTelephone} salarié(s) concerné(s) n&apos;ont pas de numéro de téléphone : ajoutez-le sur leur fiche pour qu&apos;ils puissent se
+                    connecter.
+                  </span>
+                )}
+              </p>
+              {peutPublier === true && <ActionEnLigne action={publierPeriode.bind(null, periodeId)} libelle="Publier aux salariés" variante="secondaire" />}
+            </div>
+          )}
+          {periode.statut === "publiee" && periode.publiee_le && (
+            <p className="flex items-center gap-2 text-sm text-marque">
+              <CircleCheck size={16} aria-hidden />
+              Publiée aux salariés le {formaterDate(periode.publiee_le)}.
+            </p>
+          )}
         </div>
       </Carte>
 

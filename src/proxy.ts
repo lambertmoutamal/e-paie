@@ -25,8 +25,23 @@ export async function proxy(requete: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const connecte = Boolean(data?.claims?.sub);
   const motDePasseADefinir = data?.claims?.app_metadata?.mot_de_passe_a_definir === true;
+  const salarie = data?.claims?.app_metadata?.type === "salarie";
   const chemin = requete.nextUrl.pathname;
+  const pagePortail = chemin === "/portail" || chemin.startsWith("/portail/");
+  const connexionPortail = chemin === "/portail/connexion";
 
+  // Portail salarié (connexion par téléphone)
+  if (pagePortail) {
+    if (!connecte && !connexionPortail) return rediriger(requete, reponse, "/portail/connexion");
+    if (connecte && salarie && connexionPortail) return rediriger(requete, reponse, "/portail");
+    if (connecte && !salarie && !connexionPortail) return rediriger(requete, reponse, "/espace");
+    return reponse;
+  }
+
+  // Un compte salarié n'entre jamais dans l'espace du personnel.
+  if (connecte && salarie && (chemin.startsWith("/espace") || chemin === "/connexion")) {
+    return rediriger(requete, reponse, "/portail");
+  }
   if (!connecte && chemin.startsWith("/espace")) {
     return rediriger(requete, reponse, "/connexion");
   }
@@ -48,5 +63,5 @@ function rediriger(requete: NextRequest, reponse: NextResponse, chemin: string) 
 }
 
 export const config = {
-  matcher: ["/espace/:path*", "/connexion"],
+  matcher: ["/espace/:path*", "/connexion", "/portail", "/portail/:path*"],
 };

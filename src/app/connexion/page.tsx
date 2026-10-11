@@ -19,7 +19,12 @@ export default function PageConnexion() {
               Essayer gratuitement 30 jours
             </Link>
           </p>
-          <p>Vous êtes salarié ? L&apos;espace salarié, avec connexion par téléphone, arrive bientôt.</p>
+          <p>
+            Vous êtes salarié ?{" "}
+            <Link href="/portail/connexion" className="font-medium text-marque hover:underline">
+              Connexion par téléphone
+            </Link>
+          </p>
         </div>
       }
     >
