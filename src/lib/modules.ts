@@ -1,0 +1,99 @@
+// Catalogue des modules d'e-Paie (inspiré de l'organisation des SIRH du marché).
+// Source unique pour le menu, le tableau de bord, la fiche entreprise et le site vitrine.
+// « disponible » : utilisable aujourd'hui ; « bientot » : prévu au plan (docs/plan.md).
+
+export type IdModule = "administration" | "bulletins" | "absences" | "self-service" | "notes-de-frais" | "pilotage" | "paie";
+
+export type Module = {
+  id: IdModule;
+  nom: string;
+  accroche: string;
+  fonctions: { libelle: string; disponible: boolean }[];
+  statut: "disponible" | "bientot";
+  // Page du module pour une entreprise donnée (si disponible)
+  lienEntreprise?: (entrepriseId: string) => string;
+};
+
+export const MODULES: Module[] = [
+  {
+    id: "administration",
+    nom: "Gestion administrative",
+    accroche: "Dossiers salariés, import Excel, contrats et échéances.",
+    statut: "disponible",
+    lienEntreprise: (id) => `/espace/entreprises/${id}/salaries`,
+    fonctions: [
+      { libelle: "Fiches salariés et sortie du personnel", disponible: true },
+      { libelle: "Import des salariés depuis Excel", disponible: true },
+      { libelle: "Contrats, avenants et documents du salarié", disponible: false },
+      { libelle: "Alertes de fin de CDD et de période d'essai", disponible: false },
+    ],
+  },
+  {
+    id: "bulletins",
+    nom: "Bulletins & coffre-fort",
+    accroche: "Dépôt, validation et publication des bulletins, archivés durablement.",
+    statut: "bientot",
+    fonctions: [
+      { libelle: "Dépôt des bulletins PDF, un par salarié et par mois", disponible: false },
+      { libelle: "Circuit de validation configurable", disponible: false },
+      { libelle: "Coffre-fort numérique du salarié", disponible: false },
+    ],
+  },
+  {
+    id: "absences",
+    nom: "Congés & absences",
+    accroche: "Demandes, validation et soldes de congés, sans papier.",
+    statut: "bientot",
+    fonctions: [
+      { libelle: "Demandes de congé et de permission", disponible: false },
+      { libelle: "Validation par le responsable RH", disponible: false },
+      { libelle: "Soldes de congés", disponible: false },
+    ],
+  },
+  {
+    id: "self-service",
+    nom: "Self-service salarié & manager",
+    accroche: "Le salarié et son responsable gèrent l'essentiel depuis leur téléphone.",
+    statut: "bientot",
+    fonctions: [
+      { libelle: "Portail salarié : connexion par téléphone", disponible: false },
+      { libelle: "Réclamations avec suivi", disponible: false },
+      { libelle: "Espace manager : équipe et validations", disponible: false },
+    ],
+  },
+  {
+    id: "notes-de-frais",
+    nom: "Notes de frais",
+    accroche: "Saisie avec justificatif photo, validation et suivi des remboursements.",
+    statut: "bientot",
+    fonctions: [
+      { libelle: "Saisie depuis le téléphone avec photo du justificatif", disponible: false },
+      { libelle: "Validation par le manager", disponible: false },
+    ],
+  },
+  {
+    id: "pilotage",
+    nom: "Pilotage",
+    accroche: "Tableaux de bord et rapports : effectifs, mouvements, absences.",
+    statut: "bientot",
+    fonctions: [
+      { libelle: "Effectifs, entrées et sorties", disponible: false },
+      { libelle: "Absentéisme et congés", disponible: false },
+      { libelle: "Exports Excel", disponible: false },
+    ],
+  },
+  {
+    id: "paie",
+    nom: "Calcul de la paie",
+    accroche: "Rubriques, taux et plafonds paramétrables, calcul et contrôle automatiques.",
+    statut: "bientot",
+    fonctions: [
+      { libelle: "Paramétrage des rubriques et taux", disponible: false },
+      { libelle: "Calcul et contrôle de la paie", disponible: false },
+    ],
+  },
+];
+
+export function moduleParId(id: string): Module | undefined {
+  return MODULES.find((m) => m.id === id);
+}

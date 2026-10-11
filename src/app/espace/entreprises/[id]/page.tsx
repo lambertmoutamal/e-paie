@@ -9,6 +9,8 @@ import { ActionEnLigne, Champ, ChoixListe, Formulaire } from "@/components/formu
 import { Badge, Carte, classesBouton, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
 import { ajouterUtilisateur, changerAcces, modifierEntreprise, renvoyerInvitationEntreprise } from "../actions";
 import { ChampsEntreprise } from "../champs-entreprise";
+import { MODULES } from "@/lib/modules";
+import { CarteModule } from "@/components/carte-module";
 
 export const metadata: Metadata = { title: "Entreprise" };
 
@@ -56,6 +58,21 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
           </>
         }
       />
+
+      <section aria-labelledby="titre-modules" className="flex flex-col gap-3">
+        <h2 id="titre-modules" className="text-lg font-semibold">
+          Modules
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {MODULES.slice(0, 4).map((m) => (
+            <CarteModule
+              key={m.id}
+              module={m}
+              href={m.statut === "disponible" && m.lienEntreprise ? m.lienEntreprise(id) : `/espace/modules/${m.id}`}
+            />
+          ))}
+        </div>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="flex flex-col gap-6 lg:col-span-3">
