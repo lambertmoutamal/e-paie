@@ -24,8 +24,9 @@ export const MODULES: Module[] = [
     fonctions: [
       { libelle: "Fiches salariés et sortie du personnel", disponible: true },
       { libelle: "Import des salariés depuis Excel", disponible: true },
-      { libelle: "Contrats, avenants et documents du salarié", disponible: false },
-      { libelle: "Alertes de fin de CDD et de période d'essai", disponible: false },
+      { libelle: "Contrats, avenants, renouvellements et documents du salarié", disponible: true },
+      { libelle: "Échéances : fins de CDD et de périodes d'essai", disponible: true },
+      { libelle: "Salariés prévisionnels (embauches à venir)", disponible: true },
     ],
   },
   {

@@ -5,6 +5,7 @@ import { libelleRole } from "@/lib/auth/roles";
 import { champLie } from "@/lib/supabase/relations";
 import { MODULES } from "@/lib/modules";
 import { CarteModule } from "@/components/carte-module";
+import { CarteEcheances, type Echeance } from "@/components/echeances";
 import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page, Statistique } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
@@ -22,6 +23,9 @@ export default async function TableauDeBord() {
         supabase.from("profils").select("id", { count: "exact", head: true }),
       ]).then((r) => r.map((x) => x.count ?? 0))
     : [0, 0, 0];
+  // Fins de contrat et de période d'essai à venir (la base limite aux entreprises accessibles)
+  const { data: echeancesBrutes } = await supabase.rpc("echeances_contrats", { p_jours: 30 });
+  const echeances = (echeancesBrutes ?? []) as Echeance[];
 
   const prenom = (profil?.nom_complet || "").split(" ")[0];
   const acces = [
@@ -90,6 +94,8 @@ export default async function TableauDeBord() {
           </div>
         </section>
       )}
+
+      {echeances.length > 0 && <CarteEcheances echeances={echeances.slice(0, 8)} avecEntreprise />}
 
       <Carte titre="Mes accès" description="Les espaces sur lesquels vous pouvez intervenir." sansMarge>
         {acces.length === 0 ? (

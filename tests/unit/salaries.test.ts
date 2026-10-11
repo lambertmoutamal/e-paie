@@ -5,6 +5,8 @@ import {
   COLONNES_IMPORT,
   normaliserDate,
   normaliserTelephoneSalarie,
+  schemaLigneImport,
+  separerLigne,
   schemaSalarie,
 } from "@/lib/salaries/regles";
 
@@ -108,7 +110,7 @@ describe("revérification sur le serveur", () => {
       ligne({ matricule: "9", nom: "Mba", prenoms: "Paul", date_embauche: "15/06/2021", telephone: "77000001", sexe: "m" }),
     ]);
     const nettoyees = analyse.lignes[0].donnees;
-    const r = schemaSalarie().safeParse(nettoyees);
+    const r = schemaLigneImport().safeParse(nettoyees);
     expect(r.success).toBe(true);
     expect(r.success && r.data).toEqual(nettoyees);
   });
@@ -121,5 +123,35 @@ describe("cohérence des dates", () => {
       date_embauche: "2020-01-01", telephone: "", email: "", adresse: "", numero_cnss: "", banque: "", numero_compte: "",
     });
     expect(r.success).toBe(false);
+  });
+});
+
+describe("colonnes contrat de l'import", () => {
+  test("un CDD avec salaire saisi avec espaces crée un contrat séparé de la fiche", () => {
+    const analyse = analyserFeuille([
+      ENTETES,
+      ligne({ matricule: "10", nom: "A", prenoms: "B", date_embauche: "01/01/2026", type_contrat: "cdd", salaire_base: "350 000", date_fin_prevue: "31/12/2026" }),
+    ]);
+    expect(analyse.lignes[0].erreurs).toEqual([]);
+    const { salarie, contrat } = separerLigne(analyse.lignes[0].donnees!);
+    expect(contrat).toEqual({ type_contrat: "cdd", salaire_base: 350000, date_fin_prevue: "2026-12-31", fin_periode_essai: null });
+    expect(salarie).not.toHaveProperty("type_contrat");
+  });
+
+  test("un CDD sans date de fin, ou un type inconnu, est signalé", () => {
+    const analyse = analyserFeuille([
+      ENTETES,
+      ligne({ matricule: "11", nom: "A", prenoms: "B", date_embauche: "01/01/2026", type_contrat: "CDD" }),
+      ligne({ matricule: "12", nom: "C", prenoms: "D", date_embauche: "01/01/2026", type_contrat: "Intérim longue durée" }),
+      ligne({ matricule: "13", nom: "E", prenoms: "F", date_embauche: "01/01/2026", salaire_base: "200000" }),
+    ]);
+    expect(analyse.lignes[0].erreurs).toEqual(["Date de fin de contrat obligatoire pour un contrat à durée déterminée."]);
+    expect(analyse.lignes[1].erreurs[0]).toContain("Type de contrat inconnu");
+    expect(analyse.lignes[2].erreurs).toEqual(["Indiquez le type de contrat (CDI, CDD…)."]);
+  });
+
+  test("sans colonne contrat, aucun contrat n'est créé", () => {
+    const analyse = analyserFeuille([ENTETES, ligne({ matricule: "14", nom: "A", prenoms: "B", date_embauche: "01/01/2026" })]);
+    expect(separerLigne(analyse.lignes[0].donnees!).contrat).toBeNull();
   });
 });

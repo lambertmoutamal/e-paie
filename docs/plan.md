@@ -14,15 +14,15 @@ Organisation des modules inspirée des SIRH du marché (référence : Nibelis), 
 | 3 | Connexion du personnel, journal d'audit infalsifiable |
 | 4 | Administration : cabinets, entreprises, utilisateurs et rôles, invitations par email |
 | 4 bis | Inscription libre, essai gratuit, abonnements (lecture seule puis blocage) |
-| 4 ter | Paiement Mobile Money (Genuka Pay) — *en attente de la clé secrète Genuka* |
+| 4 ter | Paiement Mobile Money (Genuka Pay) — *en attente de la clé secrète Genuka ; Chariow à l'étude* |
 | 5 | Salariés et import Excel |
 | — | Organisation par modules, site vitrine (accueil, experts-comptables, demande de démo) |
+| 6 | Contrats, avenants, renouvellements, documents du salarié (stockage privé), échéances, salariés prévisionnels, import Excel des contrats |
 
 ## À venir
 
 | Étape | Module | Contenu |
 |---|---|---|
-| 6 | Gestion administrative | Contrats (CDI, CDD…), avenants, PDF signé, documents du salarié, **alertes de fin de CDD et de période d'essai**, **salariés prévisionnels** (embauches à venir) |
 | 7 | Bulletins & coffre-fort | Périodes de paie, dépôt des bulletins PDF (unitaire et en masse), stockage privé |
 | 8 | Bulletins & coffre-fort | Circuit de validation configurable (séparation des tâches, refus commenté, verrouillage) |
 | 9 | Self-service | Publication et **portail salarié** : connexion par téléphone, bulletins, historique |
