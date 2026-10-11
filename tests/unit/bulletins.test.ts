@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { associerFichiers, bornesMois, estPdf, libellePeriode, lireNomFichier, salariesAttendus } from "@/lib/bulletins/regles";
+import { associerFichiers, bornesMois, estPdf, libellePeriode, lireCircuit, lireNomFichier, salariesAttendus } from "@/lib/bulletins/regles";
 
 describe("périodes", () => {
   test("libellé et bornes du mois (années bissextiles comprises)", () => {
@@ -58,5 +58,26 @@ describe("contrôle du contenu", () => {
     expect(estPdf(new TextEncoder().encode("%PDF-1.7\n..."))).toBe(true);
     expect(estPdf(new TextEncoder().encode("MZ\x90\x00 programme"))).toBe(false);
     expect(estPdf(new Uint8Array())).toBe(false);
+  });
+});
+
+describe("circuit de validation", () => {
+  const formulaire = (champs: Record<string, string>) => {
+    const f = new FormData();
+    for (const [k, v] of Object.entries(champs)) f.set(k, v);
+    return f;
+  };
+
+  test("lit un circuit valide de plusieurs étapes", () => {
+    const r = lireCircuit(formulaire({ nombre: "2", libelle_1: " Contrôle ", role_1: "controleur", libelle_2: "Visa DG", role_2: "signataire" }));
+    expect(r).toEqual({ ok: true, etapes: [{ libelle: "Contrôle", role: "controleur" }, { libelle: "Visa DG", role: "signataire" }] });
+  });
+
+  test("refuse un circuit vide, trop long ou mal rempli", () => {
+    expect(lireCircuit(formulaire({ nombre: "0" })).ok).toBe(false);
+    expect(lireCircuit(formulaire({ nombre: "6" })).ok).toBe(false);
+    const r = lireCircuit(formulaire({ nombre: "1", libelle_1: "X", role_1: "gestionnaire_paie" }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(Object.keys(r.erreurs).sort()).toEqual(["libelle_1", "role_1"]);
   });
 });

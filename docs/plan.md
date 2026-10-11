@@ -19,12 +19,12 @@ Organisation des modules inspirée des SIRH du marché (référence : Nibelis), 
 | — | Organisation par modules, site vitrine (accueil, experts-comptables, demande de démo) |
 | 6 | Contrats, avenants, renouvellements, documents du salarié (stockage privé), échéances, salariés prévisionnels, import Excel des contrats |
 | 7 | Périodes de paie, dépôt des bulletins PDF un par un ou en masse (reconnaissance par matricule), contrôle du contenu, empreinte SHA-256, stockage privé |
+| 8 | Circuit de validation configurable par entreprise (1 à 5 étapes), séparation des tâches, refus commenté, approbation et verrouillage, historique |
 
 ## À venir
 
 | Étape | Module | Contenu |
 |---|---|---|
-| 8 | Bulletins & coffre-fort | Circuit de validation configurable (séparation des tâches, refus commenté, verrouillage) |
 | 9 | Self-service | Publication et **portail salarié** : connexion par téléphone, bulletins, historique |
 | 10 | Congés & absences | Demandes de congé et de permission, validation RH, soldes |
 | 11 | Self-service | Réclamations avec échanges et statut |

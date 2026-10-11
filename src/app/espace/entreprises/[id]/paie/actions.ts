@@ -5,7 +5,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
-import { estPdf, libellePeriode, schemaPeriode, TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
+import { estPdf, libellePeriode, lireCircuit, schemaPeriode, TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
 
 // Toutes les écritures passent par le client de la personne connectée :
 // la base vérifie le rôle, l'abonnement, l'entreprise et que la période est en brouillon.
@@ -40,7 +40,7 @@ export async function supprimerPeriode(entrepriseId: string, periodeId: string):
     .eq("id", periodeId)
     .eq("entreprise_id", entrepriseId)
     .select("id");
-  if (error?.code === "23503") return { erreur: "Retirez d'abord les bulletins de cette période." };
+  if (error?.code === "23503") return { erreur: "Cette période contient des bulletins ou un historique de validation : elle est conservée." };
   if (error || !data?.length) return { erreur: "Cette période ne peut pas être supprimée." };
   redirect(`/espace/entreprises/${entrepriseId}/paie`);
 }
@@ -119,4 +119,53 @@ export async function retirerBulletin(entrepriseId: string, bulletinId: string) 
     .select("fichier_chemin");
   if (data?.[0]) await supabase.storage.from(ESPACE).remove([data[0].fichier_chemin]);
   refresh();
+}
+
+// ---------------------------------------------------------------------
+// Circuit de validation (les règles sont appliquées par la base)
+// ---------------------------------------------------------------------
+
+// Message clair renvoyé par les fonctions du circuit (code P0001), sinon message générique.
+function messageCircuit(error: { code?: string; message: string }, defaut: string) {
+  return error.code === "P0001" ? error.message : defaut;
+}
+
+export async function definirCircuit(entrepriseId: string, _e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const lu = lireCircuit(formulaire);
+  if (!lu.ok) return { erreurs: lu.erreurs, erreur: lu.erreurs._, valeurs: lu.valeurs };
+  const { error } = await supabase.rpc("definir_circuit", { p_entreprise_id: entrepriseId, p_etapes: lu.etapes });
+  if (error) return { erreur: messageCircuit(error, "Le circuit n'a pas pu être enregistré.") };
+  refresh();
+  return { succes: "Circuit enregistré. Il s'appliquera aux prochaines périodes envoyées en validation." };
+}
+
+export async function soumettrePeriode(periodeId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const { error } = await supabase.rpc("soumettre_periode", { p_periode_id: periodeId });
+  if (error) return { erreur: messageCircuit(error, "L'envoi en validation a échoué.") };
+  refresh();
+  return { succes: "Période envoyée en validation." };
+}
+
+// Validation ou refus de l'étape en cours (le bouton cliqué indique la décision).
+export async function deciderEtape(periodeId: string, _e: EtatFormulaire, formulaire: FormData): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const decision = formulaire.get("decision");
+  const commentaire = String(formulaire.get("commentaire") ?? "").trim().slice(0, 1000);
+  const valeurs = { commentaire };
+
+  if (decision === "refuser") {
+    if (commentaire.length < 5) return { erreurs: { commentaire: "Expliquez le motif du refus (5 caractères au moins)." }, valeurs };
+    const { data, error } = await supabase.rpc("refuser_etape", { p_periode_id: periodeId, p_commentaire: commentaire });
+    if (error) return { erreur: messageCircuit(error, "Le refus n'a pas pu être enregistré."), valeurs };
+    refresh();
+    return { succes: data === "brouillon" ? "Période refusée : elle revient en brouillon pour correction." : "Refus enregistré : la période revient à l'étape précédente." };
+  }
+  if (decision !== "valider") return { erreur: "Choisissez Valider ou Refuser.", valeurs };
+
+  const { data, error } = await supabase.rpc("valider_etape", { p_periode_id: periodeId, p_commentaire: commentaire || null });
+  if (error) return { erreur: messageCircuit(error, "La validation n'a pas pu être enregistrée."), valeurs };
+  refresh();
+  return { succes: data === "approuvee" ? "Période approuvée : elle est désormais verrouillée." : "Étape validée : la période passe à l'étape suivante." };
 }
