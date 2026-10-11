@@ -20,12 +20,12 @@ Organisation des modules inspirée des SIRH du marché (référence : Nibelis), 
 | 6 | Contrats, avenants, renouvellements, documents du salarié (stockage privé), échéances, salariés prévisionnels, import Excel des contrats |
 | 7 | Périodes de paie, dépôt des bulletins PDF un par un, en masse, ou en un seul PDF découpé automatiquement (reconnaissance du matricule sur chaque page), contrôle du contenu, empreinte SHA-256, stockage privé |
 | 8 | Circuit de validation configurable par entreprise (1 à 5 étapes), séparation des tâches, refus commenté, approbation et verrouillage, historique |
+| 9 | Publication des bulletins, **portail salarié** : connexion par code SMS ou WhatsApp (Twilio Verify), bulletins et historique |
 
 ## À venir
 
 | Étape | Module | Contenu |
 |---|---|---|
-| 9 | Self-service | Publication et **portail salarié** : connexion par téléphone, bulletins, historique |
 | 10 | Congés & absences | Demandes de congé et de permission, validation RH, soldes |
 | 11 | Self-service | Réclamations avec échanges et statut |
 | 12 | Transversal | Notifications dans l'application et par email ; prévenance des salariés avant blocage |

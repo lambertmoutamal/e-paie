@@ -30,6 +30,9 @@ export function EnTetePublic() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
+          <Link href="/portail/connexion" className={classesBouton("discret", "petit")}>
+            Espace salarié
+          </Link>
           <Link href="/connexion" className={classesBouton("discret", "petit")}>
             Se connecter
           </Link>
@@ -50,6 +53,9 @@ export function EnTetePublic() {
               </Link>
             ))}
             <hr className="my-1 border-bordure" />
+            <Link href="/portail/connexion" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
+              Espace salarié
+            </Link>
             <Link href="/connexion" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
               Se connecter
             </Link>

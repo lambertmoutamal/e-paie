@@ -56,3 +56,12 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - Séparation des tâches : l’émetteur, les déposants de bulletins et le validateur d’une autre étape ne
   peuvent pas valider. Un refus (commentaire obligatoire) renvoie à l’étape précédente ; refusée à la
   première étape, la période revient en brouillon.
+
+## 2026-10-11 — Publication et portail salarié
+
+- Connexion des salariés par **code à 6 chiffres, par SMS ou WhatsApp, via Twilio Verify** (choix du
+  salarié). Twilio est configuré dans Supabase : aucune clé dans le code.
+- Le compte salarié est créé à la première connexion et rattaché aux fiches portant ce numéro.
+  Changer le numéro sur la fiche détache l’ancien compte. Un salarié avec plusieurs employeurs voit tout.
+- Le salarié garde l’accès à ses bulletins après son départ ; tout est coupé si l’abonnement est bloqué.
+- Publication d’une période approuvée : administrateurs ou signataire.

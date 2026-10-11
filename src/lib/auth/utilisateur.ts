@@ -11,6 +11,8 @@ export const exigerUtilisateur = cache(async () => {
   const supabase = await clientSupabaseServeur();
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect("/connexion");
+  // Les comptes salariés n'ont accès qu'au portail
+  if (data.user.app_metadata?.type === "salarie") redirect("/portail");
   return { supabase, utilisateur: data.user };
 });
 

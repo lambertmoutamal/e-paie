@@ -39,7 +39,7 @@ export const MODULES: Module[] = [
       { libelle: "Périodes de paie mensuelles", disponible: true },
       { libelle: "Dépôt des bulletins PDF : un par un, en masse, ou un seul PDF découpé automatiquement par matricule", disponible: true },
       { libelle: "Circuit de validation configurable (1 à 5 étapes, refus commenté, verrouillage)", disponible: true },
-      { libelle: "Coffre-fort numérique du salarié", disponible: false },
+      { libelle: "Publication aux salariés et coffre-fort numérique (historique complet)", disponible: true },
     ],
   },
   {
@@ -57,9 +57,9 @@ export const MODULES: Module[] = [
     id: "self-service",
     nom: "Self-service salarié & manager",
     accroche: "Le salarié et son responsable gèrent l'essentiel depuis leur téléphone.",
-    statut: "bientot",
+    statut: "disponible",
     fonctions: [
-      { libelle: "Portail salarié : connexion par téléphone", disponible: false },
+      { libelle: "Portail salarié : connexion par téléphone (SMS ou WhatsApp), bulletins et historique", disponible: true },
       { libelle: "Réclamations avec suivi", disponible: false },
       { libelle: "Espace manager : équipe et validations", disponible: false },
     ],
