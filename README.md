@@ -164,6 +164,13 @@ Elles seules voient aussi un bandeau et une carte « À faire » dès qu'elles s
 
 Sans configuration Twilio, en développement, les messages WhatsApp s'affichent dans la console.
 
+## Congés et absences
+
+- Côté entreprise : ouvrez l'entreprise, puis le module **Congés & absences** (onglets
+  Demandes, Planning, Soldes, Réglages). Commencez par **Réglages** : jours acquis par mois,
+  jours fériés de l'année, types d'absence ; puis **Soldes** : solde de départ de chaque salarié.
+- Côté salarié : onglet **Absences** de son espace (`/portail/absences`).
+
 ## Commandes utiles
 
 | Commande | Rôle |

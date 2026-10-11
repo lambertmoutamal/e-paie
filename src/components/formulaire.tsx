@@ -198,7 +198,7 @@ export function ChoixCartes({
   );
 }
 
-export function CaseACocher({ nom, children }: { nom: string; children: ReactNode }) {
+export function CaseACocher({ nom, children, coche }: { nom: string; children: ReactNode; coche?: boolean }) {
   const etat = use(ContexteFormulaire);
   const erreur = etat?.erreurs?.[nom];
   const id = useId();
@@ -209,7 +209,7 @@ export function CaseACocher({ nom, children }: { nom: string; children: ReactNod
           id={id}
           type="checkbox"
           name={nom}
-          defaultChecked={etat?.valeurs?.[nom] === "on"}
+          defaultChecked={etat?.valeurs ? etat.valeurs[nom] === "on" : coche}
           aria-invalid={erreur ? true : undefined}
           className="mt-0.5 size-4 accent-[var(--marque)]"
         />

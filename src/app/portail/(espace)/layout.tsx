@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Squelette } from "@/components/ui";
 import { deconnecterSalarie } from "../connexion/actions";
+import { OngletsPortail } from "./onglets";
 
 // Espace du salarié : mise en page simple, pensée d'abord pour le téléphone.
 export default function MiseEnPagePortail({ children }: LayoutProps<"/portail">) {
@@ -21,6 +22,7 @@ export default function MiseEnPagePortail({ children }: LayoutProps<"/portail">)
             </button>
           </form>
         </div>
+        <OngletsPortail />
       </header>
       <main className="flex-1 px-4 py-6">
         <div className="mx-auto w-full max-w-3xl">

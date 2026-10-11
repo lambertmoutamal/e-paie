@@ -22,3 +22,22 @@ export const mesActionsPaie = cache(async (): Promise<ActionPaie[]> => {
   const { data } = await supabase.rpc("mes_actions_paie");
   return (data ?? []) as ActionPaie[];
 });
+
+export type DemandeATraiter = {
+  demande_id: string;
+  entreprise_id: string;
+  raison_sociale: string;
+  salarie: string;
+  type_libelle: string;
+  debut: string;
+  fin: string;
+  nb_jours: number;
+  cree_le: string;
+};
+
+// Demandes d'absence que la personne connectée doit traiter (RH, ou administrateur s'il n'y a pas de RH).
+export const mesDemandesATraiter = cache(async (): Promise<DemandeATraiter[]> => {
+  const { supabase } = await exigerUtilisateur();
+  const { data } = await supabase.rpc("mes_demandes_a_traiter");
+  return (data ?? []) as DemandeATraiter[];
+});
