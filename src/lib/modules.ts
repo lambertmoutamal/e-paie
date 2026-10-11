@@ -33,9 +33,11 @@ export const MODULES: Module[] = [
     id: "bulletins",
     nom: "Bulletins & coffre-fort",
     accroche: "Dépôt, validation et publication des bulletins, archivés durablement.",
-    statut: "bientot",
+    statut: "disponible",
+    lienEntreprise: (id) => `/espace/entreprises/${id}/paie`,
     fonctions: [
-      { libelle: "Dépôt des bulletins PDF, un par salarié et par mois", disponible: false },
+      { libelle: "Périodes de paie mensuelles", disponible: true },
+      { libelle: "Dépôt des bulletins PDF, un par salarié et par mois, un par un ou en masse", disponible: true },
       { libelle: "Circuit de validation configurable", disponible: false },
       { libelle: "Coffre-fort numérique du salarié", disponible: false },
     ],
