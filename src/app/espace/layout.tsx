@@ -70,7 +70,12 @@ async function Menu({ variante }: { variante: "lateral" | "onglets" }) {
           {
             titre: "Structures",
             elements: [
-              ...(adminPlateforme ? [{ href: "/espace/cabinets", libelle: "Cabinets", icone: "cabinets" as const }] : []),
+              ...(adminPlateforme
+                ? [
+                    { href: "/espace/cabinets", libelle: "Cabinets", icone: "cabinets" as const },
+                    { href: "/espace/demandes-demo", libelle: "Demandes de démo", icone: "demandes" as const },
+                  ]
+                : []),
               { href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const },
             ],
           },

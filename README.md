@@ -123,7 +123,7 @@ n'est laissée. Comptez 1 à 2 minutes selon la connexion.
 - L'administrateur plateforme gère les abonnements et le prix des formules dans
   **Abonnements** (menu de gauche) ; l'équipe reçoit un email à chaque inscription et à chaque
   demande Pro (adresse `EMAIL_ALERTES`).
-- Les décisions métier sont consignées dans [`docs/decisions.md`](docs/decisions.md).
+- Les décisions métier sont consignées dans [`docs/decisions.md`](docs/decisions.md) et le plan dans [`docs/plan.md`](docs/plan.md).
 
 ## Commandes utiles
 
