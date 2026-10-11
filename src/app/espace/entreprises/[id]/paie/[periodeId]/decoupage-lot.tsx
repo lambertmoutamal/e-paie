@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleAlert, CircleCheck, Eye, FileStack, LoaderCircle, Upload } from "lucide-react";
+import { CircleAlert, CircleCheck, Eye, FileStack, KeyRound, LoaderCircle, Upload } from "lucide-react";
 import { libellePages, MOTIFS_DECOUPAGE, reconnaitreSalarie, regrouperPages, type Reconnaissance } from "@/lib/bulletins/decoupage";
 import { TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
 import { classesBouton } from "@/components/ui";
@@ -21,10 +21,23 @@ type Groupe = {
 const TAILLE_MAX_LOT = 50 * 1024 * 1024; // 50 Mo
 
 // Lecture du texte de chaque page avec pdf.js (chargé seulement quand on en a besoin).
-async function lireTextePages(donnees: Uint8Array, avancer: (page: number, total: number) => void): Promise<string[]> {
-  const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-  const chargement = pdfjs.getDocument({ data: donnees });
+// Version « legacy » : compatible avec les navigateurs et téléphones moins récents.
+// Les fichiers de polices (cmaps, standard_fonts) sont copiés dans public/pdfjs par scripts/copier-pdfjs.mjs.
+async function lireTextePages(
+  donnees: Uint8Array,
+  motDePasse: string | undefined,
+  avancer: (page: number, total: number) => void,
+): Promise<string[]> {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
+  const chargement = pdfjs.getDocument({
+    data: donnees,
+    password: motDePasse,
+    cMapUrl: "/pdfjs/cmaps/",
+    cMapPacked: true,
+    standardFontDataUrl: "/pdfjs/standard_fonts/",
+    wasmUrl: "/pdfjs/wasm/",
+  });
   const document = await chargement.promise;
   const textes: string[] = [];
   for (let n = 1; n <= document.numPages; n++) {
@@ -38,12 +51,14 @@ async function lireTextePages(donnees: Uint8Array, avancer: (page: number, total
 }
 
 // Fabrique le PDF individuel d'un bulletin à partir des pages du lot.
+// Les PDF protégés (chiffrés par le logiciel de paie) sont déchiffrés : le bulletin produit ne l'est plus.
 // Le lot n'est analysé qu'une fois, même pour des centaines de bulletins.
-const lotsCharges = new WeakMap<Uint8Array, Promise<import("pdf-lib").PDFDocument>>();
+type Lot = { nom: string; donnees: Uint8Array; motDePasse?: string };
+const lotsCharges = new WeakMap<Lot, Promise<import("@cantoo/pdf-lib").PDFDocument>>();
 
-async function extrairePages(lot: Uint8Array, pages: number[]): Promise<Uint8Array> {
-  const { PDFDocument } = await import("pdf-lib");
-  if (!lotsCharges.has(lot)) lotsCharges.set(lot, PDFDocument.load(lot));
+async function extrairePages(lot: Lot, pages: number[]): Promise<Uint8Array> {
+  const { PDFDocument } = await import("@cantoo/pdf-lib");
+  if (!lotsCharges.has(lot)) lotsCharges.set(lot, PDFDocument.load(lot.donnees, { password: lot.motDePasse ?? "" }));
   const source = await lotsCharges.get(lot)!;
   const bulletin = await PDFDocument.create();
   const copies = await bulletin.copyPages(source, pages.map((p) => p - 1));
@@ -67,7 +82,9 @@ export function DecoupageLot({
   salaries: SalarieAttendu[];
 }) {
   const router = useRouter();
-  const [lot, setLot] = useState<{ nom: string; donnees: Uint8Array } | null>(null);
+  const [lot, setLot] = useState<Lot | null>(null);
+  // Fichier en attente du mot de passe d'ouverture
+  const [protege, setProtege] = useState<{ fichier: File; incorrect: boolean } | null>(null);
   const [groupes, setGroupes] = useState<Groupe[]>([]);
   const [analyse, setAnalyse] = useState<{ page: number; total: number } | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -76,10 +93,11 @@ export function DecoupageLot({
   const parId = new Map(salaries.map((s) => [s.id, s]));
   const suffixe = `${annee}-${String(mois).padStart(2, "0")}`;
 
-  async function analyser(fichier: File | undefined) {
+  async function analyser(fichier: File | undefined, motDePasse?: string) {
     setErreur(null);
     setGroupes([]);
     setLot(null);
+    setProtege(null);
     if (!fichier) return;
     if (fichier.size > TAILLE_MAX_LOT) return setErreur("Fichier trop lourd (50 Mo maximum) : découpez-le en plusieurs lots.");
     const donnees = new Uint8Array(await fichier.arrayBuffer());
@@ -89,7 +107,7 @@ export function DecoupageLot({
     try {
       setAnalyse({ page: 0, total: 0 });
       // pdf.js peut « consommer » le tableau transmis : on lui en donne une copie
-      const textes = await lireTextePages(donnees.slice(), (page, total) => setAnalyse({ page, total }));
+      const textes = await lireTextePages(donnees.slice(), motDePasse, (page, total) => setAnalyse({ page, total }));
       const reconnus: Reconnaissance[] = textes.map((t) => reconnaitreSalarie(t, salaries));
       setGroupes(
         regrouperPages(reconnus).map((g) => {
@@ -102,13 +120,20 @@ export function DecoupageLot({
           };
         }),
       );
-      setLot({ nom: fichier.name, donnees });
+      setLot({ nom: fichier.name, donnees, motDePasse });
       if (reconnus.every((r) => "motif" in r && r.motif === "aucun_texte")) {
         setErreur("Aucun texte trouvé : ce PDF semble scanné. Exportez les bulletins directement depuis le logiciel de paie, ou attribuez les pages à la main.");
       }
     } catch (e) {
       console.error(e);
-      setErreur("Le PDF n'a pas pu être lu (fichier protégé par mot de passe ou endommagé ?).");
+      const nom = e instanceof Error ? e.name : "";
+      if (nom === "PasswordException") {
+        setProtege({ fichier, incorrect: Boolean(motDePasse) });
+      } else if (nom === "InvalidPDFException") {
+        setErreur("Ce PDF est endommagé ou incomplet. Exportez-le à nouveau depuis le logiciel de paie.");
+      } else {
+        setErreur(`Le PDF n'a pas pu être lu. Détail technique : ${e instanceof Error ? `${e.name} — ${e.message}` : String(e)}`);
+      }
     } finally {
       setAnalyse(null);
     }
@@ -116,7 +141,7 @@ export function DecoupageLot({
 
   async function apercu(pages: number[]) {
     if (!lot) return;
-    const octets = await extrairePages(lot.donnees, pages);
+    const octets = await extrairePages(lot, pages);
     const url = URL.createObjectURL(new Blob([octets as BlobPart], { type: "application/pdf" }));
     window.open(url, "_blank", "noopener");
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
@@ -136,7 +161,7 @@ export function DecoupageLot({
       const s = parId.get(g.salarieId)!;
       let resultat: Groupe["resultat"];
       try {
-        const octets = await extrairePages(lot.donnees, g.pages);
+        const octets = await extrairePages(lot, g.pages);
         if (octets.length > TAILLE_MAX_BULLETIN) {
           resultat = { ok: false, message: "Bulletin trop lourd (2 Mo maximum)." };
         } else {
@@ -184,6 +209,35 @@ export function DecoupageLot({
           <LoaderCircle size={16} className="animate-spin" aria-hidden />
           Lecture du fichier{analyse.total ? ` : page ${analyse.page} sur ${analyse.total}` : "…"}
         </p>
+      )}
+      {protege && (
+        <form
+          className="flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const motDePasse = String(new FormData(e.currentTarget).get("mot_de_passe") ?? "");
+            if (motDePasse) analyser(protege.fichier, motDePasse);
+          }}
+        >
+          <label htmlFor="mot-de-passe-lot" className="flex items-center gap-2 font-medium text-amber-900">
+            <KeyRound size={16} aria-hidden />
+            {protege.incorrect ? "Mot de passe incorrect. Réessayez :" : "Ce PDF est protégé par un mot de passe à l'ouverture. Saisissez-le :"}
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="mot-de-passe-lot"
+              name="mot_de_passe"
+              type="password"
+              autoComplete="off"
+              autoFocus
+              className="h-10 flex-1 rounded-lg border border-bordure bg-surface px-3 text-base"
+            />
+            <button type="submit" className={classesBouton("principal", "petit")}>
+              Ouvrir
+            </button>
+          </div>
+          <p className="text-xs text-amber-900/80">Le mot de passe sert uniquement à ouvrir le fichier sur votre ordinateur : il n&apos;est ni envoyé ni enregistré.</p>
+        </form>
       )}
       {erreur && (
         <p role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
