@@ -92,10 +92,10 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   les dates de congé prévues. Statut « Prévu » : visible au planning et par le salarié, non déduit du
   solde, sans alerte. Le RH ou un administrateur les confirme : ils deviennent des absences acceptées.
 
-## 2026-10-12 — Contrats : import ou rédaction dans e-Paie
+## 2026-10-12 — Contrats : import ou rédaction dans DématPaie
 
 - Deux possibilités pour chaque contrat ou avenant : **importer le document signé** (PDF ou photo),
-  ou le **rédiger dans e-Paie** à partir d'un modèle.
+  ou le **rédiger dans DématPaie** à partir d'un modèle.
 - Modèles : 3 modèles standard fournis (CDI, CDD, avenant), génériques et **à faire valider par un
   juriste**, en lecture seule ; chaque entreprise les personnalise, crée les siens ou **importe ses
   modèles Word (.docx)**.

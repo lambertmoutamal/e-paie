@@ -37,15 +37,15 @@ function gabarit({ titre, paragraphes, bouton, note }: {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e3e8e5;border-radius:12px">
 <tr><td style="padding:20px 28px;border-bottom:1px solid #e3e8e5">
-  <span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;background:#0b5d3b;color:#fff;border-radius:7px;font-weight:700">e</span>
-  <span style="margin-left:8px;font-size:17px;font-weight:700;color:#17201b;vertical-align:middle">e-Paie</span>
+  <span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;background:#0b5d3b;color:#fff;border-radius:7px;font-weight:700">D</span>
+  <span style="margin-left:8px;font-size:17px;font-weight:700;color:#17201b;vertical-align:middle">DématPaie</span>
 </td></tr>
 <tr><td style="padding:28px">
   <h1 style="margin:0 0 20px;font-size:21px;line-height:1.3;color:#17201b">${titre}</h1>
   ${corps}${action}${remarque}
 </td></tr>
 </table>
-<p style="margin:16px 0 0;font-size:12px;color:#8a978f">e-Paie · La paie zéro papier<br>Email automatique, merci de ne pas y répondre.</p>
+<p style="margin:16px 0 0;font-size:12px;color:#8a978f">DématPaie · La paie zéro papier<br>Email automatique, merci de ne pas y répondre.</p>
 </td></tr></table></body></html>`;
 }
 
@@ -53,17 +53,17 @@ export function emailInvitation(p: { nom: string; perimetre: string; lien: strin
   const nom = echapper(p.nom);
   const perimetre = echapper(p.perimetre);
   return {
-    sujet: "Activez votre compte e-Paie",
+    sujet: "Activez votre compte DématPaie",
     html: gabarit({
       titre: `Bienvenue ${nom}`,
       paragraphes: [
-        `Un compte a été créé pour vous sur <strong>e-Paie</strong>, la plateforme de paie zéro papier, pour : <strong>${perimetre}</strong>.`,
+        `Un compte a été créé pour vous sur <strong>DématPaie</strong>, la plateforme de paie zéro papier, pour : <strong>${perimetre}</strong>.`,
         "Cliquez sur le bouton ci-dessous pour confirmer votre adresse email et choisir votre mot de passe.",
       ],
       bouton: { libelle: "Activer mon compte", lien: p.lien },
       note: "Ce lien est personnel et valable 24 heures. Si vous n'attendiez pas cette invitation, ignorez simplement cet email : aucun compte ne sera activé.",
     }),
-    texte: `Bienvenue ${p.nom},\n\nUn compte a été créé pour vous sur e-Paie pour : ${p.perimetre}.\nActivez-le et choisissez votre mot de passe en ouvrant ce lien (valable 24 heures) :\n${p.lien}\n\nSi vous n'attendiez pas cette invitation, ignorez cet email.`,
+    texte: `Bienvenue ${p.nom},\n\nUn compte a été créé pour vous sur DématPaie pour : ${p.perimetre}.\nActivez-le et choisissez votre mot de passe en ouvrant ce lien (valable 24 heures) :\n${p.lien}\n\nSi vous n'attendiez pas cette invitation, ignorez cet email.`,
   };
 }
 
@@ -71,14 +71,14 @@ export function emailAccesAjoute(p: { nom: string; perimetre: string; lienConnex
   const nom = echapper(p.nom);
   const perimetre = echapper(p.perimetre);
   return {
-    sujet: "Nouvel accès sur e-Paie",
+    sujet: "Nouvel accès sur DématPaie",
     html: gabarit({
       titre: `Bonjour ${nom}`,
-      paragraphes: [`Un nouvel accès vous a été attribué sur e-Paie : <strong>${perimetre}</strong>.`],
+      paragraphes: [`Un nouvel accès vous a été attribué sur DématPaie : <strong>${perimetre}</strong>.`],
       bouton: { libelle: "Se connecter", lien: p.lienConnexion },
       note: "Si vous pensez qu'il s'agit d'une erreur, contactez votre administrateur.",
     }),
-    texte: `Bonjour ${p.nom},\n\nUn nouvel accès vous a été attribué sur e-Paie : ${p.perimetre}.\nConnexion : ${p.lienConnexion}`,
+    texte: `Bonjour ${p.nom},\n\nUn nouvel accès vous a été attribué sur DématPaie : ${p.perimetre}.\nConnexion : ${p.lienConnexion}`,
   };
 }
 
@@ -89,60 +89,60 @@ export function emailInscription(p: { nom: string; structure: string; lien: stri
     ? "Vous avez choisi la formule Pro : votre essai gratuit de 30 jours démarre dès l'activation, et notre équipe vous contactera pour mettre en place votre abonnement."
     : "Votre essai gratuit de 30 jours démarre dès l'activation : toutes les fonctionnalités, sans engagement.";
   return {
-    sujet: "Activez votre compte e-Paie",
+    sujet: "Activez votre compte DématPaie",
     html: gabarit({
       titre: `Bienvenue ${nom}`,
       paragraphes: [
-        `Merci d'avoir inscrit <strong>${structure}</strong> sur e-Paie, la plateforme de paie zéro papier.`,
+        `Merci d'avoir inscrit <strong>${structure}</strong> sur DématPaie, la plateforme de paie zéro papier.`,
         echapper(suite),
         "Cliquez sur le bouton ci-dessous pour confirmer votre adresse email et choisir votre mot de passe.",
       ],
       bouton: { libelle: "Activer mon compte", lien: p.lien },
       note: "Ce lien est personnel et valable 24 heures. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email : aucun compte ne sera activé.",
     }),
-    texte: `Bienvenue ${p.nom},\n\nMerci d'avoir inscrit ${p.structure} sur e-Paie.\n${suite}\n\nActivez votre compte (lien valable 24 heures) :\n${p.lien}\n\nSi vous n'êtes pas à l'origine de cette inscription, ignorez cet email.`,
+    texte: `Bienvenue ${p.nom},\n\nMerci d'avoir inscrit ${p.structure} sur DématPaie.\n${suite}\n\nActivez votre compte (lien valable 24 heures) :\n${p.lien}\n\nSi vous n'êtes pas à l'origine de cette inscription, ignorez cet email.`,
   };
 }
 
 export function emailCompteExistant(p: { lienConnexion: string; lienMotDePasse: string }): Email {
   return {
-    sujet: "Vous avez déjà un compte e-Paie",
+    sujet: "Vous avez déjà un compte DématPaie",
     html: gabarit({
       titre: "Vous avez déjà un compte",
       paragraphes: [
-        "Quelqu'un (probablement vous) a tenté de créer un compte e-Paie avec cette adresse, mais un compte existe déjà.",
+        "Quelqu'un (probablement vous) a tenté de créer un compte DématPaie avec cette adresse, mais un compte existe déjà.",
         `Connectez-vous simplement. En cas d'oubli, utilisez <a href="${echapper(p.lienMotDePasse)}" style="color:#0b5d3b">« Mot de passe oublié »</a>.`,
       ],
       bouton: { libelle: "Se connecter", lien: p.lienConnexion },
       note: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre compte n'a pas été modifié.",
     }),
-    texte: `Un compte e-Paie existe déjà avec cette adresse.\nConnexion : ${p.lienConnexion}\nMot de passe oublié : ${p.lienMotDePasse}`,
+    texte: `Un compte DématPaie existe déjà avec cette adresse.\nConnexion : ${p.lienConnexion}\nMot de passe oublié : ${p.lienMotDePasse}`,
   };
 }
 
 export function emailAccuseDemo(p: { nom: string }): Email {
   const nom = echapper(p.nom);
   return {
-    sujet: "Votre demande de démonstration e-Paie",
+    sujet: "Votre demande de démonstration DématPaie",
     html: gabarit({
       titre: `Merci ${nom}`,
       paragraphes: [
-        "Nous avons bien reçu votre demande de démonstration d'e-Paie.",
+        "Nous avons bien reçu votre demande de démonstration d'DématPaie.",
         "Un membre de notre équipe vous contacte très prochainement pour convenir d'un rendez-vous.",
       ],
       note: "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.",
     }),
-    texte: `Merci ${p.nom},\n\nNous avons bien reçu votre demande de démonstration d'e-Paie. Un membre de notre équipe vous contacte très prochainement.`,
+    texte: `Merci ${p.nom},\n\nNous avons bien reçu votre demande de démonstration d'DématPaie. Un membre de notre équipe vous contacte très prochainement.`,
   };
 }
 
-// Alerte interne envoyée à l'équipe e-Paie
+// Alerte interne envoyée à l'équipe DématPaie
 export function emailAlerte(p: { titre: string; lignes: [string, string][] }): Email {
   const tableau = p.lignes
     .map(([cle, valeur]) => `<strong>${echapper(cle)} :</strong> ${echapper(valeur)}`)
     .join("<br>");
   return {
-    sujet: `[e-Paie] ${p.titre}`,
+    sujet: `[DématPaie] ${p.titre}`,
     html: gabarit({ titre: echapper(p.titre), paragraphes: [tableau] }),
     texte: `${p.titre}\n\n${p.lignes.map(([cle, valeur]) => `${cle} : ${valeur}`).join("\n")}`,
   };
@@ -150,14 +150,14 @@ export function emailAlerte(p: { titre: string; lignes: [string, string][] }): E
 
 export function emailRecuperation(p: { lien: string }): Email {
   return {
-    sujet: "Réinitialisation de votre mot de passe e-Paie",
+    sujet: "Réinitialisation de votre mot de passe DématPaie",
     html: gabarit({
       titre: "Choisissez un nouveau mot de passe",
-      paragraphes: ["Vous avez demandé à réinitialiser votre mot de passe e-Paie."],
+      paragraphes: ["Vous avez demandé à réinitialiser votre mot de passe DématPaie."],
       bouton: { libelle: "Choisir un nouveau mot de passe", lien: p.lien },
       note: "Ce lien est valable 24 heures et ne fonctionne qu'une fois. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre mot de passe reste inchangé.",
     }),
-    texte: `Vous avez demandé à réinitialiser votre mot de passe e-Paie.\nOuvrez ce lien (valable 24 heures) :\n${p.lien}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.`,
+    texte: `Vous avez demandé à réinitialiser votre mot de passe DématPaie.\nOuvrez ce lien (valable 24 heures) :\n${p.lien}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.`,
   };
 }
 
@@ -172,7 +172,7 @@ export function emailActionPaie(
       titre: echapper(c.titre),
       paragraphes: c.paragraphes.map(echapper),
       bouton: { libelle: c.bouton, lien },
-      note: "Vous recevez cet email car votre rôle sur e-Paie vous permet d'agir sur cette paie.",
+      note: "Vous recevez cet email car votre rôle sur DématPaie vous permet d'agir sur cette paie.",
     }),
     texte: `${c.titre},\n\n${c.paragraphes.join("\n\n")}\n\n${c.bouton} : ${lien}\n`,
   };

@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "e-Paie",
-    template: "%s · e-Paie",
+    default: "DématPaie",
+    template: "%s · DématPaie",
   },
   description:
     "Plateforme de paie zéro papier pour les cabinets comptables et les entreprises.",

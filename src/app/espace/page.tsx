@@ -55,7 +55,7 @@ export default async function TableauDeBord() {
     <Page>
       <EnTetePage
         titre={prenom ? `Bonjour ${prenom}` : "Bonjour"}
-        description="Bienvenue sur votre espace e-Paie."
+        description="Bienvenue sur votre espace DématPaie."
         actions={
           administrateur && (
             <>

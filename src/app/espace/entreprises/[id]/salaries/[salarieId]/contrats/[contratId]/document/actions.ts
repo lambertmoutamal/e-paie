@@ -8,9 +8,10 @@ import { genererPdf } from "@/lib/contrats/pdf";
 import { preparerContenu } from "@/lib/contrats/redaction";
 import { deposerFichier, supprimerFichier } from "@/lib/stockage/fichiers";
 
-// Les PDF produits par e-Paie portent cette mention : ce sont les seuls qu'une nouvelle
+// Les PDF produits par DématPaie portent cette mention : ce sont les seuls qu'une nouvelle
 // génération peut remplacer (jamais un contrat signé importé).
-const SUFFIXE_GENERE = "(e-Paie).pdf";
+const SUFFIXE_GENERE = "(DématPaie).pdf";
+const SUFFIXES_GENERES = [SUFFIXE_GENERE, "(DématPaie).pdf"]; // ancien nom de la plateforme
 
 function message(error: { code?: string; message: string }, defaut: string) {
   if (error.code === "42501" && error.message.includes("document")) return error.message;
@@ -55,7 +56,7 @@ export async function enregistrerDocument(
   }
 
   // Ne jamais écraser un contrat signé importé
-  if (contrat.fichier_chemin && !contrat.fichier_nom?.endsWith(SUFFIXE_GENERE)) {
+  if (contrat.fichier_chemin && !SUFFIXES_GENERES.some((x) => contrat.fichier_nom?.endsWith(x))) {
     return { erreur: "Un contrat signé est déjà joint : le PDF n'a pas été remplacé. Le texte est enregistré." };
   }
   const salarie = (Array.isArray(contrat.salaries) ? contrat.salaries[0] : contrat.salaries) as { nom: string; prenoms: string } | null;

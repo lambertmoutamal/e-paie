@@ -38,7 +38,7 @@ export async function envoyerEmail(destinataire: string, email: Email): Promise<
   console.info(`[email] « ${email.sujet} » accepté par Resend (suivi : ${id ?? "inconnu"})`);
 }
 
-// Alerte interne à l'équipe e-Paie (nouvelle inscription, demande Pro…).
+// Alerte interne à l'équipe DématPaie (nouvelle inscription, demande Pro…).
 // Ne bloque jamais l'action en cours : un échec est seulement noté dans le journal.
 export async function alerterEquipe(email: Email): Promise<void> {
   const destinataire = process.env.EMAIL_ALERTES || process.env.EMAIL_REPONSE;

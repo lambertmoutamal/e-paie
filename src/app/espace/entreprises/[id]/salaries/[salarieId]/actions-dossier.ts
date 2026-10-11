@@ -53,7 +53,7 @@ export async function creerContrat(entrepriseId: string, salarieId: string, _e: 
     if (depot) await supprimerFichier(supabase, depot.chemin);
     return { erreur: erreurBase(error.code), valeurs: lu.valeurs };
   }
-  // Rédaction dans e-Paie : le texte est préparé à partir du modèle choisi, puis l'éditeur s'ouvre
+  // Rédaction dans DématPaie : le texte est préparé à partir du modèle choisi, puis l'éditeur s'ouvre
   if (await initialiserDepuisModele(supabase, cree.id, formulaire)) {
     redirect(`/espace/entreprises/${entrepriseId}/salaries/${salarieId}/contrats/${cree.id}/document`);
   }
@@ -132,7 +132,7 @@ export async function ajouterAvenant(
   );
   await supabase.from("contrats").update(changements).eq("id", parent.id);
 
-  // Rédaction de l'avenant dans e-Paie (après la mise à jour du contrat : le texte reprend les nouvelles conditions)
+  // Rédaction de l'avenant dans DématPaie (après la mise à jour du contrat : le texte reprend les nouvelles conditions)
   if (await initialiserDepuisModele(supabase, avenant.id, formulaire)) {
     redirect(`/espace/entreprises/${entrepriseId}/salaries/${salarieId}/contrats/${avenant.id}/document`);
   }

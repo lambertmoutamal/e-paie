@@ -1,4 +1,4 @@
-// Logo e-Paie : un bulletin stylisé dans un carré aux couleurs de la marque.
+// Logo DématPaie : un bulletin stylisé dans un carré aux couleurs de la marque.
 export function Logo({ taille = 32, avecNom = true, clair = false }: { taille?: number; avecNom?: boolean; clair?: boolean }) {
   return (
     <span className="inline-flex items-center gap-2">
@@ -10,7 +10,7 @@ export function Logo({ taille = 32, avecNom = true, clair = false }: { taille?: 
       </svg>
       {avecNom && (
         <span className={`text-lg font-bold tracking-tight ${clair ? "text-white" : "text-foreground"}`}>
-          e-Paie
+          Démat<span className={clair ? "text-white/80" : "text-marque"}>Paie</span>
         </span>
       )}
     </span>

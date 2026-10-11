@@ -75,7 +75,7 @@ export default async function PageModeles({ params }: PageProps<"/espace/entrepr
         )}
       </Carte>
 
-      <Carte titre="Modèles standard e-Paie" sansMarge>
+      <Carte titre="Modèles standard DématPaie" sansMarge>
         <p className="flex items-start gap-2 border-b border-bordure bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:px-5">
           <Info size={16} className="mt-0.5 shrink-0" aria-hidden />
           Modèles génériques fournis à titre indicatif : adaptez-les et faites-les valider par un juriste au regard du droit du travail et de la

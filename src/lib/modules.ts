@@ -1,4 +1,4 @@
-// Catalogue des modules d'e-Paie (inspiré de l'organisation des SIRH du marché).
+// Catalogue des modules d'DématPaie (inspiré de l'organisation des SIRH du marché).
 // Source unique pour le menu, le tableau de bord, la fiche entreprise et le site vitrine.
 // « disponible » : utilisable aujourd'hui ; « bientot » : prévu au plan (docs/plan.md).
 

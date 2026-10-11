@@ -55,7 +55,7 @@ const SECURITE = [
 ];
 
 const QUESTIONS = [
-  { q: "Faut-il installer un logiciel ?", r: "Non. e-Paie fonctionne dans le navigateur, sur ordinateur comme sur téléphone. Rien à installer, rien à mettre à jour." },
+  { q: "Faut-il installer un logiciel ?", r: "Non. DématPaie fonctionne dans le navigateur, sur ordinateur comme sur téléphone. Rien à installer, rien à mettre à jour." },
   { q: "Comment se passe l'essai gratuit ?", r: "Vous créez votre compte en quelques minutes : 30 jours d'accès complet, sans engagement et sans moyen de paiement. Vous choisissez ensuite de souscrire ou non." },
   { q: "Puis-je importer mes salariés existants ?", r: "Oui, depuis un fichier Excel. Un modèle est fourni et chaque ligne est vérifiée avant l'import." },
   { q: "Mes salariés doivent-ils avoir un smartphone ?", r: "Le portail salarié est conçu pour le téléphone, mais il fonctionne aussi sur ordinateur. La connexion se fait par numéro de téléphone." },
@@ -74,7 +74,7 @@ export default function Accueil() {
               La paie zéro papier, jusqu&apos;au téléphone du salarié.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-doux">
-              e-Paie réunit cabinets comptables, entreprises et salariés : dossiers du personnel, validation et publication
+              DématPaie réunit cabinets comptables, entreprises et salariés : dossiers du personnel, validation et publication
               des bulletins, congés et échanges, dans un espace sécurisé.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -214,7 +214,7 @@ export default function Accueil() {
             <Badge teinte="bleu">Mode autonome</Badge>
             <h3 className="mt-3 text-lg font-semibold">L&apos;entreprise gère sa paie</h3>
             <p className="mt-2 text-sm text-doux">
-              Vos équipes RH et paie travaillent directement dans e-Paie, avec leurs propres rôles et le circuit de validation
+              Vos équipes RH et paie travaillent directement dans DématPaie, avec leurs propres rôles et le circuit de validation
               de votre choix.
             </p>
           </article>

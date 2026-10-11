@@ -6,7 +6,7 @@ const LIEN = "https://e-paie.exemple.ga/auth/confirmer?token_hash=abc123&type=in
 describe("emails", () => {
   test("l'invitation contient le bouton d'activation, le nom et le périmètre", () => {
     const email = emailInvitation({ nom: "Awa Ndong", perimetre: "Gestionnaire de paie · CONCEPT PART", lien: LIEN });
-    expect(email.sujet).toBe("Activez votre compte e-Paie");
+    expect(email.sujet).toBe("Activez votre compte DématPaie");
     expect(email.html).toContain("Activer mon compte");
     expect(email.html).toContain("Awa Ndong");
     expect(email.html).toContain("CONCEPT PART");

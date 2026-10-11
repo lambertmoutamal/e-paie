@@ -3,7 +3,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { htmlVersPdf } from "./document";
 
-// Génération du PDF d'un contrat rédigé dans e-Paie (pdfmake, police Roboto incluse).
+// Génération du PDF d'un contrat rédigé dans DématPaie (pdfmake, police Roboto incluse).
 // Par sécurité, aucun accès à Internet et seulement les fichiers de police de pdfmake.
 const require = createRequire(import.meta.url);
 
