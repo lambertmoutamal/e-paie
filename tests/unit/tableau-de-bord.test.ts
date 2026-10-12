@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { absencesDuMois, compter, evolutionEffectif, joursOuvrables, repartitionSexe, type SalarieStat } from "@/lib/tableau-de-bord/calculs";
+import { absencesDuMois, compter, evolutionEffectif, joursOuvrables, pyramideDesAges, repartitionSexe, type SalarieStat } from "@/lib/tableau-de-bord/calculs";
 
 const auj = new Date("2026-10-13T10:00:00Z");
 const s = (date_embauche: string, date_sortie: string | null = null, sexe: string | null = "F"): SalarieStat => ({
@@ -48,5 +48,22 @@ describe("tableau de bord", () => {
       { nom: "CDD", valeur: 2 },
       { nom: "CDI", valeur: 1 },
     ]);
+  });
+});
+
+
+describe("pyramide des âges", () => {
+  test("répartit les salariés en poste par tranche d'âge et par sexe", () => {
+    const p = (date_naissance: string | null, sexe: string | null, date_sortie: string | null = null) => ({ ...s("2020-01-01", date_sortie, sexe), date_naissance });
+    const r = pyramideDesAges([p("2003-10-14", "F"), p("2003-10-13", "M"), p("1990-05-01", "F"), p("1960-01-01", "M"), p(null, "F"), p("1980-01-01", "M", "2025-01-01")], auj);
+    // 2003-10-14 : 22 ans (anniversaire demain) ; 2003-10-13 : 23 ans ; 1990 : 36 ans ; 1960 : 66 ans
+    expect(r.tranches).toEqual([
+      { tranche: "55 ans et plus", hommes: 1, femmes: 0 },
+      { tranche: "45 à 54 ans", hommes: 0, femmes: 0 },
+      { tranche: "35 à 44 ans", hommes: 0, femmes: 1 },
+      { tranche: "25 à 34 ans", hommes: 0, femmes: 0 },
+      { tranche: "Moins de 25 ans", hommes: 1, femmes: 1 },
+    ]);
+    expect(r.sansDate).toBe(1);
   });
 });

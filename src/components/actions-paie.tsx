@@ -111,7 +111,7 @@ export function CarteActionsPaie({
 export function BandeauActionsPaie({ nombre }: { nombre: number }) {
   return (
     <Link
-      href="/espace#a-faire"
+      href="/espace/a-faire"
       className="flex items-center justify-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-950 hover:bg-amber-100"
     >
       <BellRing size={16} className="shrink-0 text-amber-600" aria-hidden />

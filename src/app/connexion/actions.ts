@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { clientSupabaseServeur } from "@/lib/supabase/serveur";
 import { messageErreurConnexion, validerConnexion, type EtatConnexion } from "@/lib/auth/connexion";
 import { estCookieDeSession } from "@/lib/auth/session";
+import { COOKIE_ENTREPRISE } from "@/lib/entreprise-courante";
 
 export async function seConnecter(_etat: EtatConnexion, formulaire: FormData): Promise<EtatConnexion> {
   const email = String(formulaire.get("email") ?? "").trim().toLowerCase();
@@ -17,7 +18,10 @@ export async function seConnecter(_etat: EtatConnexion, formulaire: FormData): P
   const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse });
   if (error) return { erreur: messageErreurConnexion(error.code, error.status), email };
 
-  redirect("/espace");
+  // Nouvelle session : l'entreprise de travail est choisie à chaque connexion
+  // (l'écran de choix redirige directement vers l'accueil s'il n'y a qu'une entreprise).
+  (await cookies()).delete({ name: COOKIE_ENTREPRISE, path: "/espace" });
+  redirect("/espace/choisir-entreprise");
 }
 
 export async function seDeconnecter() {
@@ -31,6 +35,7 @@ export async function seDeconnecter() {
   for (const { name } of magasinCookies.getAll()) {
     if (estCookieDeSession(name)) magasinCookies.delete(name);
   }
+  magasinCookies.delete({ name: COOKIE_ENTREPRISE, path: "/espace" });
 
   redirect("/connexion");
 }

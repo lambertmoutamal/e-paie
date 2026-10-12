@@ -159,13 +159,13 @@ export function SelecteurEntreprise({ entreprises, courante }: { entreprises: { 
         <Briefcase size={15} className="pointer-events-none absolute left-3 text-white/80" aria-hidden />
       )}
       <select
-        value={courante ?? ""}
+        value={courante ?? "toutes"}
         disabled={enCours}
         onChange={(ev) => demarrer(() => choisirEntreprise(ev.target.value))}
         className="h-10 max-w-48 cursor-pointer appearance-none truncate rounded-full border border-white/25 bg-white/10 pl-9 pr-8 text-sm font-semibold text-white outline-none hover:bg-white/15 focus:ring-2 focus:ring-white/40 sm:max-w-60"
       >
-        <option value="" className="text-foreground">
-          Choisir une entreprise…
+        <option value="toutes" className="text-foreground">
+          Toutes mes entreprises
         </option>
         {entreprises.map((e) => (
           <option key={e.id} value={e.id} className="text-foreground">

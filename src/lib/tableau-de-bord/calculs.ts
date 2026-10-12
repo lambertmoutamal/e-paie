@@ -95,3 +95,26 @@ export function compter<T>(liste: T[], cle: (x: T) => string, libelles: Record<s
   for (const x of liste) m.set(cle(x), (m.get(cle(x)) ?? 0) + 1);
   return [...m].map(([k, valeur]) => ({ nom: libelles[k] ?? k, valeur })).sort((a, b) => b.valeur - a.valeur);
 }
+
+// Pyramide des âges des salariés en poste (hommes à gauche, femmes à droite)
+export const TRANCHES_AGE = ["Moins de 25 ans", "25 à 34 ans", "35 à 44 ans", "45 à 54 ans", "55 ans et plus"];
+
+export function pyramideDesAges(salaries: (SalarieStat & { date_naissance: string | null })[], aujourdhui: Date) {
+  const auj = iso(aujourdhui);
+  const tranches = TRANCHES_AGE.map((tranche) => ({ tranche, hommes: 0, femmes: 0 }));
+  let sansDate = 0;
+  for (const s of salaries) {
+    if (!present(s, auj)) continue;
+    if (!s.date_naissance || (s.sexe !== "F" && s.sexe !== "M")) {
+      sansDate++;
+      continue;
+    }
+    const [a, m, j] = s.date_naissance.split("-").map(Number);
+    const age = aujourdhui.getUTCFullYear() - a - (aujourdhui.getUTCMonth() + 1 < m || (aujourdhui.getUTCMonth() + 1 === m && aujourdhui.getUTCDate() < j) ? 1 : 0);
+    const i = age < 25 ? 0 : age < 35 ? 1 : age < 45 ? 2 : age < 55 ? 3 : 4;
+    if (s.sexe === "F") tranches[i].femmes++;
+    else tranches[i].hommes++;
+  }
+  // Ordre d'affichage : les plus âgés en haut
+  return { tranches: tranches.reverse(), sansDate };
+}

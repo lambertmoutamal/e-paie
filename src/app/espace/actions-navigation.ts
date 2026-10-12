@@ -2,17 +2,27 @@
 
 import { cookies } from "next/headers";
 import { refresh } from "next/cache";
-import { COOKIE_ENTREPRISE, entreprisesAccessibles } from "@/lib/entreprise-courante";
+import { redirect } from "next/navigation";
+import { COOKIE_ENTREPRISE, entreprisesAccessibles, TOUTES } from "@/lib/entreprise-courante";
 
-// Choix de l'entreprise de travail (mémorisé sur cet appareil). Seule une entreprise
-// accessible à la personne peut être choisie.
-export async function choisirEntreprise(entrepriseId: string) {
+const OPTIONS = { httpOnly: true, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", path: "/espace" };
+
+// Mémorise l'entreprise de travail (ou « toutes ») pour la session en cours.
+// Seule une entreprise accessible à la personne peut être choisie.
+async function memoriser(entrepriseId: string) {
   const liste = await entreprisesAccessibles();
-  const magasin = await cookies();
-  if (!entrepriseId) {
-    magasin.delete(COOKIE_ENTREPRISE);
-  } else if (liste.some((e) => e.id === entrepriseId)) {
-    magasin.set(COOKIE_ENTREPRISE, entrepriseId, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/espace", maxAge: 60 * 60 * 24 * 365 });
-  }
+  const valeur = entrepriseId === TOUTES || entrepriseId === "" ? TOUTES : liste.some((e) => e.id === entrepriseId) ? entrepriseId : null;
+  if (valeur) (await cookies()).set(COOKIE_ENTREPRISE, valeur, OPTIONS);
+}
+
+// Changement depuis la barre du haut : on reste sur la page
+export async function choisirEntreprise(entrepriseId: string) {
+  await memoriser(entrepriseId);
   refresh();
+}
+
+// Choix à la connexion : on ouvre ensuite le tableau de bord
+export async function choisirEntrepriseEtContinuer(entrepriseId: string) {
+  await memoriser(entrepriseId);
+  redirect("/espace");
 }

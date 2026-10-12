@@ -156,4 +156,10 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - **Livre de paie, DTS, DAS et soldes de tout compte** : produits à partir de l'**import Excel mensuel** des
   résultats de paie (choix de l'utilisateur) — prochaine étape ; il faudra un exemple du fichier du logiciel
   de paie et les modèles officiels de DTS et DAS.
+- **Choix de l'entreprise à la connexion** (si plusieurs entreprises accessibles) : écran dédié, choix
+  redemandé à chaque connexion ; possibilité de voir « toutes mes entreprises » ; changement possible depuis
+  la barre du haut.
+- **Tableau de bord sur un seul écran** (sans défilement sur ordinateur) : 8 indicateurs et 6 graphiques
+  (effectif, **pyramide des âges**, contrats, hommes/femmes, absences par type, réclamations par sujet).
+  La liste « À faire » a sa propre page, ouverte par la cloche.
 

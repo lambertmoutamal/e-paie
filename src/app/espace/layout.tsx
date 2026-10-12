@@ -18,7 +18,7 @@ import { MenuGroupes, MenuMobile, SelecteurEntreprise } from "./navigation";
 // session est vérifiée.
 export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col print:block print:h-auto">
       <header className="sticky top-0 z-20 print:hidden bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-md">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 lg:gap-6 lg:px-8">
           <Link href="/espace" aria-label="Accueil" className="shrink-0">
@@ -69,7 +69,8 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
         </Suspense>
       </div>
 
-      <main className="flex-1 px-4 pb-12 pt-6 lg:px-8">
+      {/* Le contenu défile sous la barre ; le tableau de bord, lui, occupe exactement la place restante */}
+      <main className="relative min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-5 lg:px-8 print:overflow-visible">
         <div className="mx-auto w-full max-w-6xl">
           <Suspense fallback={<Squelette />}>{children}</Suspense>
         </div>
@@ -101,7 +102,7 @@ async function Cloche() {
   const nombre = actions.length + demandes.length + reclamations.length;
   return (
     <Link
-      href="/espace#a-faire"
+      href="/espace/a-faire"
       className="relative grid size-10 place-items-center rounded-full hover:bg-white/10"
       aria-label={nombre ? `${nombre} action(s) à faire` : "Aucune action à faire"}
       title={nombre ? `${nombre} action(s) à faire` : "Aucune action à faire"}
