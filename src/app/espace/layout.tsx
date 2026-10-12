@@ -8,15 +8,18 @@ import { Squelette } from "@/components/ui";
 import { seDeconnecter } from "../connexion/actions";
 import { mesActionsPaie, mesDemandesATraiter, mesReclamationsATraiter } from "@/lib/bulletins/actions-a-faire";
 import { BandeauActionsPaie } from "@/components/actions-paie";
-import { BarreOnglets, NavigationHaut, type ElementMenu } from "./navigation";
+import { entrepriseCourante, entreprisesAccessibles } from "@/lib/entreprise-courante";
+import { groupesMenu } from "@/lib/menu";
+import { MenuGroupes, MenuMobile, SelecteurEntreprise } from "./navigation";
 
-// Structure commune de l'espace privé : barre de navigation en haut (rubriques,
-// recherche, cloche des actions à faire, compte), contenu au centre, onglets en bas
-// sur téléphone. Le cadre s'affiche immédiatement ; le reste dès que la session est vérifiée.
+// Structure commune de l'espace privé : barre de navigation en haut (groupes de tâches
+// avec menus déroulants, entreprise de travail, recherche, cloche des actions à faire,
+// compte), contenu au centre. Le cadre s'affiche immédiatement ; le reste dès que la
+// session est vérifiée.
 export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-20 bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-md">
+      <header className="sticky top-0 z-20 print:hidden bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-md">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 lg:gap-6 lg:px-8">
           <Link href="/espace" aria-label="Accueil" className="shrink-0">
             <Logo clair taille={30} />
@@ -27,7 +30,10 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
             </Suspense>
           </nav>
           <span className="flex-1 lg:hidden" />
-          <form action="/espace/recherche" role="search" className="relative hidden md:block">
+          <Suspense fallback={null}>
+            <Selecteur />
+          </Suspense>
+          <form action="/espace/recherche" role="search" className="relative hidden xl:block">
             <label htmlFor="recherche-salarie" className="sr-only">
               Rechercher un salarié
             </label>
@@ -36,10 +42,10 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
               id="recherche-salarie"
               name="q"
               placeholder="Rechercher un salarié…"
-              className="h-10 w-56 rounded-full border border-white/20 bg-white/10 pl-9 pr-3 text-sm text-white outline-none placeholder:text-white/60 focus:w-72 focus:bg-white/20 focus:ring-2 focus:ring-white/40 transition-all"
+              className="h-10 w-44 rounded-full border border-white/20 bg-white/10 pl-9 pr-3 text-sm text-white outline-none placeholder:text-white/60 focus:w-64 focus:bg-white/20 focus:ring-2 focus:ring-white/40 transition-all"
             />
           </form>
-          <Link href="/espace/recherche" className="grid size-10 place-items-center rounded-full hover:bg-white/10 md:hidden" aria-label="Rechercher un salarié">
+          <Link href="/espace/recherche" className="grid size-10 place-items-center rounded-full hover:bg-white/10 xl:hidden" aria-label="Rechercher un salarié">
             <Search size={19} aria-hidden />
           </Link>
           <Suspense fallback={<span className="size-10" />}>
@@ -48,68 +54,45 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
           <Suspense fallback={<span className="size-10" />}>
             <MenuUtilisateur />
           </Suspense>
+          <Suspense fallback={null}>
+            <Menu variante="mobile" />
+          </Suspense>
         </div>
       </header>
 
-      <Suspense fallback={null}>
-        <BandeauAbonnement />
-      </Suspense>
-      <Suspense fallback={null}>
-        <BandeauActions />
-      </Suspense>
+      <div className="print:hidden">
+        <Suspense fallback={null}>
+          <BandeauAbonnement />
+        </Suspense>
+        <Suspense fallback={null}>
+          <BandeauActions />
+        </Suspense>
+      </div>
 
-      <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-12">
+      <main className="flex-1 px-4 pb-12 pt-6 lg:px-8">
         <div className="mx-auto w-full max-w-6xl">
           <Suspense fallback={<Squelette />}>{children}</Suspense>
         </div>
       </main>
 
-      <nav aria-label="Menu principal" className="fixed inset-x-0 bottom-0 z-10 border-t border-bordure bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <Suspense fallback={null}>
-          <Menu variante="onglets" />
-        </Suspense>
-      </nav>
     </div>
   );
 }
 
-async function Menu({ variante }: { variante: "haut" | "onglets" }) {
-  const { adminPlateforme, cabinets, affectations, abonnements } = await droitsUtilisateur();
-  const voitEntreprises = adminPlateforme || cabinets.length > 0 || affectations.length > 0;
+async function Menu({ variante }: { variante: "haut" | "mobile" }) {
+  const [{ adminPlateforme, cabinets, abonnements }, courante] = await Promise.all([droitsUtilisateur(), entrepriseCourante()]);
+  const groupes = groupesMenu({
+    entrepriseId: courante?.id ?? null,
+    adminPlateforme,
+    administrateur: adminPlateforme || cabinets.length > 0,
+    voitAbonnement: adminPlateforme || abonnements.length > 0,
+  });
+  return variante === "haut" ? <MenuGroupes groupes={groupes} /> : <MenuMobile groupes={groupes} />;
+}
 
-  if (variante === "onglets") {
-    const onglets: ElementMenu[] = [
-      { href: "/espace", libelle: "Accueil", icone: "tableau" },
-      ...(voitEntreprises
-        ? [
-            { href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const },
-            { href: "/espace/modules", libelle: "Modules", icone: "modules" as const },
-          ]
-        : []),
-      { href: "/espace/profil", libelle: "Profil", icone: "profil" },
-    ];
-    return <BarreOnglets elements={onglets} />;
-  }
-
-  const rubriques: ElementMenu[] = [
-    { href: "/espace", libelle: "Accueil", icone: "tableau" },
-    ...(voitEntreprises
-      ? [
-          { href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const },
-          { href: "/espace/modules", libelle: "Modules", icone: "modules" as const },
-        ]
-      : []),
-    ...(adminPlateforme
-      ? [
-          { href: "/espace/cabinets", libelle: "Cabinets", icone: "cabinets" as const },
-          { href: "/espace/demandes-demo", libelle: "Démos", icone: "demandes" as const },
-        ]
-      : []),
-    ...(adminPlateforme || abonnements.length > 0
-      ? [{ href: "/espace/abonnement", libelle: adminPlateforme ? "Abonnements" : "Abonnement", icone: "abonnement" as const }]
-      : []),
-  ];
-  return <NavigationHaut elements={rubriques} />;
+async function Selecteur() {
+  const [liste, courante] = await Promise.all([entreprisesAccessibles(), entrepriseCourante()]);
+  return <SelecteurEntreprise entreprises={liste} courante={courante?.id ?? null} />;
 }
 
 // Cloche : nombre d'actions qui attendent la personne (validations, demandes, réclamations).

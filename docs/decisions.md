@@ -144,3 +144,16 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   fiche salarié avec bandeau, avatar et coordonnées.
 - Palette **indigo** (marque) et **corail** (accent), une couleur par module, avatars colorés.
 
+## 2026-10-13 — Navigation par groupes, tableau de bord, états
+
+- Barre du haut organisée en **groupes avec menus déroulants** (Salariés, Paie, Absences, Réclamations,
+  États, Paramètres) et **sélecteur d'entreprise de travail** (mémorisé sur l'appareil).
+- **Tableau de bord** : indicateurs clés (effectif, entrées, sorties, absentéisme, bulletins, demandes,
+  réclamations, fins de CDD) et graphiques (effectif et mouvements sur 12 mois, contrats, hommes/femmes,
+  absences par type, réclamations par sujet).
+- **États** exportables en Excel et imprimables en PDF : personnel, entrées et sorties, contrats et échéances,
+  réclamations, congés du mois, absences par type, soldes de congés, registre des bulletins.
+- **Livre de paie, DTS, DAS et soldes de tout compte** : produits à partir de l'**import Excel mensuel** des
+  résultats de paie (choix de l'utilisateur) — prochaine étape ; il faudra un exemple du fichier du logiciel
+  de paie et les modèles officiels de DTS et DAS.
+
