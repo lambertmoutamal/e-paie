@@ -1,59 +1,68 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { LogOut } from "lucide-react";
+import { Bell, KeyRound, LogOut, Search, UserRound } from "lucide-react";
 import { droitsUtilisateur } from "@/lib/auth/utilisateur";
 import { messageBandeau } from "@/lib/abonnements/phases";
 import { Logo } from "@/components/logo";
 import { Squelette } from "@/components/ui";
 import { seDeconnecter } from "../connexion/actions";
-import { MODULES } from "@/lib/modules";
 import { mesActionsPaie, mesDemandesATraiter, mesReclamationsATraiter } from "@/lib/bulletins/actions-a-faire";
 import { BandeauActionsPaie } from "@/components/actions-paie";
-import { BarreOnglets, MenuLateral, type ElementMenu, type GroupeMenu } from "./navigation";
+import { BarreOnglets, NavigationHaut, type ElementMenu } from "./navigation";
 
-// Structure commune de l'espace privé. Le cadre s'affiche immédiatement ;
-// le menu et le nom de la personne arrivent dès que la session est vérifiée.
+// Structure commune de l'espace privé : barre de navigation en haut (rubriques,
+// recherche, cloche des actions à faire, compte), contenu au centre, onglets en bas
+// sur téléphone. Le cadre s'affiche immédiatement ; le reste dès que la session est vérifiée.
 export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
   return (
-    <div className="flex min-h-dvh">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-bordure bg-surface lg:flex">
-        <div className="flex h-16 items-center px-5">
-          <Link href="/espace" aria-label="Tableau de bord">
-            <Logo />
+    <div className="flex min-h-dvh flex-col">
+      <header className="sticky top-0 z-20 bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-md">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 lg:gap-6 lg:px-8">
+          <Link href="/espace" aria-label="Accueil" className="shrink-0">
+            <Logo clair taille={30} />
           </Link>
-        </div>
-        <nav aria-label="Menu principal" className="flex-1 overflow-y-auto px-3 py-2">
-          <Suspense fallback={null}>
-            <Menu variante="lateral" />
+          <nav aria-label="Menu principal" className="hidden min-w-0 flex-1 lg:block">
+            <Suspense fallback={null}>
+              <Menu variante="haut" />
+            </Suspense>
+          </nav>
+          <span className="flex-1 lg:hidden" />
+          <form action="/espace/recherche" role="search" className="relative hidden md:block">
+            <label htmlFor="recherche-salarie" className="sr-only">
+              Rechercher un salarié
+            </label>
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/70" aria-hidden />
+            <input
+              id="recherche-salarie"
+              name="q"
+              placeholder="Rechercher un salarié…"
+              className="h-10 w-56 rounded-full border border-white/20 bg-white/10 pl-9 pr-3 text-sm text-white outline-none placeholder:text-white/60 focus:w-72 focus:bg-white/20 focus:ring-2 focus:ring-white/40 transition-all"
+            />
+          </form>
+          <Link href="/espace/recherche" className="grid size-10 place-items-center rounded-full hover:bg-white/10 md:hidden" aria-label="Rechercher un salarié">
+            <Search size={19} aria-hidden />
+          </Link>
+          <Suspense fallback={<span className="size-10" />}>
+            <Cloche />
           </Suspense>
-        </nav>
-        <p className="px-5 py-4 text-xs text-doux">La paie zéro papier</p>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b border-bordure bg-surface/90 px-4 backdrop-blur lg:px-8">
-          <Link href="/espace" className="lg:hidden" aria-label="Tableau de bord">
-            <Logo taille={28} />
-          </Link>
-          <span className="hidden lg:block" />
-          <Suspense fallback={null}>
+          <Suspense fallback={<span className="size-10" />}>
             <MenuUtilisateur />
           </Suspense>
-        </header>
+        </div>
+      </header>
 
-        <Suspense fallback={null}>
-          <BandeauAbonnement />
-        </Suspense>
-        <Suspense fallback={null}>
-          <BandeauActions />
-        </Suspense>
+      <Suspense fallback={null}>
+        <BandeauAbonnement />
+      </Suspense>
+      <Suspense fallback={null}>
+        <BandeauActions />
+      </Suspense>
 
-        <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-10">
-          <div className="mx-auto w-full max-w-5xl">
-            <Suspense fallback={<Squelette />}>{children}</Suspense>
-          </div>
-        </main>
-      </div>
+      <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-12">
+        <div className="mx-auto w-full max-w-6xl">
+          <Suspense fallback={<Squelette />}>{children}</Suspense>
+        </div>
+      </main>
 
       <nav aria-label="Menu principal" className="fixed inset-x-0 bottom-0 z-10 border-t border-bordure bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
         <Suspense fallback={null}>
@@ -64,47 +73,9 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
   );
 }
 
-async function Menu({ variante }: { variante: "lateral" | "onglets" }) {
+async function Menu({ variante }: { variante: "haut" | "onglets" }) {
   const { adminPlateforme, cabinets, affectations, abonnements } = await droitsUtilisateur();
   const voitEntreprises = adminPlateforme || cabinets.length > 0 || affectations.length > 0;
-
-  const groupes: GroupeMenu[] = [
-    { titre: "Vue d'ensemble", elements: [{ href: "/espace", libelle: "Tableau de bord", icone: "tableau" }] },
-    ...(voitEntreprises
-      ? [
-          {
-            titre: "Structures",
-            elements: [
-              ...(adminPlateforme
-                ? [
-                    { href: "/espace/cabinets", libelle: "Cabinets", icone: "cabinets" as const },
-                    { href: "/espace/demandes-demo", libelle: "Demandes de démo", icone: "demandes" as const },
-                  ]
-                : []),
-              { href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const },
-            ],
-          },
-          {
-            titre: "Modules",
-            elements: MODULES.map((m) => ({
-              href: `/espace/modules/${m.id}`,
-              libelle: m.nom,
-              icone: m.id,
-              bientot: m.statut === "bientot",
-            })),
-          },
-        ]
-      : []),
-    {
-      titre: "Compte",
-      elements: [
-        ...(adminPlateforme || abonnements.length > 0
-          ? [{ href: "/espace/abonnement", libelle: adminPlateforme ? "Abonnements" : "Abonnement", icone: "abonnement" as const }]
-          : []),
-        { href: "/espace/profil", libelle: "Mon profil", icone: "profil" },
-      ],
-    },
-  ];
 
   if (variante === "onglets") {
     const onglets: ElementMenu[] = [
@@ -119,18 +90,58 @@ async function Menu({ variante }: { variante: "lateral" | "onglets" }) {
     ];
     return <BarreOnglets elements={onglets} />;
   }
-  return <MenuLateral groupes={groupes} />;
+
+  const rubriques: ElementMenu[] = [
+    { href: "/espace", libelle: "Accueil", icone: "tableau" },
+    ...(voitEntreprises
+      ? [
+          { href: "/espace/entreprises", libelle: "Entreprises", icone: "entreprises" as const },
+          { href: "/espace/modules", libelle: "Modules", icone: "modules" as const },
+        ]
+      : []),
+    ...(adminPlateforme
+      ? [
+          { href: "/espace/cabinets", libelle: "Cabinets", icone: "cabinets" as const },
+          { href: "/espace/demandes-demo", libelle: "Démos", icone: "demandes" as const },
+        ]
+      : []),
+    ...(adminPlateforme || abonnements.length > 0
+      ? [{ href: "/espace/abonnement", libelle: adminPlateforme ? "Abonnements" : "Abonnement", icone: "abonnement" as const }]
+      : []),
+  ];
+  return <NavigationHaut elements={rubriques} />;
 }
 
-// Bandeau d'information sur l'abonnement (essai, lecture seule, blocage).
-// Non affiché pour l'administrateur plateforme, qui voit tous les abonnements.
-// Rappel permanent des validations et publications qui attendent la personne.
+// Cloche : nombre d'actions qui attendent la personne (validations, demandes, réclamations).
+async function Cloche() {
+  const [actions, demandes, reclamations] = await Promise.all([mesActionsPaie(), mesDemandesATraiter(), mesReclamationsATraiter()]);
+  const nombre = actions.length + demandes.length + reclamations.length;
+  return (
+    <Link
+      href="/espace#a-faire"
+      className="relative grid size-10 place-items-center rounded-full hover:bg-white/10"
+      aria-label={nombre ? `${nombre} action(s) à faire` : "Aucune action à faire"}
+      title={nombre ? `${nombre} action(s) à faire` : "Aucune action à faire"}
+    >
+      <Bell size={19} aria-hidden />
+      {nombre > 0 && (
+        <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-bold text-white ring-2 ring-marque-fonce">
+          {nombre > 99 ? "99+" : nombre}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+// Rappel permanent des validations, demandes et réclamations qui attendent la personne.
 async function BandeauActions() {
   const [actions, demandes, reclamations] = await Promise.all([mesActionsPaie(), mesDemandesATraiter(), mesReclamationsATraiter()]);
   const nombre = actions.length + demandes.length + reclamations.length;
   return nombre ? <BandeauActionsPaie nombre={nombre} /> : null;
 }
 
+// Bandeau d'information sur l'abonnement (essai, lecture seule, blocage).
+// Non affiché pour l'administrateur plateforme, qui voit tous les abonnements.
 async function BandeauAbonnement() {
   const { adminPlateforme, abonnements } = await droitsUtilisateur();
   if (adminPlateforme) return null;
@@ -156,6 +167,7 @@ async function BandeauAbonnement() {
   );
 }
 
+// Avatar et menu du compte (profil, mot de passe, déconnexion), sans JavaScript.
 async function MenuUtilisateur() {
   const { profil } = await droitsUtilisateur();
   const nom: string = profil?.nom_complet || profil?.email || "";
@@ -167,23 +179,38 @@ async function MenuUtilisateur() {
     .join("");
 
   return (
-    <div className="flex items-center gap-3">
-      <Link href="/espace/profil" className="flex items-center gap-2">
-        <span className="grid size-9 place-items-center rounded-full bg-marque text-sm font-semibold text-white">
-          {initiales}
-        </span>
-        <span className="hidden max-w-48 truncate text-sm font-medium sm:block">{nom}</span>
-      </Link>
-      <form action={seDeconnecter}>
-        <button
-          type="submit"
-          className="grid size-9 place-items-center rounded-lg text-doux hover:bg-black/[.04] hover:text-foreground"
-          aria-label="Se déconnecter"
-          title="Se déconnecter"
-        >
-          <LogOut size={18} aria-hidden />
-        </button>
-      </form>
-    </div>
+    <details className="group relative">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full p-0.5 hover:bg-white/10" aria-label="Mon compte">
+        <span className="grid size-9 place-items-center rounded-full bg-accent text-sm font-bold text-white ring-2 ring-white/40">{initiales}</span>
+      </summary>
+      <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-xl border border-bordure bg-surface text-foreground shadow-xl">
+        <div className="border-b border-bordure bg-marque-claire/60 px-4 py-3">
+          <p className="truncate font-semibold">{profil?.nom_complet || "Mon compte"}</p>
+          <p className="truncate text-xs text-doux">{profil?.email}</p>
+        </div>
+        <ul className="py-1 text-sm">
+          <li>
+            <Link href="/espace/profil" className="flex items-center gap-2 px-4 py-2 hover:bg-black/[.04]">
+              <UserRound size={16} className="text-doux" aria-hidden />
+              Mon profil
+            </Link>
+          </li>
+          <li>
+            <Link href="/espace/mot-de-passe" className="flex items-center gap-2 px-4 py-2 hover:bg-black/[.04]">
+              <KeyRound size={16} className="text-doux" aria-hidden />
+              Changer mon mot de passe
+            </Link>
+          </li>
+          <li className="border-t border-bordure">
+            <form action={seDeconnecter}>
+              <button type="submit" className="flex w-full items-center gap-2 px-4 py-2 text-left text-red-700 hover:bg-red-50">
+                <LogOut size={16} aria-hidden />
+                Se déconnecter
+              </button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </details>
   );
 }

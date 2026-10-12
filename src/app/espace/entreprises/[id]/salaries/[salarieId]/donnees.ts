@@ -8,7 +8,7 @@ export async function chargerDossier(entrepriseId: string, salarieId: string) {
   const [{ data: salarie }, { data: entreprise }, { data: peutGerer }] = await Promise.all([
     supabase
       .from("salaries")
-      .select("id, matricule, nom, prenoms, poste, statut, date_sortie, date_embauche")
+      .select("id, matricule, nom, prenoms, poste, statut, date_sortie, date_embauche, telephone, email")
       .eq("id", salarieId)
       .eq("entreprise_id", entrepriseId)
       .maybeSingle(),

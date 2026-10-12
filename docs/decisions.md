@@ -136,3 +136,11 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   une seconde page attribuée au même salarié est signalée et n'est pas envoyée. Un salarié ne peut donc
   pas recevoir la page d'un collègue.
 
+## 2026-10-12 — Nouvelle interface
+
+- Présentation inspirée de BambooHR (organisation de l'écran seulement, ni logo ni textes repris) :
+  barre de navigation en haut, cloche des actions à faire, menu du compte, recherche d'un salarié,
+  accueil en tuiles (À faire, qui est absent, anniversaires et ancienneté, échéances, modules),
+  fiche salarié avec bandeau, avatar et coordonnées.
+- Palette **indigo** (marque) et **corail** (accent), une couleur par module, avatars colorés.
+

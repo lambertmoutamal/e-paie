@@ -20,32 +20,32 @@ function gabarit({ titre, paragraphes, bouton, note }: {
   note?: string;
 }): string {
   const corps = paragraphes
-    .map((p) => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334139">${p}</p>`)
+    .map((p) => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#33384d">${p}</p>`)
     .join("");
   const action = bouton
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="background:#0b5d3b;border-radius:8px">
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="background:#4f46e5;border-radius:8px">
          <a href="${echapper(bouton.lien)}" style="display:inline-block;padding:14px 28px;color:#ffffff;font-weight:600;font-size:15px;text-decoration:none">${echapper(bouton.libelle)}</a>
        </td></tr></table>
-       <p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:#5b6b62">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br><span style="word-break:break-all;color:#0b5d3b">${echapper(bouton.lien)}</span></p>`
+       <p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:#5b6478">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br><span style="word-break:break-all;color:#4f46e5">${echapper(bouton.lien)}</span></p>`
     : "";
   const remarque = note
-    ? `<p style="margin:16px 0 0;padding-top:16px;border-top:1px solid #e3e8e5;font-size:13px;line-height:1.5;color:#5b6b62">${note}</p>`
+    ? `<p style="margin:16px 0 0;padding-top:16px;border-top:1px solid #e4e7f0;font-size:13px;line-height:1.5;color:#5b6478">${note}</p>`
     : "";
 
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
-<body style="margin:0;background:#f5f7f6;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+<body style="margin:0;background:#f6f7fb;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e3e8e5;border-radius:12px">
-<tr><td style="padding:20px 28px;border-bottom:1px solid #e3e8e5">
-  <span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;background:#0b5d3b;color:#fff;border-radius:7px;font-weight:700">D</span>
-  <span style="margin-left:8px;font-size:17px;font-weight:700;color:#17201b;vertical-align:middle">DématPaie</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e4e7f0;border-radius:12px">
+<tr><td style="padding:20px 28px;border-bottom:1px solid #e4e7f0">
+  <span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;background:#4f46e5;color:#fff;border-radius:7px;font-weight:700">D</span>
+  <span style="margin-left:8px;font-size:17px;font-weight:700;color:#1b1e2e;vertical-align:middle">DématPaie</span>
 </td></tr>
 <tr><td style="padding:28px">
-  <h1 style="margin:0 0 20px;font-size:21px;line-height:1.3;color:#17201b">${titre}</h1>
+  <h1 style="margin:0 0 20px;font-size:21px;line-height:1.3;color:#1b1e2e">${titre}</h1>
   ${corps}${action}${remarque}
 </td></tr>
 </table>
-<p style="margin:16px 0 0;font-size:12px;color:#8a978f">DématPaie · La paie zéro papier<br>Email automatique, merci de ne pas y répondre.</p>
+<p style="margin:16px 0 0;font-size:12px;color:#8a90a6">DématPaie · La paie zéro papier<br>Email automatique, merci de ne pas y répondre.</p>
 </td></tr></table></body></html>`;
 }
 
@@ -111,7 +111,7 @@ export function emailCompteExistant(p: { lienConnexion: string; lienMotDePasse: 
       titre: "Vous avez déjà un compte",
       paragraphes: [
         "Quelqu'un (probablement vous) a tenté de créer un compte DématPaie avec cette adresse, mais un compte existe déjà.",
-        `Connectez-vous simplement. En cas d'oubli, utilisez <a href="${echapper(p.lienMotDePasse)}" style="color:#0b5d3b">« Mot de passe oublié »</a>.`,
+        `Connectez-vous simplement. En cas d'oubli, utilisez <a href="${echapper(p.lienMotDePasse)}" style="color:#4f46e5">« Mot de passe oublié »</a>.`,
       ],
       bouton: { libelle: "Se connecter", lien: p.lienConnexion },
       note: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre compte n'a pas été modifié.",
