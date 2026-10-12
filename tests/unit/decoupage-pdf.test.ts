@@ -41,21 +41,31 @@ describe("découpage d'un vrai PDF de bulletins", () => {
     ]);
 
     const groupes = regrouperPages((await lireTextes(lot)).map((t) => reconnaitreSalarie(t, salaries)));
+    // Une page = un bulletin : la 2e page d'Awa n'est pas ajoutée à son bulletin, elle est signalée
     expect(groupes).toEqual([
-      { pages: [1, 2], salarieId: "awa" },
+      { pages: [1], salarieId: "awa" },
+      { pages: [2], salarieId: null, motif: "doublon" },
       { pages: [3], salarieId: "paul" },
       { pages: [4], salarieId: null, motif: "introuvable" },
     ]);
 
-    // Découpage : le bulletin d'Awa contient ses 2 pages, et seulement les siennes
+    // Découpage : le bulletin de Paul contient sa seule page, rien d'autre
     const source = await PDFDocument.load(lot);
     const bulletin = await PDFDocument.create();
-    (await bulletin.copyPages(source, [0, 1])).forEach((p) => bulletin.addPage(p));
+    (await bulletin.copyPages(source, [2])).forEach((p) => bulletin.addPage(p));
     const octets = await bulletin.save();
+    expect((await PDFDocument.load(octets)).getPageCount()).toBe(1);
     const textes = await lireTextes(octets);
-    expect(textes).toHaveLength(2);
-    expect(textes.join(" ")).toContain("NDONG");
-    expect(textes.join(" ")).not.toContain("MBA");
+    expect(textes.join(" ")).toContain("MBA");
+    expect(textes.join(" ")).not.toContain("NDONG");
+  });
+
+  test("comptage des pages (contrôle du serveur), y compris d'un PDF protégé", async () => {
+    const unePage = await fabriquerLot([["Matricule : 0123"]]);
+    const deuxPages = await fabriquerLot([["Matricule : 0123"], ["Matricule : A-45"]], { userPassword: "", ownerPassword: "proprio" });
+    const compter = async (o: Uint8Array) => (await PDFDocument.load(o, { ignoreEncryption: true, updateMetadata: false })).getPageCount();
+    expect(await compter(unePage)).toBe(1);
+    expect(await compter(deuxPages)).toBe(2);
   });
 
   test("PDF protégé par le logiciel de paie : lu et découpé, mot de passe d'ouverture géré", async () => {

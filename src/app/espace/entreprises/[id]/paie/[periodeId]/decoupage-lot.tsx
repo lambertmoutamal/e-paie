@@ -186,7 +186,8 @@ export function DecoupageLot({
     <div className="flex flex-col gap-4">
       <p className="text-sm text-doux">
         Déposez le PDF unique produit par votre logiciel de paie. Chaque page est lue, le <strong className="text-foreground">matricule</strong> est
-        recherché puis comparé aux salariés de l&apos;entreprise. Les pages consécutives d&apos;un même salarié forment un seul bulletin. Vérifiez
+        recherché puis comparé aux salariés de l&apos;entreprise. <strong className="text-foreground">Une page = un bulletin</strong> : chaque
+        salarié ne reçoit que sa page. Vérifiez
         l&apos;aperçu avant l&apos;envoi. Le fichier est découpé sur votre ordinateur : seuls les bulletins individuels sont envoyés.
       </p>
 
