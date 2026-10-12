@@ -8,6 +8,7 @@ import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { alerterPaie } from "@/lib/notifications/alertes-paie";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import { estPdf, libellePeriode, lireCircuit, schemaPeriode, TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
+import { compterPages } from "@/lib/bulletins/pages";
 
 // Toutes les écritures passent par le client de la personne connectée :
 // la base vérifie le rôle, l'abonnement, l'entreprise et que la période est en brouillon.
@@ -65,6 +66,10 @@ export async function deposerBulletin(
   // On vérifie le contenu réel du fichier, pas seulement son nom.
   const contenu = new Uint8Array(await fichier.arrayBuffer());
   if (!estPdf(contenu)) return { ok: false, erreur: "Ce fichier n'est pas un vrai PDF." };
+  // Un bulletin = une seule page : un salarié ne doit jamais recevoir la page d'un collègue.
+  const pages = await compterPages(contenu);
+  if (pages === null) return { ok: false, erreur: "Ce PDF est illisible ou endommagé." };
+  if (pages !== 1) return { ok: false, erreur: `Un bulletin doit tenir sur une seule page : ce PDF en contient ${pages}.` };
   const empreinte = createHash("sha256").update(contenu).digest("hex");
 
   const [{ data: periode }, { data: salarie }, { data: existant }] = await Promise.all([

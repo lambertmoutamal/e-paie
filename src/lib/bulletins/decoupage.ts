@@ -59,20 +59,14 @@ export type GroupePages = {
   motif?: "aucun_texte" | "introuvable" | "ambigu" | "doublon";
 };
 
-// Pages consécutives du même salarié = un seul bulletin (bulletin sur plusieurs pages).
-// Une page non reconnue reste seule, pour être corrigée à la main.
-// Un salarié qui réapparaît plus loin dans le lot est signalé comme doublon.
+// Un bulletin = une seule page : chaque page devient un bulletin distinct, jamais regroupé
+// (un salarié ne reçoit ainsi jamais la page d'un collègue).
+// Une page non reconnue reste à corriger à la main ; une seconde page attribuée au même
+// salarié est signalée comme doublon et n'est pas envoyée.
 export function regrouperPages(resultats: Reconnaissance[]): GroupePages[] {
-  const groupes: GroupePages[] = [];
-  resultats.forEach((r, i) => {
-    const page = i + 1;
-    const dernier = groupes.at(-1);
-    if (r.salarieId && dernier?.salarieId === r.salarieId && dernier.motif === undefined) {
-      dernier.pages.push(page);
-      return;
-    }
-    groupes.push("motif" in r ? { pages: [page], salarieId: null, motif: r.motif } : { pages: [page], salarieId: r.salarieId });
-  });
+  const groupes: GroupePages[] = resultats.map((r, i) =>
+    "motif" in r ? { pages: [i + 1], salarieId: null, motif: r.motif } : { pages: [i + 1], salarieId: r.salarieId },
+  );
   const vus = new Set<string>();
   for (const g of groupes) {
     if (!g.salarieId) continue;
@@ -88,7 +82,7 @@ export const MOTIFS_DECOUPAGE: Record<NonNullable<GroupePages["motif"]>, string>
   aucun_texte: "Page sans texte (PDF scanné ?) : choisissez le salarié.",
   introuvable: "Aucun matricule reconnu : choisissez le salarié.",
   ambigu: "Plusieurs salariés possibles : choisissez le bon.",
-  doublon: "Ce salarié a déjà un bulletin plus haut dans le lot.",
+  doublon: "Ce salarié a déjà une page plus haut dans le lot (un bulletin = une page) : vérifiez et choisissez le bon salarié.",
 };
 
 export function libellePages(pages: number[]): string {

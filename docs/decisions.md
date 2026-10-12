@@ -128,3 +128,11 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - Le salarié peut rattacher un de ses bulletins publiés et joindre une photo ou un PDF ; l'entreprise peut
   joindre un document (bulletin corrigé, attestation).
 
+## 2026-10-12 — Un bulletin = une page
+
+- Chaque bulletin déposé doit tenir sur **une seule page** : contrôlé par le serveur pour tous les modes
+  de dépôt (un par un, un PDF par salarié, PDF unique découpé).
+- Dans le découpage d'un PDF unique, chaque page devient un bulletin distinct, sans jamais être regroupée ;
+  une seconde page attribuée au même salarié est signalée et n'est pas envoyée. Un salarié ne peut donc
+  pas recevoir la page d'un collègue.
+

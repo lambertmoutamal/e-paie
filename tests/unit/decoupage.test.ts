@@ -37,14 +37,15 @@ describe("reconnaissance du salarié sur une page", () => {
 
 describe("regroupement des pages", () => {
   const ok = (id: string): Reconnaissance => ({ salarieId: id, methode: "libelle" });
-  test("pages consécutives du même salarié regroupées, inconnues isolées, doublons signalés", () => {
+  test("une page = un bulletin : jamais de regroupement, seconde page du même salarié signalée", () => {
     const g = regrouperPages([ok("awa"), ok("awa"), ok("paul"), { salarieId: null, motif: "introuvable" }, ok("awa")]);
     expect(g).toEqual([
-      { pages: [1, 2], salarieId: "awa" },
+      { pages: [1], salarieId: "awa" },
+      { pages: [2], salarieId: null, motif: "doublon" },
       { pages: [3], salarieId: "paul" },
       { pages: [4], salarieId: null, motif: "introuvable" },
       { pages: [5], salarieId: null, motif: "doublon" },
     ]);
-    expect(libellePages([1, 2])).toBe("Pages 1 à 2");
+    expect(libellePages([3])).toBe("Page 3");
   });
 });
