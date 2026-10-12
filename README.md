@@ -181,6 +181,13 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
   Personnalisez un modèle standard ou importez votre modèle Word, et utilisez « + Insérer un champ ».
 - Le PDF est généré par le serveur (police Roboto incluse, aucun accès Internet).
 
+## Réclamations
+
+- Salarié : onglet **Réclamations** de son espace (`/portail/reclamations`).
+- Entreprise : module **Self-service** de l'entreprise (`/espace/entreprises/<id>/reclamations`) ; les
+  réclamations à traiter apparaissent aussi dans « À faire ». Bulletin → gestionnaire de paie ; autres
+  sujets → RH ; à défaut, administrateurs.
+
 ## Commandes utiles
 
 | Commande | Rôle |

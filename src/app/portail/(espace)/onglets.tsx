@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, FileText } from "lucide-react";
+import { CalendarDays, FileText, MessagesSquare } from "lucide-react";
 
 const ONGLETS = [
   { href: "/portail", libelle: "Bulletins", icone: FileText },
   { href: "/portail/absences", libelle: "Absences", icone: CalendarDays },
+  { href: "/portail/reclamations", libelle: "Réclamations", icone: MessagesSquare },
 ];
 
 // Onglets de l'espace salarié (grands boutons, faciles à toucher sur téléphone).

@@ -42,3 +42,21 @@ export const mesDemandesATraiter = cache(async (): Promise<DemandeATraiter[]> =>
   const { data } = await supabase.rpc("mes_demandes_a_traiter");
   return (data ?? []) as DemandeATraiter[];
 });
+
+export type ReclamationATraiter = {
+  reclamation_id: string;
+  entreprise_id: string;
+  raison_sociale: string;
+  salarie: string;
+  sujet: string;
+  objet: string;
+  derniere_activite: string;
+};
+
+// Réclamations qui attendent une réponse de la personne connectée (chargée de ce sujet).
+export const mesReclamationsATraiter = cache(async (): Promise<ReclamationATraiter[]> => {
+  const { supabase } = await exigerUtilisateur();
+  const { data } = await supabase.rpc("mes_reclamations_a_traiter");
+  return (data ?? []) as ReclamationATraiter[];
+});
+

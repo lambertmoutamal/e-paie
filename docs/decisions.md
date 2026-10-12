@@ -118,3 +118,13 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - **Qui valide** : le RH (par défaut), les administrateurs, ou le RH puis un administrateur (deux
   personnes différentes). Seul un administrateur peut changer ce réglage.
 
+## 2026-10-12 — Réclamations
+
+- Traitement **selon le sujet** : bulletin de paie → gestionnaire de paie ; congés, contrat, attestation,
+  autre → RH ; sans personne ayant ce rôle → administrateurs. Chacun ne voit que les réclamations de ses
+  sujets (les administrateurs voient tout, mais n'ont « à faire » que s'il n'y a personne d'autre).
+- Statuts : ouverte → en cours (après une réponse) → résolue (par l'entreprise) → close (confirmée par le
+  salarié). Un message du salarié sur une réclamation résolue la rouvre.
+- Le salarié peut rattacher un de ses bulletins publiés et joindre une photo ou un PDF ; l'entreprise peut
+  joindre un document (bulletin corrigé, attestation).
+

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { BellRing, CalendarDays, ChevronRight, CircleCheck, Send, Undo2 } from "lucide-react";
+import { BellRing, CalendarDays, ChevronRight, CircleCheck, MessagesSquare, Send, Undo2 } from "lucide-react";
 import { libellePeriode } from "@/lib/bulletins/regles";
-import type { ActionPaie, DemandeATraiter } from "@/lib/bulletins/actions-a-faire";
+import type { ActionPaie, DemandeATraiter, ReclamationATraiter } from "@/lib/bulletins/actions-a-faire";
+import { SUJETS_RECLAMATION, type SujetReclamation } from "@/lib/reclamations/regles";
 import { formaterJours, libelleDates } from "@/lib/absences/regles";
 import { formaterDate } from "@/lib/abonnements/phases";
 
@@ -12,8 +13,16 @@ const APPARENCE = {
 } as const;
 
 // Carte « À faire » du tableau de bord : très visible, en tête de page.
-export function CarteActionsPaie({ actions, demandes = [] }: { actions: ActionPaie[]; demandes?: DemandeATraiter[] }) {
-  const total = actions.length + demandes.length;
+export function CarteActionsPaie({
+  actions,
+  demandes = [],
+  reclamations = [],
+}: {
+  actions: ActionPaie[];
+  demandes?: DemandeATraiter[];
+  reclamations?: ReclamationATraiter[];
+}) {
+  const total = actions.length + demandes.length + reclamations.length;
   return (
     <section id="a-faire" aria-labelledby="titre-a-faire" className="overflow-hidden rounded-xl border-2 border-amber-300 bg-surface shadow-sm">
       <div className="flex items-center gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 sm:px-5">
@@ -68,6 +77,25 @@ export function CarteActionsPaie({ actions, demandes = [] }: { actions: ActionPa
                 <span className="block truncate text-sm text-doux">
                   {d.type_libelle} · {libelleDates(d)} · {formaterJours(d.nb_jours)}
                   {d.prevalidee ? " · premier accord du RH donné" : ""}
+                </span>
+              </span>
+              <ChevronRight size={18} className="shrink-0 text-doux" aria-hidden />
+            </Link>
+          </li>
+        ))}
+        {reclamations.map((r) => (
+          <li key={r.reclamation_id}>
+            <Link href={`/espace/entreprises/${r.entreprise_id}/reclamations/${r.reclamation_id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-black/[.02] sm:px-5">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-800">
+                <MessagesSquare size={14} aria-hidden />
+                Réclamation
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">
+                  {r.objet} · {r.salarie}
+                </span>
+                <span className="block truncate text-sm text-doux">
+                  {SUJETS_RECLAMATION[r.sujet as SujetReclamation]?.libelle ?? r.sujet} · {r.raison_sociale} · depuis le {formaterDate(r.derniere_activite)}
                 </span>
               </span>
               <ChevronRight size={18} className="shrink-0 text-doux" aria-hidden />
