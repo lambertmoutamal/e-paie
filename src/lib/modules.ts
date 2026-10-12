@@ -60,9 +60,10 @@ export const MODULES: Module[] = [
     nom: "Self-service salarié & manager",
     accroche: "Le salarié et son responsable gèrent l'essentiel depuis leur téléphone.",
     statut: "disponible",
+    lienEntreprise: (id) => `/espace/entreprises/${id}/reclamations`,
     fonctions: [
       { libelle: "Portail salarié : connexion par téléphone (SMS ou WhatsApp), bulletins et historique", disponible: true },
-      { libelle: "Réclamations avec suivi", disponible: false },
+      { libelle: "Réclamations avec échanges, pièces jointes et suivi", disponible: true },
       { libelle: "Espace manager : équipe et validations", disponible: false },
     ],
   },

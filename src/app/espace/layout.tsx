@@ -7,7 +7,7 @@ import { Logo } from "@/components/logo";
 import { Squelette } from "@/components/ui";
 import { seDeconnecter } from "../connexion/actions";
 import { MODULES } from "@/lib/modules";
-import { mesActionsPaie, mesDemandesATraiter } from "@/lib/bulletins/actions-a-faire";
+import { mesActionsPaie, mesDemandesATraiter, mesReclamationsATraiter } from "@/lib/bulletins/actions-a-faire";
 import { BandeauActionsPaie } from "@/components/actions-paie";
 import { BarreOnglets, MenuLateral, type ElementMenu, type GroupeMenu } from "./navigation";
 
@@ -126,8 +126,8 @@ async function Menu({ variante }: { variante: "lateral" | "onglets" }) {
 // Non affiché pour l'administrateur plateforme, qui voit tous les abonnements.
 // Rappel permanent des validations et publications qui attendent la personne.
 async function BandeauActions() {
-  const [actions, demandes] = await Promise.all([mesActionsPaie(), mesDemandesATraiter()]);
-  const nombre = actions.length + demandes.length;
+  const [actions, demandes, reclamations] = await Promise.all([mesActionsPaie(), mesDemandesATraiter(), mesReclamationsATraiter()]);
+  const nombre = actions.length + demandes.length + reclamations.length;
   return nombre ? <BandeauActionsPaie nombre={nombre} /> : null;
 }
 

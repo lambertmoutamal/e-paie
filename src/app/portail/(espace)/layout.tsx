@@ -22,7 +22,10 @@ export default function MiseEnPagePortail({ children }: LayoutProps<"/portail">)
             </button>
           </form>
         </div>
-        <OngletsPortail />
+        {/* Les onglets lisent l'adresse de la page : ils s'affichent dès qu'elle est connue */}
+        <Suspense fallback={<div className="h-11" aria-hidden />}>
+          <OngletsPortail />
+        </Suspense>
       </header>
       <main className="flex-1 px-4 py-6">
         <div className="mx-auto w-full max-w-3xl">

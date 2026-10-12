@@ -3,7 +3,7 @@ import { clientSupabaseServeur } from "@/lib/supabase/serveur";
 import { COMPARTIMENT } from "@/lib/stockage/fichiers";
 
 // Seuls ces espaces de stockage privés peuvent être ouverts par ce lien.
-const COMPARTIMENTS_AUTORISES = new Set([COMPARTIMENT, "bulletins", "absences"]);
+const COMPARTIMENTS_AUTORISES = new Set([COMPARTIMENT, "bulletins", "absences", "reclamations"]);
 
 // Ouvre un fichier de l'espace privé : un lien temporaire (60 secondes) est créé
 // au nom de la personne connectée ; la base refuse si elle n'a pas accès à l'entreprise.

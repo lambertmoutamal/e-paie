@@ -24,12 +24,13 @@ Organisation des modules inspirée des SIRH du marché (référence : Nibelis), 
 | — | Alertes de paie par email et WhatsApp, actions « À faire » visibles par la seule personne qui doit agir |
 | 10 | Congés et permissions : demandes depuis le portail (justificatif), validation RH, soldes calculés automatiquement, jours fériés, planning, alertes |
 | — | Congés prévisionnels ; contrats : import du document signé ou rédaction dans DématPaie (modèles, import Word, champs automatiques, PDF) |
+| — | Réglages personnalisables des congés (types, ancienneté, règles, qui valide), date du dernier congé |
+| 11 | Réclamations : ouverture depuis le portail (sujet, bulletin, pièce jointe), échanges, résolution et clôture, traitement selon le sujet, alertes |
 
 ## À venir
 
 | Étape | Module | Contenu |
 |---|---|---|
-| 11 | Self-service | Réclamations avec échanges et statut |
 | 12 | Transversal | Notifications dans l'application et par email ; prévenance des salariés avant blocage |
 | 13 | Self-service | **Espace manager** : vue de son équipe, validation des absences de ses collaborateurs |
 | 14 | Notes de frais | Saisie depuis le téléphone avec photo du justificatif, validation par le manager, suivi |
