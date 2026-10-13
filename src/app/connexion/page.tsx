@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Building2 } from "lucide-react";
 import { CadreAuth } from "@/components/cadre-auth";
+import { classesBouton } from "@/components/ui";
 import { seConnecter } from "./actions";
 import { FormulaireConnexion } from "./formulaire-connexion";
 
@@ -34,6 +36,14 @@ export default function PageConnexion() {
           Mot de passe oublié ?
         </Link>
       </p>
+      {/* Les entreprises s'ajoutent ici, jamais depuis l'espace connecté */}
+      <div className="mt-6 border-t border-bordure pt-6">
+        <Link href="/nouvelle-entreprise" className={`${classesBouton("secondaire")} w-full`}>
+          <Building2 size={16} aria-hidden />
+          Créer une nouvelle entreprise
+        </Link>
+        <p className="mt-2 text-center text-xs text-doux">Pour les cabinets comptables déjà inscrits.</p>
+      </div>
     </CadreAuth>
   );
 }

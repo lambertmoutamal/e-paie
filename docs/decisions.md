@@ -187,3 +187,12 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   seulement le nombre d'actions en attente dans les autres entreprises.
 - L'écran de choix (`/choix-entreprise`) est **hors du cadre de l'espace** : ni menus, ni recherche, ni cloche ;
   seulement le logo et « Se déconnecter ». « Changer d'entreprise » quitte d'abord l'entreprise actuelle.
+
+## 2026-10-13 — Création d'entreprise depuis la page de connexion uniquement
+
+- On ne crée plus d'entreprise depuis l'espace connecté (page, menu et boutons retirés ; la page
+  `/nouvelle-entreprise` redirige vers l'espace si l'on est déjà connecté).
+- Page de connexion → **« Créer une nouvelle entreprise »** : le cabinet saisit son email et son mot de
+  passe, puis la fiche de l'entreprise. Elle est rattachée à son cabinet (nom du cabinet demandé s'il en
+  gère plusieurs) ; la base refuse si la personne n'administre pas ce cabinet. Un nouveau client sans
+  compte passe par « Essayer gratuitement 30 jours ».

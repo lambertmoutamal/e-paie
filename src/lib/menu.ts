@@ -81,7 +81,6 @@ export function groupesMenu({
         ...(administrateur
           ? [
               { libelle: "Liste des entreprises", href: "/espace/entreprises", description: "Administration des entreprises du cabinet" },
-              { libelle: "Nouvelle entreprise", href: "/espace/entreprises/nouvelle" },
             ]
           : []),
         ...(adminPlateforme

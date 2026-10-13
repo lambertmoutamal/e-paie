@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Briefcase, LogOut, Plus } from "lucide-react";
+import { Briefcase, LogOut } from "lucide-react";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { Carte, EtatVide, LienBouton, Squelette } from "@/components/ui";
+import { Carte, EtatVide, Squelette } from "@/components/ui";
 import { entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { Logo } from "@/components/logo";
 import { seDeconnecter } from "../connexion/actions";
@@ -47,13 +47,10 @@ async function ChoixEntreprise() {
           <EtatVide
             icone={Briefcase}
             titre="Aucune entreprise ne vous est encore affectée"
-            texte="Demandez à l'administrateur de votre cabinet de vous donner accès à une entreprise."
-            action={
-              (adminPlateforme || cabinets.length > 0) && (
-                <LienBouton href="/espace/entreprises/nouvelle" icone={Plus}>
-                  Créer une entreprise
-                </LienBouton>
-              )
+            texte={
+              adminPlateforme || cabinets.length > 0
+                ? "Pour ajouter une entreprise cliente : déconnectez-vous, puis cliquez sur « Créer une nouvelle entreprise » sur la page de connexion."
+                : "Demandez à l'administrateur de votre cabinet de vous donner accès à une entreprise."
             }
           />
         </Carte>

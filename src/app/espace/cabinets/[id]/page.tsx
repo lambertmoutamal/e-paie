@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Briefcase, Plus, UserRound } from "lucide-react";
+import { Briefcase, UserRound } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { champLie, valeurLiee } from "@/lib/supabase/relations";
 import { ActionEnLigne, Champ, Formulaire } from "@/components/formulaire";
-import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
+import { Badge, Carte, EnTetePage, EtatVide, Ligne, ListeLignes, Page } from "@/components/ui";
 import { ajouterAdministrateur, renvoyerInvitationAdmin } from "../actions";
 
 export const metadata: Metadata = { title: "Cabinet" };
@@ -32,16 +32,11 @@ export default async function PageCabinet({ params }: PageProps<"/espace/cabinet
         titre={cabinet.nom}
         description={[cabinet.nif && `NIF ${cabinet.nif}`, cabinet.telephone, cabinet.email, cabinet.adresse].filter(Boolean).join(" · ") || undefined}
         fil={[{ href: "/espace", libelle: "Tableau de bord" }, { href: "/espace/cabinets", libelle: "Cabinets" }]}
-        actions={
-          <LienBouton href={`/espace/entreprises/nouvelle?cabinet=${cabinet.id}`} icone={Plus}>
-            Nouvelle entreprise
-          </LienBouton>
-        }
       />
 
       <Carte titre={`Entreprises clientes (${entreprises?.length ?? 0})`} sansMarge>
         {!entreprises?.length ? (
-          <EtatVide icone={Briefcase} titre="Aucune entreprise" texte="Ajoutez la première entreprise cliente de ce cabinet." />
+          <EtatVide icone={Briefcase} titre="Aucune entreprise" texte="Les entreprises s'ajoutent depuis la page de connexion : « Créer une nouvelle entreprise »." />
         ) : (
           <ListeLignes>
             {entreprises.map((e) => (

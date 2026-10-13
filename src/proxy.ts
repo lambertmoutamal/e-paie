@@ -43,13 +43,15 @@ export async function proxy(requete: NextRequest) {
   const pagePersonnel = chemin.startsWith("/espace") || chemin === "/choix-entreprise";
 
   // Un compte salarié n'entre jamais dans l'espace du personnel.
-  if (connecte && salarie && (pagePersonnel || chemin === "/connexion")) {
+  const pageAuth = chemin === "/connexion" || chemin === "/nouvelle-entreprise";
+  if (connecte && salarie && (pagePersonnel || pageAuth)) {
     return rediriger(requete, reponse, "/portail");
   }
   if (!connecte && pagePersonnel) {
     return rediriger(requete, reponse, "/connexion");
   }
-  if (connecte && chemin === "/connexion") {
+  // Une fois connecté, on ne crée plus d'entreprise : cela se fait uniquement depuis la connexion
+  if (connecte && pageAuth) {
     return rediriger(requete, reponse, "/espace");
   }
   // Compte tout juste activé (ou mot de passe oublié) : il faut d'abord choisir un mot de passe.
@@ -72,5 +74,5 @@ function rediriger(requete: NextRequest, reponse: NextResponse, chemin: string) 
 }
 
 export const config = {
-  matcher: ["/espace/:path*", "/choix-entreprise", "/connexion", "/portail", "/portail/:path*"],
+  matcher: ["/espace/:path*", "/choix-entreprise", "/connexion", "/nouvelle-entreprise", "/portail", "/portail/:path*"],
 };

@@ -11,10 +11,9 @@ describe("une seule entreprise à la fois", () => {
     expect(exigeEntrepriseChoisie("/espace/recherche")).toBe(true);
   });
 
-  test("l'écran de choix, le compte et la création d'entreprise restent ouverts", () => {
+  test("l'écran de choix et le compte restent ouverts", () => {
     expect(exigeEntrepriseChoisie("/choix-entreprise")).toBe(false);
     expect(exigeEntrepriseChoisie("/espace/mot-de-passe")).toBe(false);
-    expect(exigeEntrepriseChoisie("/espace/entreprises/nouvelle")).toBe(false);
     expect(exigeEntrepriseChoisie("/espace/profilXYZ")).toBe(true);
     expect(exigeEntrepriseChoisie("/connexion")).toBe(false);
     expect(exigeEntrepriseChoisie("/espaceX")).toBe(false);

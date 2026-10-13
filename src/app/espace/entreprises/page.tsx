@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Briefcase, Plus } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { champLie } from "@/lib/supabase/relations";
-import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
+import { Badge, Carte, EnTetePage, EtatVide, Ligne, ListeLignes, Page } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Entreprises" };
 
@@ -23,13 +23,6 @@ export default async function PageEntreprises() {
         titre="Entreprises"
         description="Les entreprises auxquelles vous avez accès."
         fil={[{ href: "/espace", libelle: "Tableau de bord" }]}
-        actions={
-          peutCreer && (
-            <LienBouton href="/espace/entreprises/nouvelle" icone={Plus}>
-              Nouvelle entreprise
-            </LienBouton>
-          )
-        }
       />
 
 
@@ -38,7 +31,7 @@ export default async function PageEntreprises() {
           <EtatVide
             icone={Briefcase}
             titre="Aucune entreprise"
-            texte={peutCreer ? "Créez votre première entreprise cliente." : "Aucune entreprise ne vous est encore affectée."}
+            texte={peutCreer ? "Ajoutez une entreprise depuis la page de connexion : « Créer une nouvelle entreprise »." : "Aucune entreprise ne vous est encore affectée."}
           />
         ) : (
           <ListeLignes>
