@@ -5,7 +5,6 @@ export const COOKIE_ENTREPRISE = "dematpaie_entreprise";
 
 // Pages accessibles sans entreprise de travail (compte, abonnement, administration de la plateforme)
 const PAGES_LIBRES = [
-  "/espace/choisir-entreprise",
   "/espace/mot-de-passe",
   "/espace/profil",
   "/espace/abonnement",

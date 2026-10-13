@@ -28,6 +28,6 @@ export const entrepriseCourante = cache(async (): Promise<EntrepriseAccessible |
 // Pour les pages de travail : sans entreprise choisie, retour à l'écran de choix.
 export async function exigerEntrepriseCourante(): Promise<EntrepriseAccessible> {
   const courante = await entrepriseCourante();
-  if (!courante) redirect("/espace/choisir-entreprise");
+  if (!courante) redirect("/choix-entreprise");
   return courante;
 }

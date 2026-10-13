@@ -18,7 +18,7 @@ export function groupesMenu({
   administrateur: boolean;
   voitAbonnement: boolean;
 }): GroupeMenu[] {
-  const e = (chemin: string) => (entrepriseId ? `/espace/entreprises/${entrepriseId}${chemin}` : "/espace/choisir-entreprise");
+  const e = (chemin: string) => (entrepriseId ? `/espace/entreprises/${entrepriseId}${chemin}` : "/choix-entreprise");
   const etat = (code: string) => `/espace/etats/${code}`;
 
   const sectionsEtats = (["Personnel", "Congés et absences", "Paie", "Déclarations"] as const).map((g) => ({

@@ -14,7 +14,7 @@ async function memoriser(entrepriseId: string) {
   if (liste.some((e) => e.id === entrepriseId)) (await cookies()).set(COOKIE_ENTREPRISE, entrepriseId, OPTIONS);
 }
 
-// Choix à la connexion ou depuis le menu du compte : on ouvre ensuite le tableau de bord
+// Choix sur l'écran des entreprises : on ouvre ensuite le tableau de bord
 export async function choisirEntrepriseEtContinuer(entrepriseId: string) {
   await memoriser(entrepriseId);
   redirect("/espace");
@@ -25,4 +25,11 @@ export async function choisirEntrepriseEtContinuer(entrepriseId: string) {
 export async function basculerEntreprise(entrepriseId: string) {
   await memoriser(entrepriseId);
   refresh();
+}
+
+// « Changer d'entreprise » : on quitte l'entreprise actuelle (plus aucune page de travail
+// accessible) et on revient à l'écran de choix.
+export async function changerEntreprise() {
+  (await cookies()).delete({ name: COOKIE_ENTREPRISE, path: "/espace" });
+  redirect("/choix-entreprise");
 }

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Briefcase, ChevronRight, LoaderCircle, Search } from "lucide-react";
-import { choisirEntrepriseEtContinuer } from "../actions-navigation";
+import { choisirEntrepriseEtContinuer } from "../espace/actions-navigation";
 
 const COULEURS = ["bg-indigo-500", "bg-rose-500", "bg-emerald-500", "bg-amber-500", "bg-sky-500", "bg-violet-500", "bg-orange-500", "bg-teal-500"];
 

@@ -12,7 +12,7 @@ describe("une seule entreprise à la fois", () => {
   });
 
   test("l'écran de choix, le compte et la création d'entreprise restent ouverts", () => {
-    expect(exigeEntrepriseChoisie("/espace/choisir-entreprise")).toBe(false);
+    expect(exigeEntrepriseChoisie("/choix-entreprise")).toBe(false);
     expect(exigeEntrepriseChoisie("/espace/mot-de-passe")).toBe(false);
     expect(exigeEntrepriseChoisie("/espace/entreprises/nouvelle")).toBe(false);
     expect(exigeEntrepriseChoisie("/espace/profilXYZ")).toBe(true);

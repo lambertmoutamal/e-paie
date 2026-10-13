@@ -21,7 +21,7 @@ export async function seConnecter(_etat: EtatConnexion, formulaire: FormData): P
   // Nouvelle session : l'entreprise de travail est choisie à chaque connexion
   // (une seule entreprise à la fois, montrée même s'il n'y en a qu'une).
   (await cookies()).delete({ name: COOKIE_ENTREPRISE, path: "/espace" });
-  redirect("/espace/choisir-entreprise");
+  redirect("/choix-entreprise");
 }
 
 export async function seDeconnecter() {

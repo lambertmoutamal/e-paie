@@ -1,20 +1,38 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Briefcase, Plus } from "lucide-react";
+import { Briefcase, LogOut, Plus } from "lucide-react";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { Carte, EtatVide, LienBouton, Squelette } from "@/components/ui";
 import { entreprisesAccessibles } from "@/lib/entreprise-courante";
+import { Logo } from "@/components/logo";
+import { seDeconnecter } from "../connexion/actions";
 import { ListeChoixEntreprises } from "./liste";
 
 export const metadata: Metadata = { title: "Choisir l'entreprise" };
 
 // Écran affiché après la connexion : la ou les entreprises auxquelles la personne a accès.
-// Les données (session, entreprises) se chargent dans une zone d'attente.
+// Il est hors de l'espace de travail : ni menus, ni recherche, ni accès aux pages tant
+// qu'aucune entreprise n'est choisie. Seule la déconnexion reste possible.
 export default function PageChoisirEntreprise() {
   return (
-    <Suspense fallback={<Squelette />}>
-      <ChoixEntreprise />
-    </Suspense>
+    <div className="flex min-h-dvh flex-col">
+      <header className="bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-md">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 lg:px-8">
+          <Logo clair taille={30} />
+          <form action={seDeconnecter}>
+            <button type="submit" className="inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white/90 hover:bg-white/10">
+              <LogOut size={16} aria-hidden />
+              Se déconnecter
+            </button>
+          </form>
+        </div>
+      </header>
+      <main className="flex-1 px-4 pb-10 pt-8 lg:px-8">
+        <Suspense fallback={<Squelette />}>
+          <ChoixEntreprise />
+        </Suspense>
+      </main>
+    </div>
   );
 }
 

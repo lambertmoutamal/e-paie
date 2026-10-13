@@ -11,6 +11,7 @@ import { BandeauActionsPaie } from "@/components/actions-paie";
 import { entrepriseCourante, entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { groupesMenu } from "@/lib/menu";
 import { MenuGroupes, MenuMobile } from "./navigation";
+import { changerEntreprise } from "./actions-navigation";
 
 // Structure commune de l'espace privé : barre de navigation en haut (groupes de tâches
 // avec menus déroulants, recherche, cloche des actions à faire, compte avec le
@@ -167,10 +168,12 @@ async function MenuUtilisateur() {
             <p className="text-xs text-doux">Entreprise de travail</p>
             <p className="truncate font-semibold">{courante?.raison_sociale ?? "Aucune entreprise choisie"}</p>
             {liste.length > 1 && (
-              <Link href="/espace/choisir-entreprise" className="mt-1 inline-flex items-center gap-1.5 font-semibold text-marque hover:underline">
-                <ArrowLeftRight size={14} aria-hidden />
-                Changer d&apos;entreprise
-              </Link>
+              <form action={changerEntreprise}>
+                <button type="submit" className="mt-1 inline-flex items-center gap-1.5 font-semibold text-marque hover:underline">
+                  <ArrowLeftRight size={14} aria-hidden />
+                  Changer d&apos;entreprise
+                </button>
+              </form>
             )}
           </div>
         )}
