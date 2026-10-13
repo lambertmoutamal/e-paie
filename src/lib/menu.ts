@@ -87,11 +87,9 @@ export function groupesMenu({
         ...(adminPlateforme
           ? [
               { libelle: "Cabinets", href: "/espace/cabinets" },
-              { libelle: "Demandes de démo", href: "/espace/demandes-demo" },
             ]
           : []),
         ...(voitAbonnement ? [{ libelle: adminPlateforme ? "Abonnements" : "Mon abonnement", href: "/espace/abonnement" }] : []),
-        { libelle: "Catalogue des modules", href: "/espace/modules" },
         { libelle: "Mon profil", href: "/espace/profil" },
       ],
     },

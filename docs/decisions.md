@@ -213,3 +213,12 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - Un cabinet déjà inscrit garde son propre lien « Ajouter une entreprise cliente » (avec ses identifiants).
 - Sécurité : chaque cabinet ne voit que ses demandes ; aucune écriture directe (dépôt par le serveur,
   traitement par des fonctions qui vérifient le cabinet) ; aucune fonction ouverte aux visiteurs.
+
+## 2026-10-13 — Annulation du dépôt des bulletins
+
+- Tant que la paie n'est pas envoyée en validation, la personne qui dépose peut **annuler le dépôt**
+  (tous les bulletins du mois retirés d'un coup, après confirmation).
+- Une fois envoyée, plus d'annulation : seul un validateur peut la **refuser**. Elle revient alors en
+  brouillon chez la personne qui l'a préparée (bandeau avec le motif) : elle peut **modifier** (remplacer)
+  ou **supprimer** des bulletins, ou annuler tout le dépôt, puis renvoyer en validation.
+- Menu Paramètres : « Catalogue des modules » et « Demandes de démo » retirés.

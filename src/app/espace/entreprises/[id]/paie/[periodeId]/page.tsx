@@ -7,7 +7,7 @@ import { formaterDate } from "@/lib/abonnements/phases";
 import { libellePeriode, libelleRole, salariesAttendus, STATUTS_PERIODE, type EtapeCircuit, type StatutPeriode } from "@/lib/bulletins/regles";
 import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, classesBouton, EnTetePage, EtatVide, Page, Statistique } from "@/components/ui";
-import { deciderEtape, publierPeriode, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
+import { annulerDepot, deciderEtape, publierPeriode, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
 import { DecisionEtape } from "./decision-etape";
 import { DepotUnique } from "./depot-bulletins";
 import { ModesDepot } from "./modes-depot";
@@ -84,6 +84,10 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
   const lignes = [...attendus, ...horsListe].sort((a, b) => Number(parSalarie.has(a.id)) - Number(parSalarie.has(b.id)));
   const manquants = attendus.filter((s) => !parSalarie.has(s.id)).length;
   const sansTelephone = (salaries ?? []).filter((s) => parSalarie.has(s.id) && !s.telephone).length;
+  // Paie refusée par un validateur : elle revient en brouillon chez qui l'a préparée
+  const dernierEvenement = historique?.[0];
+  const refusee = periode.statut === "brouillon" && dernierEvenement?.action === "refus";
+  const auteurRefus = (dernierEvenement?.auteur as unknown as { nom_complet: string | null } | null)?.nom_complet ?? "un validateur";
 
   return (
     <Page>
@@ -172,7 +176,23 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
                   ? `${manquants > 0 ? `Attention : ${manquants} bulletin(s) manquant(s). ` : "Tous les bulletins attendus sont déposés. "}Après l'envoi, les bulletins ne pourront plus être modifiés, sauf en cas de refus.`
                   : "Déposez au moins un bulletin avant d'envoyer la période."}
               </p>
-              {!!bulletins?.length && <ActionEnLigne action={soumettrePeriode.bind(null, periodeId)} libelle="Envoyer en validation" />}
+              {!!bulletins?.length && (
+                <div className="flex flex-wrap items-start gap-2">
+                  <details className="group relative">
+                    <summary className={`${classesBouton("danger", "petit")} cursor-pointer list-none`}>
+                      <Undo2 size={14} aria-hidden />
+                      Annuler le dépôt
+                    </summary>
+                    <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-bordure bg-surface p-3 text-sm shadow-xl">
+                      <p className="mb-3">
+                        Les <strong>{bulletins.length} bulletin(s)</strong> déposé(s) pour {titre} seront retirés. Vous pourrez les déposer à nouveau.
+                      </p>
+                      <ActionEnLigne action={annulerDepot.bind(null, id, periodeId)} libelle="Confirmer l'annulation" variante="danger" />
+                    </div>
+                  </details>
+                  <ActionEnLigne action={soumettrePeriode.bind(null, periodeId)} libelle="Envoyer en validation" />
+                </div>
+              )}
             </div>
           )}
 
@@ -217,10 +237,30 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
         </div>
       </Carte>
 
+      {refusee && (
+        <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <Undo2 size={18} className="mt-0.5 shrink-0" aria-hidden />
+          <div className="flex flex-col gap-1">
+            <p className="font-semibold">
+              Paie refusée par {auteurRefus}
+              {dernierEvenement?.libelle_etape ? ` (étape « ${dernierEvenement.libelle_etape} »)` : ""}
+            </p>
+            {dernierEvenement?.commentaire && <p>Motif : « {dernierEvenement.commentaire} »</p>}
+            <p>
+              {modifiable
+                ? "Elle vous revient : modifiez (« Remplacer ») ou supprimez des bulletins dans la liste ci-dessous, ou annulez tout le dépôt, puis renvoyez-la en validation."
+                : "Elle est revenue à la personne qui l'a préparée, pour correction."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {periode.statut !== "brouillon" && (
         <p className="flex items-start gap-2 rounded-lg border border-bordure bg-surface px-3 py-2 text-sm text-doux">
           <Lock size={16} className="mt-0.5 shrink-0" aria-hidden />
-          Cette période est verrouillée : les bulletins ne peuvent plus être déposés, remplacés ni retirés.
+          {periode.statut === "en_validation"
+            ? "Paie envoyée en validation : le dépôt ne peut plus être annulé ni modifié. Si un validateur la refuse, elle reviendra à la personne qui l'a préparée, qui pourra alors modifier ou supprimer les bulletins."
+            : "Cette période est verrouillée : les bulletins ne peuvent plus être déposés, remplacés ni retirés."}
         </p>
       )}
 

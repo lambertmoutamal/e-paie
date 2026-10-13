@@ -128,6 +128,26 @@ export async function retirerBulletin(entrepriseId: string, bulletinId: string) 
   refresh();
 }
 
+// Annulation du dépôt : tous les bulletins de la période sont retirés, tant qu'elle n'a pas
+// été envoyée en validation. Après l'envoi, seul un refus du validateur la rouvre ; elle
+// revient alors en brouillon chez la personne qui l'a préparée (modifier ou supprimer).
+// La base n'autorise le retrait qu'à qui dépose les bulletins, et seulement en brouillon.
+export async function annulerDepot(entrepriseId: string, periodeId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const { data: periode } = await supabase.from("periodes_paie").select("statut").eq("id", periodeId).eq("entreprise_id", entrepriseId).maybeSingle();
+  if (!periode) return { erreur: "Période introuvable." };
+  if (periode.statut !== "brouillon") {
+    return { erreur: "La paie a été envoyée en validation : le dépôt ne peut plus être annulé. Seul un validateur peut la refuser." };
+  }
+  const { data, error } = await supabase.from("bulletins").delete().eq("periode_id", periodeId).eq("entreprise_id", entrepriseId).select("fichier_chemin");
+  if (error) return { erreur: "Le dépôt n'a pas pu être annulé." };
+  if (!data?.length) return { erreur: "Aucun bulletin retiré : vous ne pouvez pas annuler ce dépôt." };
+  const chemins = data.map((b) => b.fichier_chemin);
+  for (let i = 0; i < chemins.length; i += 100) await supabase.storage.from(ESPACE).remove(chemins.slice(i, i + 100));
+  refresh();
+  return { succes: `Dépôt annulé : ${data.length} bulletin(s) retiré(s).` };
+}
+
 // ---------------------------------------------------------------------
 // Circuit de validation (les règles sont appliquées par la base)
 // ---------------------------------------------------------------------
