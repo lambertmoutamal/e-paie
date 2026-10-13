@@ -136,3 +136,30 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   une seconde page attribuée au même salarié est signalée et n'est pas envoyée. Un salarié ne peut donc
   pas recevoir la page d'un collègue.
 
+## 2026-10-12 — Nouvelle interface
+
+- Présentation inspirée de BambooHR (organisation de l'écran seulement, ni logo ni textes repris) :
+  barre de navigation en haut, cloche des actions à faire, menu du compte, recherche d'un salarié,
+  accueil en tuiles (À faire, qui est absent, anniversaires et ancienneté, échéances, modules),
+  fiche salarié avec bandeau, avatar et coordonnées.
+- Palette **indigo** (marque) et **corail** (accent), une couleur par module, avatars colorés.
+
+## 2026-10-13 — Navigation par groupes, tableau de bord, états
+
+- Barre du haut organisée en **groupes avec menus déroulants** (Salariés, Paie, Absences, Réclamations,
+  États, Paramètres) et **sélecteur d'entreprise de travail** (mémorisé sur l'appareil).
+- **Tableau de bord** : indicateurs clés (effectif, entrées, sorties, absentéisme, bulletins, demandes,
+  réclamations, fins de CDD) et graphiques (effectif et mouvements sur 12 mois, contrats, hommes/femmes,
+  absences par type, réclamations par sujet).
+- **États** exportables en Excel et imprimables en PDF : personnel, entrées et sorties, contrats et échéances,
+  réclamations, congés du mois, absences par type, soldes de congés, registre des bulletins.
+- **Livre de paie, DTS, DAS et soldes de tout compte** : produits à partir de l'**import Excel mensuel** des
+  résultats de paie (choix de l'utilisateur) — prochaine étape ; il faudra un exemple du fichier du logiciel
+  de paie et les modèles officiels de DTS et DAS.
+- **Choix de l'entreprise à la connexion** (si plusieurs entreprises accessibles) : écran dédié, choix
+  redemandé à chaque connexion ; possibilité de voir « toutes mes entreprises » ; changement possible depuis
+  la barre du haut.
+- **Tableau de bord sur un seul écran** (sans défilement sur ordinateur) : 8 indicateurs et 6 graphiques
+  (effectif, **pyramide des âges**, contrats, hommes/femmes, absences par type, réclamations par sujet).
+  La liste « À faire » a sa propre page, ouverte par la cloche.
+

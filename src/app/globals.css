@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f6f5;
-  --foreground: #17201b;
+  /* Palette DématPaie : indigo (marque) et corail (accent) */
+  --background: #f6f7fb;
+  --foreground: #1b1e2e;
   --surface: #ffffff;
-  --bordure: #e2e8e4;
-  --doux: #5b6b62;
-  --marque: #0b5d3b;
-  --marque-fonce: #08442b;
-  --marque-claire: #e7f3ec;
-  --accent: #c8a24a;
+  --bordure: #e4e7f0;
+  --doux: #5b6478;
+  --marque: #4f46e5;
+  --marque-fonce: #4338ca;
+  --marque-nuit: #312e81;
+  --marque-claire: #eef0ff;
+  --accent: #f2665a;
+  --accent-claire: #fdeceb;
 }
 
 @theme inline {
@@ -21,7 +24,9 @@
   --color-marque: var(--marque);
   --color-marque-fonce: var(--marque-fonce);
   --color-marque-claire: var(--marque-claire);
+  --color-marque-nuit: var(--marque-nuit);
   --color-accent: var(--accent);
+  --color-accent-claire: var(--accent-claire);
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 

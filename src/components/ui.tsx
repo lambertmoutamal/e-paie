@@ -82,7 +82,7 @@ export function Carte({
   sansMarge?: boolean;
 }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-bordure bg-surface shadow-[0_1px_2px_rgba(16,24,20,.04)]">
+    <section className="overflow-hidden rounded-2xl border border-bordure bg-surface shadow-[0_1px_3px_rgba(27,30,46,.05)]">
       {(titre || action) && (
         <div className="flex items-start justify-between gap-3 border-b border-bordure px-4 py-3 sm:px-5">
           <div>
@@ -173,21 +173,42 @@ export function EtatVide({ icone: Icone, titre, texte, action }: { icone: Lucide
   );
 }
 
-export function Statistique({ icone: Icone, libelle, valeur, href }: { icone: LucideIcon; libelle: string; valeur: number | string; href?: string }) {
+const TEINTES_STAT = {
+  indigo: "bg-indigo-50 text-indigo-600",
+  vert: "bg-emerald-50 text-emerald-600",
+  corail: "bg-accent-claire text-accent",
+  ambre: "bg-amber-50 text-amber-600",
+  ciel: "bg-sky-50 text-sky-600",
+  violet: "bg-violet-50 text-violet-600",
+};
+
+export function Statistique({
+  icone: Icone,
+  libelle,
+  valeur,
+  href,
+  teinte = "indigo",
+}: {
+  icone: LucideIcon;
+  libelle: string;
+  valeur: number | string;
+  href?: string;
+  teinte?: keyof typeof TEINTES_STAT;
+}) {
   const contenu = (
     <>
-      <span className="grid size-10 place-items-center rounded-lg bg-marque-claire text-marque">
-        <Icone size={20} aria-hidden />
+      <span className={`grid size-11 shrink-0 place-items-center rounded-xl ${TEINTES_STAT[teinte]}`}>
+        <Icone size={21} aria-hidden />
       </span>
-      <div>
-        <p className="text-2xl font-bold tabular-nums">{valeur}</p>
-        <p className="text-sm text-doux">{libelle}</p>
+      <div className="min-w-0">
+        <p className="text-2xl font-bold tabular-nums leading-tight">{valeur}</p>
+        <p className="truncate text-sm text-doux">{libelle}</p>
       </div>
     </>
   );
-  const classes = "flex items-center gap-3 rounded-xl border border-bordure bg-surface p-4";
+  const classes = "flex items-center gap-3 rounded-2xl border border-bordure bg-surface p-4 shadow-[0_1px_2px_rgba(27,30,46,.04)]";
   return href ? (
-    <Link href={href} className={`${classes} hover:border-marque/40`}>
+    <Link href={href} className={`${classes} transition hover:-translate-y-0.5 hover:shadow-md`}>
       {contenu}
     </Link>
   ) : (
