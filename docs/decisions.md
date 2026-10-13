@@ -148,7 +148,7 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 
 - Barre du haut organisée en **groupes avec menus déroulants** (Salariés, Paie, Absences, Réclamations,
   États, Paramètres) et **sélecteur d'entreprise de travail** (mémorisé sur l'appareil).
-- **Tableau de bord** : indicateurs clés (effectif, entrées, sorties, absentéisme, bulletins, demandes,
+- **Tableau de bord** : indicateurs clés (effectif, entrées, sorties, fins de CDD ; absentéisme, bulletins, demandes et réclamations retirés le 13/10,
   réclamations, fins de CDD) et graphiques (effectif et mouvements sur 12 mois, contrats, hommes/femmes,
   absences par type, réclamations par sujet).
 - **États** exportables en Excel et imprimables en PDF : personnel, entrées et sorties, contrats et échéances,
