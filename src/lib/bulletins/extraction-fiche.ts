@@ -16,6 +16,7 @@ export type FicheLue = {
   localisation: string | null;
   date_embauche: string | null;
   numero_cnss: string | null;
+  numero_cnamgs: string | null;
   telephone: string | null;
   email: string | null;
   adresse: string | null;
@@ -38,6 +39,7 @@ const LIBELLES: [Champ, string][] = [
   ["prenoms", String.raw`PRENOMS?`],
   ["matricule", String.raw`MATRICULE(?:\s?SALARIE)?|MAT\.?|${N}MATRICULE|CODE SALARIE|${N}SALARIE`],
   ["numero_cnss", String.raw`MATRICULE\s?CNSS|${N}(?:D'\s?)?(?:IMMATRICULATION\s)?CNSS|CNSS\s?${N}|NUMERO\s(?:D'\s?)?(?:IMMATRICULATION\s)?CNSS|${N}SECURITE SOCIALE|${N}S\.?S\.?|IMMATRICULATION`],
+  ["numero_cnamgs", String.raw`${N}(?:D'\s?)?(?:ASSURE\s|IMMATRICULATION\s)?CNAMGS|CNAMGS\s?${N}|NUMERO\s(?:D'\s?)?(?:ASSURE\s)?CNAMGS|MATRICULE\s?CNAMGS`],
   ["date_embauche", String.raw`DATE\s(?:D'\s?)?EMBAUCHE|DATE\s(?:D'\s?)?ENTREE|EMBAUCHE?\sLE|ENTREE?\sLE|ENTREE|EMBAUCHE|DATE\s(?:DE\s)?DEBUT(?:\sDE\sCONTRAT)?|DEBUT\sDE\sCONTRAT|DATE\s(?:D'\s?)?ANCIENNETE|ANCIENNETE\sDU|ANCIENNETE\sDEPUIS`],
   ["date_naissance", String.raw`DATE\s(?:DE\s)?NAISSANCE|NE\s?\(?E?\)?\sLE|NEE?\sLE|NAISSANCE`],
   ["date_fin_contrat", String.raw`DATE\s(?:DE\s)?FIN(?:\sDE\sCONTRAT)?|FIN\sDE\sCONTRAT|FIN\sCONTRAT|ECHEANCE(?:\sDU)?\sCONTRAT`],
@@ -178,6 +180,7 @@ export function extraireFicheBulletin(texteBrut: string, matriculeConnu?: string
     localisation: null,
     date_embauche: null,
     numero_cnss: null,
+    numero_cnamgs: null,
     telephone: null,
     email: null,
     adresse: null,
@@ -235,6 +238,9 @@ export function extraireFicheBulletin(texteBrut: string, matriculeConnu?: string
       case "numero_cnss":
         fiche.numero_cnss ??= numero(v);
         break;
+      case "numero_cnamgs":
+        fiche.numero_cnamgs ??= numero(v);
+        break;
       case "numero_compte":
         fiche.numero_compte ??= numero(v);
         break;
@@ -273,6 +279,7 @@ export const LIBELLES_FICHE: Record<keyof FicheLue, string> = {
   localisation: "Localisation",
   date_embauche: "Date d'embauche",
   numero_cnss: "N° CNSS",
+  numero_cnamgs: "N° CNAMGS",
   telephone: "Téléphone",
   email: "Email",
   adresse: "Adresse",

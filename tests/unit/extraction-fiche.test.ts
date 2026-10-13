@@ -6,7 +6,7 @@ const BULLETIN_A = `SOGEA GABON BULLETIN DE PAIE Période du 01/10/2026 au 31/10
 Matricule : 0457 Nom et prénoms : NDONG ONDO Awa Marie Sexe : Féminin
 Date de naissance : 14/02/1990 Nationalité : Gabonaise Emploi : Comptable principal Catégorie : 8
 Date d'embauche : 01/03/2022 Type de contrat : CDD Date de fin de contrat : 28/02/2027
-N° CNSS : 123 456 789 Localisation : Port-Gentil Mode de paiement : Virement
+N° CNSS : 123 456 789 N° CNAMGS : 9876543210 Localisation : Port-Gentil Mode de paiement : Virement
 Banque : BGFIBank N° de compte : 40001 00010 12345678901 23
 Salaire de base 173,33 2 019,61 350 000 Net à payer 312 450`;
 
@@ -27,6 +27,7 @@ describe("Lecture d'une fiche salarié sur le bulletin", () => {
       localisation: "Port-Gentil",
       date_embauche: "2022-03-01",
       numero_cnss: "123 456 789",
+      numero_cnamgs: "9876543210",
       telephone: null,
       email: null,
       adresse: null,

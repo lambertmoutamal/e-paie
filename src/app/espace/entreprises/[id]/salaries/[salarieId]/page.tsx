@@ -19,7 +19,7 @@ export default async function PageSalarie({ params }: PageProps<"/espace/entrepr
   const [{ data: salarie }, { data: entreprise }, { data: peutGerer }] = await Promise.all([
     supabase
       .from("salaries")
-      .select("id, matricule, nom, prenoms, sexe, date_naissance, nationalite, poste, localisation, date_embauche, telephone, email, adresse, numero_cnss, banque, numero_compte, mode_paiement, statut, date_sortie, motif_sortie, modifie_le")
+      .select("id, matricule, nom, prenoms, sexe, date_naissance, nationalite, poste, localisation, date_embauche, telephone, email, adresse, numero_cnss, numero_cnamgs, banque, numero_compte, mode_paiement, statut, date_sortie, motif_sortie, modifie_le")
       .eq("id", salarieId)
       .eq("entreprise_id", id)
       .maybeSingle(),
@@ -45,7 +45,7 @@ export default async function PageSalarie({ params }: PageProps<"/espace/entrepr
         description={`${modifiable ? "" : "Consultation seule · "}Mise à jour le ${formaterDate(salarie.modifie_le)}.`}
       >
         {modifiable ? (
-          <Formulaire action={modifierSalarie.bind(null, id, salarie.id)} libelleBouton="Enregistrer" colonnes={2}>
+          <Formulaire action={modifierSalarie.bind(null, id, salarie.id)} libelleBouton="Enregistrer" colonnes={2} boutonEnHaut>
             <ChampsSalarie fiche={salarie} />
           </Formulaire>
         ) : (

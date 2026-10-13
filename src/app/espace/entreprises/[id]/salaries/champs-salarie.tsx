@@ -15,6 +15,7 @@ export type FicheSalarie = {
   email: string | null;
   adresse: string | null;
   numero_cnss: string | null;
+  numero_cnamgs: string | null;
   banque: string | null;
   numero_compte: string | null;
   mode_paiement: string | null;
@@ -47,6 +48,7 @@ export function ChampsSalarie({ fiche, lectureSeule }: { fiche?: FicheSalarie; l
       <Champ nom="localisation" libelle="Localisation (lieu de travail)" valeurInitiale={fiche?.localisation} desactive={d} />
       <Champ nom="date_embauche" libelle="Date d'embauche" type="date" requis valeurInitiale={fiche?.date_embauche} desactive={d} />
       <Champ nom="numero_cnss" libelle="N° CNSS" valeurInitiale={fiche?.numero_cnss} desactive={d} />
+      <Champ nom="numero_cnamgs" libelle="N° CNAMGS" valeurInitiale={fiche?.numero_cnamgs} desactive={d} />
 
       <TitreGroupe>Contact</TitreGroupe>
       <Champ

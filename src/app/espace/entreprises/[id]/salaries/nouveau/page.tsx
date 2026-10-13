@@ -28,7 +28,7 @@ export default async function PageNouveauSalarie({ params }: PageProps<"/espace/
         ]}
       />
       <Carte>
-        <Formulaire action={creerSalarie.bind(null, id)} libelleBouton="Créer la fiche" colonnes={2}>
+        <Formulaire action={creerSalarie.bind(null, id)} libelleBouton="Enregistrer" colonnes={2} boutonEnHaut>
           <ChampsSalarie />
         </Formulaire>
       </Carte>

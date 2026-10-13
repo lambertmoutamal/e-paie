@@ -16,11 +16,14 @@ export function Formulaire({
   action,
   libelleBouton,
   colonnes = 1,
+  boutonEnHaut,
   children,
 }: {
   action: Action;
   libelleBouton: string;
   colonnes?: 1 | 2;
+  // Formulaire long : le bouton d'envoi est aussi affiché en haut
+  boutonEnHaut?: boolean;
   children: ReactNode;
 }) {
   const [etat, envoyer] = useActionState(action, undefined);
@@ -28,6 +31,12 @@ export function Formulaire({
   return (
     <ContexteFormulaire value={etat}>
       <form action={envoyer} className="flex flex-col gap-5" noValidate>
+        {boutonEnHaut && (
+          <div className="flex flex-wrap items-center justify-end gap-3 border-b border-bordure pb-4">
+            {etat?.succes && <span className="text-sm text-marque">{etat.succes}</span>}
+            <BoutonEnvoyer>{libelleBouton}</BoutonEnvoyer>
+          </div>
+        )}
         <div className={`grid gap-4 ${colonnes === 2 ? "sm:grid-cols-2" : ""}`}>{children}</div>
         <MessageEtat etat={etat} />
         <div className="flex justify-end">

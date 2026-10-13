@@ -18,6 +18,7 @@ export const COLONNES_IMPORT = [
   { cle: "email", libelle: "Email", obligatoire: false, exemple: "awa.ndong@exemple.ga" },
   { cle: "adresse", libelle: "Adresse", obligatoire: false, exemple: "Quartier Louis, Libreville" },
   { cle: "numero_cnss", libelle: "N° CNSS", obligatoire: false, exemple: "123456789" },
+  { cle: "numero_cnamgs", libelle: "N° CNAMGS", obligatoire: false, exemple: "1234567890" },
   { cle: "banque", libelle: "Banque", obligatoire: false, exemple: "BGFIBank" },
   { cle: "numero_compte", libelle: "N° de compte (RIB)", obligatoire: false, exemple: "40001 00010 12345678901 23" },
   { cle: "mode_paiement", libelle: "Mode de paiement", obligatoire: false, exemple: "Virement" },
@@ -57,6 +58,9 @@ const SYNONYMES: Record<string, CleColonne> = {
   cnss: "numero_cnss",
   ncnss: "numero_cnss",
   numerocnss: "numero_cnss",
+  cnamgs: "numero_cnamgs",
+  ncnamgs: "numero_cnamgs",
+  numerocnamgs: "numero_cnamgs",
   rib: "numero_compte",
   ndecompterib: "numero_compte",
   numerodecompte: "numero_compte",
@@ -270,6 +274,11 @@ function champsSalarie(indicatif: string) {
         .transform((v) => (v === "" ? null : v)),
       adresse: texteFacultatif,
       numero_cnss: texteFacultatif,
+      numero_cnamgs: z
+        .string()
+        .trim()
+        .optional()
+        .transform((v) => (v ? v : null)),
       banque: texteFacultatif,
       numero_compte: texteFacultatif,
       mode_paiement: z
