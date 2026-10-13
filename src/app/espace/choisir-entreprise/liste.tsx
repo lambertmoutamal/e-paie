@@ -59,6 +59,7 @@ export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: stri
           </li>
         ))}
       </ul>
+      {entreprises.length > 1 && (
       <button
         type="button"
         disabled={enCours}
@@ -68,6 +69,7 @@ export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: stri
         {enCours && choix === "toutes" ? <LoaderCircle size={16} className="animate-spin" aria-hidden /> : <Layers size={16} aria-hidden />}
         Voir l&apos;ensemble de mes entreprises
       </button>
+      )}
     </div>
   );
 }

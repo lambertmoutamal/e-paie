@@ -24,10 +24,11 @@ export const entrepriseCourante = cache(async (): Promise<EntrepriseAccessible |
   return liste.find((e) => e.id === choisie) ?? (liste.length === 1 ? liste[0] : null);
 });
 
-// Le choix a-t-il été fait depuis la connexion ? (inutile avec une seule entreprise)
+// L'écran des entreprises a-t-il été passé depuis la connexion ? Il est montré à tous,
+// même avec une seule entreprise, pour que chacun voie à quoi il a accès.
 export const choixEntrepriseFait = cache(async (): Promise<boolean> => {
   const liste = await entreprisesAccessibles();
-  if (liste.length <= 1) return true;
+  if (liste.length === 0) return true;
   const choisie = (await cookies()).get(COOKIE_ENTREPRISE)?.value;
   return choisie === TOUTES || liste.some((e) => e.id === choisie);
 });

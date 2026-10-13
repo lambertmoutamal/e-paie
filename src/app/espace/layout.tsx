@@ -164,14 +164,16 @@ async function MenuUtilisateur() {
           <p className="truncate font-semibold">{profil?.nom_complet || "Mon compte"}</p>
           <p className="truncate text-xs text-doux">{profil?.email}</p>
         </div>
-        {liste.length > 1 && (
+        {liste.length > 0 && (
           <div className="border-b border-bordure px-4 py-2.5 text-sm">
             <p className="text-xs text-doux">Entreprise de travail</p>
             <p className="truncate font-semibold">{courante?.raison_sociale ?? "Toutes mes entreprises"}</p>
-            <Link href="/espace/choisir-entreprise" className="mt-1 inline-flex items-center gap-1.5 font-semibold text-marque hover:underline">
-              <ArrowLeftRight size={14} aria-hidden />
-              Changer d&apos;entreprise
-            </Link>
+            {liste.length > 1 && (
+              <Link href="/espace/choisir-entreprise" className="mt-1 inline-flex items-center gap-1.5 font-semibold text-marque hover:underline">
+                <ArrowLeftRight size={14} aria-hidden />
+                Changer d&apos;entreprise
+              </Link>
+            )}
           </div>
         )}
         <ul className="py-1 text-sm">
