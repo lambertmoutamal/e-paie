@@ -21,7 +21,7 @@ export default async function PageChoisirEntreprise() {
     <div className="mx-auto flex max-w-3xl flex-col gap-6 py-4">
       <header className="text-center">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Sur quelle entreprise voulez-vous travailler ?</h1>
-        <p className="mt-1 text-doux">Vous pourrez en changer à tout moment depuis la barre du haut.</p>
+        <p className="mt-1 text-doux">Vous pourrez en changer à tout moment depuis le menu de votre compte (vos initiales, en haut à droite).</p>
       </header>
       <ListeChoixEntreprises entreprises={liste.map((e) => ({ ...e, effectif: effectifs.get(e.id) ?? 0 }))} />
     </div>

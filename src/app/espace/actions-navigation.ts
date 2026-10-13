@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { COOKIE_ENTREPRISE, entreprisesAccessibles, TOUTES } from "@/lib/entreprise-courante";
 
@@ -15,13 +14,7 @@ async function memoriser(entrepriseId: string) {
   if (valeur) (await cookies()).set(COOKIE_ENTREPRISE, valeur, OPTIONS);
 }
 
-// Changement depuis la barre du haut : on reste sur la page
-export async function choisirEntreprise(entrepriseId: string) {
-  await memoriser(entrepriseId);
-  refresh();
-}
-
-// Choix à la connexion : on ouvre ensuite le tableau de bord
+// Choix à la connexion ou depuis le menu du compte : on ouvre ensuite le tableau de bord
 export async function choisirEntrepriseEtContinuer(entrepriseId: string) {
   await memoriser(entrepriseId);
   redirect("/espace");

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Bell, KeyRound, LogOut, Search, UserRound } from "lucide-react";
+import { ArrowLeftRight, Bell, KeyRound, LogOut, Search, UserRound } from "lucide-react";
 import { droitsUtilisateur } from "@/lib/auth/utilisateur";
 import { messageBandeau } from "@/lib/abonnements/phases";
 import { Logo } from "@/components/logo";
@@ -10,11 +10,11 @@ import { mesActionsPaie, mesDemandesATraiter, mesReclamationsATraiter } from "@/
 import { BandeauActionsPaie } from "@/components/actions-paie";
 import { entrepriseCourante, entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { groupesMenu } from "@/lib/menu";
-import { MenuGroupes, MenuMobile, SelecteurEntreprise } from "./navigation";
+import { MenuGroupes, MenuMobile } from "./navigation";
 
 // Structure commune de l'espace privé : barre de navigation en haut (groupes de tâches
-// avec menus déroulants, entreprise de travail, recherche, cloche des actions à faire,
-// compte), contenu au centre. Le cadre s'affiche immédiatement ; le reste dès que la
+// avec menus déroulants, recherche, cloche des actions à faire, compte avec le
+// changement d'entreprise), contenu au centre. Le cadre s'affiche immédiatement ; le reste dès que la
 // session est vérifiée.
 export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
   return (
@@ -30,9 +30,6 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
             </Suspense>
           </nav>
           <span className="flex-1 lg:hidden" />
-          <Suspense fallback={null}>
-            <Selecteur />
-          </Suspense>
           <form action="/espace/recherche" role="search" className="relative hidden xl:block">
             <label htmlFor="recherche-salarie" className="sr-only">
               Rechercher un salarié
@@ -91,11 +88,6 @@ async function Menu({ variante }: { variante: "haut" | "mobile" }) {
   return variante === "haut" ? <MenuGroupes groupes={groupes} /> : <MenuMobile groupes={groupes} />;
 }
 
-async function Selecteur() {
-  const [liste, courante] = await Promise.all([entreprisesAccessibles(), entrepriseCourante()]);
-  return <SelecteurEntreprise entreprises={liste} courante={courante?.id ?? null} />;
-}
-
 // Cloche : nombre d'actions qui attendent la personne (validations, demandes, réclamations).
 async function Cloche() {
   const [actions, demandes, reclamations] = await Promise.all([mesActionsPaie(), mesDemandesATraiter(), mesReclamationsATraiter()]);
@@ -151,9 +143,9 @@ async function BandeauAbonnement() {
   );
 }
 
-// Avatar et menu du compte (profil, mot de passe, déconnexion), sans JavaScript.
+// Avatar et menu du compte (entreprise de travail, profil, mot de passe, déconnexion), sans JavaScript.
 async function MenuUtilisateur() {
-  const { profil } = await droitsUtilisateur();
+  const [{ profil }, liste, courante] = await Promise.all([droitsUtilisateur(), entreprisesAccessibles(), entrepriseCourante()]);
   const nom: string = profil?.nom_complet || profil?.email || "";
   const initiales = nom
     .split(/[\s@.]+/)
@@ -172,6 +164,16 @@ async function MenuUtilisateur() {
           <p className="truncate font-semibold">{profil?.nom_complet || "Mon compte"}</p>
           <p className="truncate text-xs text-doux">{profil?.email}</p>
         </div>
+        {liste.length > 1 && (
+          <div className="border-b border-bordure px-4 py-2.5 text-sm">
+            <p className="text-xs text-doux">Entreprise de travail</p>
+            <p className="truncate font-semibold">{courante?.raison_sociale ?? "Toutes mes entreprises"}</p>
+            <Link href="/espace/choisir-entreprise" className="mt-1 inline-flex items-center gap-1.5 font-semibold text-marque hover:underline">
+              <ArrowLeftRight size={14} aria-hidden />
+              Changer d&apos;entreprise
+            </Link>
+          </div>
+        )}
         <ul className="py-1 text-sm">
           <li>
             <Link href="/espace/profil" className="flex items-center gap-2 px-4 py-2 hover:bg-black/[.04]">
