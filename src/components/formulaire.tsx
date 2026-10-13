@@ -8,7 +8,7 @@ import { classesBouton } from "./ui";
 
 type Action = (etat: EtatFormulaire, formulaire: FormData) => Promise<EtatFormulaire>;
 
-const ContexteFormulaire = createContext<EtatFormulaire>(undefined);
+export const ContexteFormulaire = createContext<EtatFormulaire>(undefined);
 
 // Formulaire relié à une action serveur : affiche les erreurs par champ
 // et le message de réussite.
@@ -270,7 +270,7 @@ export function TitreGroupe({ children }: { children: ReactNode }) {
   return <p className="pt-2 text-sm font-semibold text-doux sm:col-span-2">{children}</p>;
 }
 
-function BoutonEnvoyer({ children, variante = "principal" }: { children: ReactNode; variante?: "principal" | "secondaire" }) {
+export function BoutonEnvoyer({ children, variante = "principal" }: { children: ReactNode; variante?: "principal" | "secondaire" }) {
   const { pending } = useFormStatus();
   return (
     <button type="submit" disabled={pending} className={classesBouton(variante)}>

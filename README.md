@@ -119,9 +119,11 @@ n'est laissée. Comptez 1 à 2 minutes selon la connexion.
 
 - Les prospects s'inscrivent sur `/inscription` (cabinet ou entreprise, essai ou Pro).
   Ils reçoivent un email d'activation ; leur espace et leur essai de 30 jours sont créés au clic.
-- Un cabinet déjà inscrit ajoute une entreprise cliente depuis la **page de connexion** : bouton
-  « Créer une nouvelle entreprise » (email + mot de passe, puis la fiche de l'entreprise). Ce n'est pas
-  possible depuis l'espace connecté.
+- Page de connexion → **« Créer une nouvelle entreprise »** : l'entreprise choisit **Autonome** (compte créé,
+  essai 30 jours) ou **Paie gérée par un cabinet** (demande transmise au cabinet choisi). Le cabinet
+  l'accepte, la refuse ou demande des informations dans **Paramètres → Demandes d'entreprises**.
+- Un cabinet déjà inscrit ajoute lui-même un client par le lien « Ajouter une entreprise cliente »
+  (avec ses identifiants). La création n'est pas possible depuis l'espace connecté.
 - Cycle : essai ou abonnement actif → **30 jours de lecture seule** → **blocage total**.
 - L'administrateur plateforme gère les abonnements et le prix des formules dans
   **Abonnements** (menu de gauche) ; l'équipe reçoit un email à chaque inscription et à chaque

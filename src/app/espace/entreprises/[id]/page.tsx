@@ -22,7 +22,7 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
   // La RLS ne renvoie l'entreprise qu'aux personnes qui y ont accès.
   const { data: entreprise } = await supabase
     .from("entreprises")
-    .select("id, raison_sociale, nif, rccm, numero_cnss, adresse, telephone, email, mode, statut, cabinet_id, cabinets(nom)")
+    .select("id, raison_sociale, nif, rccm, numero_cnss, numero_cnamgs, adresse, telephone, email, mode, statut, cabinet_id, cabinets(nom)")
     .eq("id", id)
     .maybeSingle();
   if (!entreprise) notFound();
@@ -144,6 +144,7 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
                 ["NIF", entreprise.nif],
                 ["RCCM", entreprise.rccm],
                 ["N° employeur CNSS", entreprise.numero_cnss],
+                ["N° employeur CNAMGS", entreprise.numero_cnamgs],
                 ["Téléphone", entreprise.telephone],
                 ["Email de l'entreprise", entreprise.email],
                 ["Adresse", entreprise.adresse],

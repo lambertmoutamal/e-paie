@@ -58,6 +58,12 @@ export const schemaEntreprise = z.object({
   nif: facultatif,
   rccm: facultatif,
   numero_cnss: facultatif,
+  // Champ ajouté après coup : absent des anciens formulaires, il devient « null »
+  numero_cnamgs: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? v : null)),
   adresse: facultatif,
   telephone: telephoneFacultatif,
   email: emailFacultatif,
@@ -86,6 +92,42 @@ export const schemaInscription = z.object({
   email: emailObligatoire,
   conditions: z.literal("on", { error: "Vous devez accepter les conditions d'utilisation." }),
 });
+
+// « Créer une nouvelle entreprise » (page de connexion, sans compte) : paie autonome
+// (inscription) ou gérée par un cabinet (demande transmise au cabinet choisi).
+export const schemaCreationEntreprise = z
+  .object({
+    raison_sociale: obligatoire("La raison sociale"),
+    nif: facultatif,
+    rccm: facultatif,
+    numero_cnss: facultatif,
+    numero_cnamgs: facultatif,
+    adresse: facultatif,
+    telephone: telephoneFacultatif,
+    email: emailFacultatif,
+    contact_nom: obligatoire("Votre nom complet"),
+    contact_email: emailObligatoire,
+    contact_telephone: telephoneFacultatif,
+    gestion: z.enum(["autonome", "cabinet"], { error: "Indiquez qui fait la paie de l'entreprise." }),
+    cabinet_id: z.string().trim().optional(),
+    nb_salaries: z.string().trim().optional(),
+    conditions: z.literal("on", { error: "Vous devez accepter les conditions d'utilisation." }),
+  })
+  .superRefine((d, ctx) => {
+    if (d.gestion !== "cabinet") return;
+    if (!d.cabinet_id || !z.uuid().safeParse(d.cabinet_id).success) {
+      ctx.addIssue({ code: "custom", path: ["cabinet_id"], message: "Choisissez le cabinet qui fera votre paie." });
+    }
+    const n = Number(d.nb_salaries);
+    if (!d.nb_salaries || !Number.isInteger(n) || n < 1 || n > 100000) {
+      ctx.addIssue({ code: "custom", path: ["nb_salaries"], message: "Indiquez le nombre de salariés (un nombre entier)." });
+    }
+  })
+  .transform((d) => ({
+    ...d,
+    cabinet_id: d.gestion === "cabinet" ? (d.cabinet_id ?? null) : null,
+    nb_salaries: d.gestion === "cabinet" ? Number(d.nb_salaries) : null,
+  }));
 
 // Demande de démonstration (formulaire public du site vitrine)
 export const schemaDemandeDemo = z.object({

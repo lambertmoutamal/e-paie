@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeftRight, Sparkles } from "lucide-react";
-import { mesTachesEntrepriseCourante } from "@/lib/bulletins/actions-a-faire";
+import { ArrowLeftRight, Building2, Sparkles } from "lucide-react";
+import { mesDemandesEntreprises, mesTachesEntrepriseCourante } from "@/lib/bulletins/actions-a-faire";
 import { exigerEntrepriseCourante } from "@/lib/entreprise-courante";
 import { CarteActionsPaie } from "@/components/actions-paie";
 import { Carte, Page } from "@/components/ui";
@@ -12,13 +12,22 @@ export const metadata: Metadata = { title: "À faire" };
 // d'absence, réclamations), et un décompte pour ses autres entreprises.
 export default async function PageAFaire() {
   const courante = await exigerEntrepriseCourante();
-  const { actions, demandes, reclamations, nombre: total, ailleurs } = await mesTachesEntrepriseCourante();
+  const [{ actions, demandes, reclamations, nombre: total, ailleurs }, demandesEntreprises] = await Promise.all([mesTachesEntrepriseCourante(), mesDemandesEntreprises()]);
   return (
     <Page>
       <header>
         <h1 className="text-2xl font-bold tracking-tight">À faire</h1>
         <p className="text-doux">{courante.raison_sociale}</p>
       </header>
+      {demandesEntreprises > 0 && (
+        <Link
+          href="/espace/demandes-entreprises"
+          className="flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent-claire px-5 py-4 font-semibold text-foreground transition hover:shadow-md"
+        >
+          <Building2 size={20} className="text-accent" aria-hidden />
+          {demandesEntreprises} entreprise{demandesEntreprises > 1 ? "s souhaitent" : " souhaite"} confier sa paie à votre cabinet
+        </Link>
+      )}
       {total ? (
         <CarteActionsPaie actions={actions} demandes={demandes} reclamations={reclamations} />
       ) : (

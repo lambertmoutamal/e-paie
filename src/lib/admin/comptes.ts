@@ -38,7 +38,13 @@ export async function trouverOuCreerCompte(email: string, nomComplet: string): P
   };
 }
 
-export type DemandeInscription = { type: "cabinet" | "entreprise"; nom_structure: string; formule: "essai" | "pro" };
+// `fiche` : informations complètes de l'entreprise (formulaire « Créer une nouvelle entreprise »)
+export type DemandeInscription = {
+  type: "cabinet" | "entreprise";
+  nom_structure: string;
+  formule: "essai" | "pro";
+  fiche?: Record<string, string | null>;
+};
 
 // Inscription libre : crée le compte en attente d'activation et mémorise la demande dans
 // app_metadata (modifiable par le serveur uniquement). Le cabinet ou l'entreprise n'est créé

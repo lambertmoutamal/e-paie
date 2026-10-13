@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Briefcase, LogOut } from "lucide-react";
+import { Briefcase, Inbox, LogOut } from "lucide-react";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { Carte, EtatVide, Squelette } from "@/components/ui";
+import { Carte, EtatVide, LienBouton, Squelette } from "@/components/ui";
 import { entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { Logo } from "@/components/logo";
 import { seDeconnecter } from "../connexion/actions";
@@ -40,7 +40,10 @@ async function ChoixEntreprise() {
   const { supabase } = await exigerUtilisateur();
   const liste = await entreprisesAccessibles();
   if (liste.length === 0) {
-    const { adminPlateforme, cabinets } = await droitsUtilisateur();
+    const [{ adminPlateforme, cabinets }, { count: demandes }] = await Promise.all([
+      droitsUtilisateur(),
+      supabase.from("demandes_entreprise").select("id", { count: "exact", head: true }).eq("statut", "en_attente"),
+    ]);
     return (
       <div className="mx-auto max-w-xl py-6">
         <Carte>
@@ -51,6 +54,13 @@ async function ChoixEntreprise() {
               adminPlateforme || cabinets.length > 0
                 ? "Pour ajouter une entreprise cliente : déconnectez-vous, puis cliquez sur « Créer une nouvelle entreprise » sur la page de connexion."
                 : "Demandez à l'administrateur de votre cabinet de vous donner accès à une entreprise."
+            }
+            action={
+              demandes ? (
+                <LienBouton href="/espace/demandes-entreprises" icone={Inbox}>
+                  {`Voir les demandes d'entreprises (${demandes})`}
+                </LienBouton>
+              ) : undefined
             }
           />
         </Carte>

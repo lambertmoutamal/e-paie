@@ -196,3 +196,20 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   passe, puis la fiche de l'entreprise. Elle est rattachée à son cabinet (nom du cabinet demandé s'il en
   gère plusieurs) ; la base refuse si la personne n'administre pas ce cabinet. Un nouveau client sans
   compte passe par « Essayer gratuitement 30 jours ».
+
+## 2026-10-13 — « Créer une nouvelle entreprise » : autonome ou confiée à un cabinet
+
+- Le formulaire de la page de connexion est rempli par **l'entreprise, sans compte** : fiche (dont
+  **N° CNAMGS employeur**, désormais sur toutes les fiches entreprise), personne à contacter, puis
+  **qui fait la paie** (puces) :
+  - **Autonome** : inscription habituelle (email d'activation, essai 30 jours) ; la fiche complète est reprise ;
+  - **Paie gérée par un cabinet** : choix du cabinet inscrit et du nombre de salariés, bouton
+    « Transmettre au cabinet <nom> ». La demande est enregistrée et les administrateurs du cabinet
+    reçoivent un email ; l'entreprise reçoit un accusé de réception.
+- Le cabinet traite la demande dans **Paramètres → Demandes d'entreprises** (aussi signalée par la cloche
+  et « À faire ») : **accepter** (l'entreprise est créée chez lui en mode cabinet et le contact reçoit son
+  accès d'administrateur de l'entreprise), **refuser** (email à l'entreprise) ou **demander des informations**
+  (email à l'entreprise, qui répond directement à l'adresse du membre du cabinet).
+- Un cabinet déjà inscrit garde son propre lien « Ajouter une entreprise cliente » (avec ses identifiants).
+- Sécurité : chaque cabinet ne voit que ses demandes ; aucune écriture directe (dépôt par le serveur,
+  traitement par des fonctions qui vérifient le cabinet) ; aucune fonction ouverte aux visiteurs.

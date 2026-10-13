@@ -11,6 +11,7 @@ const PAGES_LIBRES = [
   "/espace/modules",
   "/espace/cabinets",
   "/espace/demandes-demo",
+  "/espace/demandes-entreprises",
   "/espace/fichiers",
 ];
 

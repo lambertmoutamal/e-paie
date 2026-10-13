@@ -86,3 +86,11 @@ export const mesTachesEntrepriseCourante = cache(async (): Promise<TachesEntrepr
   const t = { actions: actions.filter(ici), demandes: demandes.filter(ici), reclamations: reclamations.filter(ici) };
   return { ...t, nombre: t.actions.length + t.demandes.length + t.reclamations.length, ailleurs: [...ailleurs.values()].sort((a, b) => a.raison_sociale.localeCompare(b.raison_sociale, "fr")) };
 });
+
+// Demandes d'entreprises en attente pour les cabinets que la personne administre
+// (la base ne compte que celles de ses cabinets).
+export const mesDemandesEntreprises = cache(async (): Promise<number> => {
+  const { supabase } = await exigerUtilisateur();
+  const { count } = await supabase.from("demandes_entreprise").select("id", { count: "exact", head: true }).eq("statut", "en_attente");
+  return count ?? 0;
+});

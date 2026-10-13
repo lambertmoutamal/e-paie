@@ -6,7 +6,7 @@ import { messageBandeau } from "@/lib/abonnements/phases";
 import { Logo } from "@/components/logo";
 import { Squelette } from "@/components/ui";
 import { seDeconnecter } from "../connexion/actions";
-import { mesTachesEntrepriseCourante } from "@/lib/bulletins/actions-a-faire";
+import { mesDemandesEntreprises, mesTachesEntrepriseCourante } from "@/lib/bulletins/actions-a-faire";
 import { BandeauActionsPaie } from "@/components/actions-paie";
 import { entrepriseCourante, entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { groupesMenu } from "@/lib/menu";
@@ -91,7 +91,8 @@ async function Menu({ variante }: { variante: "haut" | "mobile" }) {
 
 // Cloche : nombre d'actions qui attendent la personne dans l'entreprise de travail.
 async function Cloche() {
-  const { nombre } = await mesTachesEntrepriseCourante();
+  const [{ nombre: taches }, demandes] = await Promise.all([mesTachesEntrepriseCourante(), mesDemandesEntreprises()]);
+  const nombre = taches + demandes;
   return (
     <Link
       href="/espace/a-faire"

@@ -43,7 +43,7 @@ export async function proxy(requete: NextRequest) {
   const pagePersonnel = chemin.startsWith("/espace") || chemin === "/choix-entreprise";
 
   // Un compte salarié n'entre jamais dans l'espace du personnel.
-  const pageAuth = chemin === "/connexion" || chemin === "/nouvelle-entreprise";
+  const pageAuth = chemin === "/connexion" || chemin === "/nouvelle-entreprise" || chemin.startsWith("/nouvelle-entreprise/");
   if (connecte && salarie && (pagePersonnel || pageAuth)) {
     return rediriger(requete, reponse, "/portail");
   }
@@ -74,5 +74,5 @@ function rediriger(requete: NextRequest, reponse: NextResponse, chemin: string) 
 }
 
 export const config = {
-  matcher: ["/espace/:path*", "/choix-entreprise", "/connexion", "/nouvelle-entreprise", "/portail", "/portail/:path*"],
+  matcher: ["/espace/:path*", "/choix-entreprise", "/connexion", "/nouvelle-entreprise", "/nouvelle-entreprise/:path*", "/portail", "/portail/:path*"],
 };
