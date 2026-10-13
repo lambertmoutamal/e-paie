@@ -223,20 +223,9 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   ou **supprimer** des bulletins, ou annuler tout le dépôt, puis renvoyer en validation.
 - Menu Paramètres : « Catalogue des modules » et « Demandes de démo » retirés.
 
-## 2026-10-13 — Création des salariés absents lors du dépôt en masse
+## 2026-10-13 — Fiche salarié : mode de paiement, localisation, N° CNAMGS
 
-- Option **« Créer les salariés absents à partir de leur bulletin »** dans le découpage du PDF : pour
-  chaque page dont le matricule n'est pas connu, la fiche est lue sur le bulletin (matricule ou « Mat. »,
-  nom et prénoms ensemble ou séparés, sexe, dates de naissance, d'embauche/entrée, de fin de contrat et
-  de sortie, nationalité, poste/emploi, localisation, N° CNSS, téléphone, email, adresse, banque, N° de
-  compte, mode de paiement, type de contrat).
-- Après la lecture du PDF, les salariés absents sont proposés **un par un** : « Voulez-vous intégrer ce
-  salarié ? ». **Oui** : le salarié est créé aussitôt (fiche modifiable avant) et son bulletin lui est
-  joint au dépôt ; **Non** : son bulletin n'est pas déposé et on passe au bulletin suivant.
-  « Décider plus tard » interrompt la revue, que l'on peut reprendre.
-- La fiche reste modifiable avant l'intégration ; matricule, nom, prénoms et date d'embauche sont obligatoires.
-  À l'envoi : le salarié est créé (« sorti » si une date de sortie passée figure sur le bulletin), son
-  contrat aussi si le type ou la date de fin est connu, puis le bulletin lui est joint. Un matricule
-  déjà existant est simplement rattaché (rien n'est modifié).
-- Fiche salarié : nouveaux champs **mode de paiement** (virement, espèces, chèque, mobile money) et
-  **localisation** (lieu de travail), aussi dans l'import Excel.
+- Nouveaux champs de la fiche salarié (formulaire et import Excel) : **mode de paiement** (virement,
+  espèces, chèque, mobile money), **localisation** (lieu de travail) et **N° CNAMGS**.
+- La création automatique des salariés absents à partir de leur bulletin, essayée le 13/10, a été
+  **retirée le 14/10** à la demande de l'utilisateur : le dépôt en masse ne crée jamais de salarié.
