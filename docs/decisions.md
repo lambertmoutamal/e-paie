@@ -230,7 +230,11 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   nom et prénoms ensemble ou séparés, sexe, dates de naissance, d'embauche/entrée, de fin de contrat et
   de sortie, nationalité, poste/emploi, localisation, N° CNSS, téléphone, email, adresse, banque, N° de
   compte, mode de paiement, type de contrat).
-- La fiche reste modifiable avant l'envoi ; matricule, nom, prénoms et date d'embauche sont obligatoires.
+- Après la lecture du PDF, les salariés absents sont proposés **un par un** : « Voulez-vous intégrer ce
+  salarié ? ». **Oui** : le salarié est créé aussitôt (fiche modifiable avant) et son bulletin lui est
+  joint au dépôt ; **Non** : son bulletin n'est pas déposé et on passe au bulletin suivant.
+  « Décider plus tard » interrompt la revue, que l'on peut reprendre.
+- La fiche reste modifiable avant l'intégration ; matricule, nom, prénoms et date d'embauche sont obligatoires.
   À l'envoi : le salarié est créé (« sorti » si une date de sortie passée figure sur le bulletin), son
   contrat aussi si le type ou la date de fin est connu, puis le bulletin lui est joint. Un matricule
   déjà existant est simplement rattaché (rien n'est modifié).

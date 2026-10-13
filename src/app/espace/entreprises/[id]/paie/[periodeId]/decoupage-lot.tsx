@@ -19,6 +19,8 @@ type Groupe = {
   pages: number[];
   salarieId: string; // "" = non attribué ; NOUVEAU = salarié à créer
   fiche?: FicheProposee; // informations lues sur le bulletin (salarié à créer)
+  integre?: string; // salarié intégré pendant la revue
+  ignore?: boolean; // « Non » à la revue : bulletin non déposé
   motif?: string;
   methode?: "libelle" | "recherche" | "nom";
   resultat?: { ok: boolean; message: string };
@@ -97,9 +99,13 @@ export function DecoupageLot({
   const [envoi, setEnvoi] = useState<{ faits: number; total: number } | null>(null);
   // Fiche lue sur chaque page, une seule fois à l'analyse (salariés absents à créer)
   const [fichesLues, setFichesLues] = useState<FicheProposee[]>([]);
-  const [creerAbsents, setCreerAbsents] = useState(false);
+  // Salariés intégrés pendant la revue (absents de la liste reçue du serveur)
+  const [ajoutes, setAjoutes] = useState<SalarieAttendu[]>([]);
+  // Revue des salariés absents, un bulletin après l'autre : « Intégrer ce salarié ? »
+  const [revue, setRevue] = useState<{ file: number[]; position: number; fiche: FicheProposee; erreur?: string; enCours?: boolean } | null>(null);
 
-  const parId = new Map(salaries.map((s) => [s.id, s]));
+  const tous = [...salaries, ...ajoutes];
+  const parId = new Map(tous.map((s) => [s.id, s]));
   const suffixe = `${annee}-${String(mois).padStart(2, "0")}`;
 
   async function analyser(fichier: File | undefined, motDePasse?: string) {
@@ -118,19 +124,21 @@ export function DecoupageLot({
       // pdf.js peut « consommer » le tableau transmis : on lui en donne une copie
       const textes = await lireTextePages(donnees.slice(), motDePasse, (page, total) => setAnalyse({ page, total }));
       const reconnus: Reconnaissance[] = textes.map((t) => reconnaitreSalarie(t, salaries));
-      setFichesLues(textes.map((t) => ficheProposee(extraireFicheBulletin(t))));
-      setCreerAbsents(false);
-      setGroupes(
-        regrouperPages(reconnus).map((g) => {
-          const r = reconnus[g.pages[0] - 1];
-          return {
-            pages: g.pages,
-            salarieId: g.salarieId ?? "",
-            motif: g.motif ? MOTIFS_DECOUPAGE[g.motif] : undefined,
-            methode: g.salarieId && "methode" in r ? r.methode : undefined,
-          };
-        }),
-      );
+      const fiches = textes.map((t) => ficheProposee(extraireFicheBulletin(t)));
+      setFichesLues(fiches);
+      const nouveauxGroupes: Groupe[] = regrouperPages(reconnus).map((g) => {
+        const r = reconnus[g.pages[0] - 1];
+        return {
+          pages: g.pages,
+          salarieId: g.salarieId ?? "",
+          motif: g.motif ? MOTIFS_DECOUPAGE[g.motif] : undefined,
+          methode: g.salarieId && "methode" in r ? r.methode : undefined,
+        };
+      });
+      setGroupes(nouveauxGroupes);
+      // Salariés absents : on propose de les intégrer, un par un
+      const file = nouveauxGroupes.map((g, i) => (creableAvec(g, fiches) ? i : -1)).filter((i) => i >= 0);
+      setRevue(file.length ? { file, position: 0, fiche: { ...fiches[nouveauxGroupes[file[0]].pages[0] - 1] } } : null);
       setLot({ nom: fichier.name, donnees, motDePasse });
       if (reconnus.every((r) => "motif" in r && r.motif === "aucun_texte")) {
         setErreur("Aucun texte trouvé : ce PDF semble scanné. Exportez les bulletins directement depuis le logiciel de paie, ou attribuez les pages à la main.");
@@ -151,20 +159,49 @@ export function DecoupageLot({
   }
 
   const lireFiche = (g: Groupe) => ({ ...(fichesLues[g.pages[0] - 1] ?? ficheProposee(extraireFicheBulletin(""))) });
-  // Page non attribuée (hors doublon) où un salarié a pu être lu : candidate à la création
-  const creable = (g: Groupe) => {
-    const f = fichesLues[g.pages[0] - 1];
+  // Page non attribuée (hors doublon) où un salarié a pu être lu : salarié absent à proposer
+  function creableAvec(g: Groupe, fiches: FicheProposee[]) {
+    const f = fiches[g.pages[0] - 1];
     return !g.salarieId && g.motif !== MOTIFS_DECOUPAGE.doublon && !!(f?.matricule || f?.nom);
-  };
-  const nbCreables = groupes.filter(creable).length;
+  }
+  const absents = groupes.map((g, i) => (creableAvec(g, fichesLues) && !g.ignore ? i : -1)).filter((i) => i >= 0);
 
-  function basculerCreation(actif: boolean) {
-    setCreerAbsents(actif);
-    setGroupes((avant) =>
-      avant.map((g) =>
-        actif && creable(g) ? { ...g, salarieId: NOUVEAU, fiche: g.fiche ?? lireFiche(g) } : !actif && g.salarieId === NOUVEAU && !g.resultat?.ok ? { ...g, salarieId: "" } : g,
-      ),
-    );
+  // Passe au salarié absent suivant (ou termine la revue)
+  function suivant(r: NonNullable<typeof revue>) {
+    const position = r.position + 1;
+    if (position >= r.file.length) return setRevue(null);
+    setRevue({ file: r.file, position, fiche: lireFiche(groupes[r.file[position]]) });
+  }
+
+  // « Oui » : le salarié est créé tout de suite ; son bulletin lui sera joint au dépôt
+  async function integrer() {
+    if (!revue) return;
+    const manquants = champsManquants(revue.fiche);
+    if (manquants.length) return setRevue({ ...revue, erreur: `Complétez d'abord : ${manquants.join(", ")}.` });
+    setRevue({ ...revue, enCours: true, erreur: undefined });
+    try {
+      const c = await creerSalarieDepuisBulletin(entrepriseId, revue.fiche);
+      if (!c.ok) return setRevue({ ...revue, enCours: false, erreur: c.erreur });
+      const f = revue.fiche;
+      if (!parId.has(c.salarieId)) setAjoutes((a) => [...a, { id: c.salarieId, matricule: f.matricule.trim(), nom: f.nom.trim().toUpperCase(), prenoms: f.prenoms.trim(), aBulletin: false }]);
+      const index = revue.file[revue.position];
+      setGroupes((avant) =>
+        avant.map((x, i) =>
+          i === index ? { ...x, salarieId: c.salarieId, motif: undefined, methode: "libelle", integre: c.existant ? "Rattaché au salarié existant" : "Salarié intégré" } : x,
+        ),
+      );
+      suivant(revue);
+    } catch {
+      setRevue({ ...revue, enCours: false, erreur: "Le salarié n'a pas pu être intégré (connexion ?). Réessayez." });
+    }
+  }
+
+  // « Non » : le bulletin de ce salarié n'est pas déposé
+  function refuser() {
+    if (!revue) return;
+    const index = revue.file[revue.position];
+    setGroupes((avant) => avant.map((x, i) => (i === index ? { ...x, ignore: true, motif: "Salarié non intégré : bulletin non déposé." } : x)));
+    suivant(revue);
   }
 
   async function apercu(pages: number[]) {
@@ -221,7 +258,7 @@ export function DecoupageLot({
     router.refresh();
   }
 
-  const occupe = analyse !== null || envoi !== null;
+  const occupe = analyse !== null || envoi !== null || revue !== null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -304,27 +341,56 @@ export function DecoupageLot({
               {envoi ? `Envoi ${envoi.faits}/${envoi.total}…` : `Déposer ${aEnvoyer.length} bulletin(s)`}
             </button>
           </div>
-          {(nbCreables > 0 || creerAbsents) && (
-            <label className="flex items-start gap-3 rounded-xl border border-marque/30 bg-marque-claire/50 px-3 py-3 text-sm">
-              <input
-                type="checkbox"
-                checked={creerAbsents}
-                disabled={occupe}
-                onChange={(e) => basculerCreation(e.target.checked)}
-                className="mt-0.5 size-4 accent-[var(--marque)]"
-              />
-              <span>
-                <span className="flex items-center gap-1.5 font-semibold">
-                  <UserPlus size={15} aria-hidden />
-                  Créer les salariés absents à partir de leur bulletin
-                  {nbCreables > 0 && ` (${nbCreables})`}
-                </span>
-                <span className="block text-doux">
-                  Matricule, nom et prénoms, dates de naissance, d&apos;embauche et de fin, nationalité, poste, localisation, mode de paiement… sont lus sur
-                  chaque bulletin. Vérifiez et complétez la fiche (« Voir la fiche ») : le salarié est créé à l&apos;envoi et son bulletin lui est joint.
-                </span>
-              </span>
-            </label>
+          {revue && (() => {
+            const g = groupes[revue.file[revue.position]];
+            return (
+              <section aria-live="polite" className="flex flex-col gap-3 rounded-2xl border-2 border-marque/40 bg-marque-claire/40 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="flex items-center gap-2 font-semibold">
+                    <UserPlus size={18} className="text-marque" aria-hidden />
+                    Salarié absent {revue.position + 1} sur {revue.file.length} · {libellePages(g.pages)}
+                  </h3>
+                  <button type="button" className={classesBouton("secondaire", "petit")} onClick={() => apercu(g.pages)}>
+                    <Eye size={14} aria-hidden />
+                    Voir le bulletin
+                  </button>
+                </div>
+                <p className="text-sm">
+                  Ce bulletin concerne un salarié qui n&apos;existe pas encore dans DématPaie. Voici les informations reconnues sur le bulletin (vous
+                  pouvez les corriger). <strong>Voulez-vous intégrer ce salarié ?</strong>
+                </p>
+                <FicheNouveauSalarie fiche={revue.fiche} desactive={revue.enCours} onChange={(fiche) => setRevue({ ...revue, fiche, erreur: undefined })} />
+                {revue.erreur && (
+                  <p role="alert" className="flex items-start gap-2 text-sm text-red-700">
+                    <CircleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
+                    {revue.erreur}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" className={classesBouton("principal", "petit")} disabled={revue.enCours} onClick={integrer}>
+                    {revue.enCours ? <LoaderCircle size={14} className="animate-spin" aria-hidden /> : <UserPlus size={14} aria-hidden />}
+                    Oui, intégrer ce salarié
+                  </button>
+                  <button type="button" className={classesBouton("secondaire", "petit")} disabled={revue.enCours} onClick={refuser}>
+                    Non, passer au bulletin suivant
+                  </button>
+                  <button type="button" className="ml-auto text-sm text-doux underline" disabled={revue.enCours} onClick={() => setRevue(null)}>
+                    Décider plus tard
+                  </button>
+                </div>
+              </section>
+            );
+          })()}
+          {!revue && absents.length > 0 && (
+            <button
+              type="button"
+              className={`${classesBouton("secondaire", "petit")} self-start`}
+              disabled={occupe}
+              onClick={() => setRevue({ file: absents, position: 0, fiche: lireFiche(groupes[absents[0]]) })}
+            >
+              <UserPlus size={14} aria-hidden />
+              Revoir les salariés absents ({absents.length})
+            </button>
           )}
           {incomplets.length > 0 && (
             <p role="alert" className="text-sm text-red-700">
@@ -363,7 +429,9 @@ export function DecoupageLot({
                     <span className="w-24 shrink-0 font-medium">{libellePages(g.pages)}</span>
                     <span className={`min-w-0 truncate ${!g.salarieId || double || (g.resultat && !g.resultat.ok) ? "text-red-700" : "text-doux"}`}>
                       {g.resultat?.message ??
-                        (double
+                        (g.integre && g.salarieId === s?.id
+                          ? `${g.integre} : ${s.matricule} · ${s.nom} ${s.prenoms}`
+                          : double
                           ? "Salarié choisi plusieurs fois."
                           : nouveau
                             ? manquants.length
@@ -386,7 +454,7 @@ export function DecoupageLot({
                         setGroupes((avant) =>
                           avant.map((x) =>
                             x === g
-                              ? { ...x, salarieId: e.target.value, methode: "libelle", resultat: undefined, fiche: e.target.value === NOUVEAU ? (x.fiche ?? lireFiche(x)) : x.fiche }
+                              ? { ...x, salarieId: e.target.value, methode: "libelle", resultat: undefined, integre: undefined, ignore: false, fiche: e.target.value === NOUVEAU ? (x.fiche ?? lireFiche(x)) : x.fiche }
                               : x,
                           ),
                         )
@@ -395,7 +463,7 @@ export function DecoupageLot({
                     >
                       <option value="">— Ne pas déposer —</option>
                       <option value={NOUVEAU}>+ Créer un nouveau salarié (fiche lue sur le bulletin)</option>
-                      {salaries.map((x) => (
+                      {tous.map((x) => (
                         <option key={x.id} value={x.id}>
                           {x.matricule} · {x.nom} {x.prenoms}
                         </option>
