@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Briefcase, Plus } from "lucide-react";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { Carte, EtatVide, LienBouton } from "@/components/ui";
+import { Carte, EtatVide, LienBouton, Squelette } from "@/components/ui";
 import { entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { ListeChoixEntreprises } from "./liste";
 
 export const metadata: Metadata = { title: "Choisir l'entreprise" };
 
 // Écran affiché après la connexion : la ou les entreprises auxquelles la personne a accès.
-export default async function PageChoisirEntreprise() {
+// Les données (session, entreprises) se chargent dans une zone d'attente.
+export default function PageChoisirEntreprise() {
+  return (
+    <Suspense fallback={<Squelette />}>
+      <ChoixEntreprise />
+    </Suspense>
+  );
+}
+
+async function ChoixEntreprise() {
   const { supabase } = await exigerUtilisateur();
   const liste = await entreprisesAccessibles();
   if (liste.length === 0) {
