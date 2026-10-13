@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { configSupabase } from "@/lib/supabase/config";
+import { COOKIE_ENTREPRISE, exigeEntrepriseChoisie } from "@/lib/entreprise-chemins";
 
 // Exécuté avant chaque page : rafraîchit la session et protège l'espace privé.
 export async function proxy(requete: NextRequest) {
@@ -51,6 +52,11 @@ export async function proxy(requete: NextRequest) {
   // Compte tout juste activé (ou mot de passe oublié) : il faut d'abord choisir un mot de passe.
   if (motDePasseADefinir && chemin.startsWith("/espace") && chemin !== "/espace/mot-de-passe") {
     return rediriger(requete, reponse, "/espace/mot-de-passe");
+  }
+  // Une seule entreprise à la fois : elle se choisit d'abord (les pages vérifient ensuite
+  // que l'entreprise mémorisée est bien accessible).
+  if (connecte && exigeEntrepriseChoisie(chemin) && !requete.cookies.get(COOKIE_ENTREPRISE)?.value) {
+    return rediriger(requete, reponse, "/espace/choisir-entreprise");
   }
   return reponse;
 }

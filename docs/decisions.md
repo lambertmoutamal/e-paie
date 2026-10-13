@@ -175,3 +175,13 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - États produits : **livre de paie** (mensuel, avec coût employeur et rubriques), **soldes de tout compte**
   (salariés sortis dans le mois + **reçu imprimable** à faire signer, montant en lettres), **DTS** et **DAS**
   (cumuls annuels par salarié). DTS et DAS sont au **format générique** en attendant les modèles officiels.
+
+## 2026-10-13 — Une seule entreprise à la fois
+
+- À la connexion, chacun voit la ou les entreprises auxquelles il a accès et en choisit **une**.
+  Il n'existe plus de vue « toutes mes entreprises » : tableau de bord, états, recherche, « À faire »
+  et cloche portent uniquement sur l'entreprise de travail.
+- Sans entreprise choisie, l'espace renvoie vers l'écran de choix (contrôle dans `proxy.ts`, puis dans
+  chaque page). Une page d'une autre entreprise (lien d'une alerte) demande d'abord de basculer.
+- Changement d'entreprise : menu du compte (initiales, en haut à droite). La page « À faire » indique
+  seulement le nombre d'actions en attente dans les autres entreprises.

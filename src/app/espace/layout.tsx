@@ -6,7 +6,7 @@ import { messageBandeau } from "@/lib/abonnements/phases";
 import { Logo } from "@/components/logo";
 import { Squelette } from "@/components/ui";
 import { seDeconnecter } from "../connexion/actions";
-import { mesActionsPaie, mesDemandesATraiter, mesReclamationsATraiter } from "@/lib/bulletins/actions-a-faire";
+import { mesTachesEntrepriseCourante } from "@/lib/bulletins/actions-a-faire";
 import { BandeauActionsPaie } from "@/components/actions-paie";
 import { entrepriseCourante, entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { groupesMenu } from "@/lib/menu";
@@ -88,10 +88,9 @@ async function Menu({ variante }: { variante: "haut" | "mobile" }) {
   return variante === "haut" ? <MenuGroupes groupes={groupes} /> : <MenuMobile groupes={groupes} />;
 }
 
-// Cloche : nombre d'actions qui attendent la personne (validations, demandes, réclamations).
+// Cloche : nombre d'actions qui attendent la personne dans l'entreprise de travail.
 async function Cloche() {
-  const [actions, demandes, reclamations] = await Promise.all([mesActionsPaie(), mesDemandesATraiter(), mesReclamationsATraiter()]);
-  const nombre = actions.length + demandes.length + reclamations.length;
+  const { nombre } = await mesTachesEntrepriseCourante();
   return (
     <Link
       href="/espace/a-faire"
@@ -111,8 +110,7 @@ async function Cloche() {
 
 // Rappel permanent des validations, demandes et réclamations qui attendent la personne.
 async function BandeauActions() {
-  const [actions, demandes, reclamations] = await Promise.all([mesActionsPaie(), mesDemandesATraiter(), mesReclamationsATraiter()]);
-  const nombre = actions.length + demandes.length + reclamations.length;
+  const { nombre } = await mesTachesEntrepriseCourante();
   return nombre ? <BandeauActionsPaie nombre={nombre} /> : null;
 }
 
@@ -167,7 +165,7 @@ async function MenuUtilisateur() {
         {liste.length > 0 && (
           <div className="border-b border-bordure px-4 py-2.5 text-sm">
             <p className="text-xs text-doux">Entreprise de travail</p>
-            <p className="truncate font-semibold">{courante?.raison_sociale ?? "Toutes mes entreprises"}</p>
+            <p className="truncate font-semibold">{courante?.raison_sociale ?? "Aucune entreprise choisie"}</p>
             {liste.length > 1 && (
               <Link href="/espace/choisir-entreprise" className="mt-1 inline-flex items-center gap-1.5 font-semibold text-marque hover:underline">
                 <ArrowLeftRight size={14} aria-hidden />

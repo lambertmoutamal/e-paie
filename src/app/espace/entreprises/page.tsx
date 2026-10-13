@@ -6,8 +6,7 @@ import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Pag
 
 export const metadata: Metadata = { title: "Entreprises" };
 
-export default async function PageEntreprises({ searchParams }: PageProps<"/espace/entreprises">) {
-  const { choisir } = await searchParams;
+export default async function PageEntreprises() {
   const { supabase } = await exigerUtilisateur();
   const { adminPlateforme, cabinets } = await droitsUtilisateur();
   const peutCreer = adminPlateforme || cabinets.length > 0;
@@ -33,12 +32,6 @@ export default async function PageEntreprises({ searchParams }: PageProps<"/espa
         }
       />
 
-      {choisir && (
-        <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Choisissez d&apos;abord l&apos;<strong>entreprise de travail</strong> dans la liste en haut de l&apos;écran (à côté de la recherche) : les menus
-          vous mèneront ensuite directement à ses salariés, sa paie, ses absences et ses réclamations.
-        </p>
-      )}
 
       <Carte titre={`${entreprises?.length ?? 0} entreprise(s)`} sansMarge>
         {!entreprises?.length ? (

@@ -6,10 +6,7 @@ import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { libellePeriode } from "@/lib/bulletins/regles";
 import { etatParCode } from "@/lib/etats/catalogue";
 import { chargerEtat } from "@/lib/etats/donnees";
-import {
-  entrepriseCourante,
-  entreprisesAccessibles,
-} from "@/lib/entreprise-courante";
+import { exigerEntrepriseCourante } from "@/lib/entreprise-courante";
 import { Carte, classesBouton, EtatVide, Page } from "@/components/ui";
 import { BoutonsExport } from "../boutons-export";
 
@@ -24,18 +21,10 @@ export default async function PageEtat({
   const { etat: code } = await params;
   const definition = etatParCode(code);
   if (!definition) notFound();
-  const {
-    entreprise: choixEntreprise,
-    mois: choixMois,
-    annee: choixAnnee,
-  } = await searchParams;
+  const { mois: choixMois, annee: choixAnnee } = await searchParams;
   const { supabase } = await exigerUtilisateur();
-  const [liste, courante] = await Promise.all([
-    entreprisesAccessibles(),
-    entrepriseCourante(),
-  ]);
-  const entreprise =
-    liste.find((e) => e.id === choixEntreprise) ?? courante ?? liste[0] ?? null;
+  // Une seule entreprise à la fois : celle choisie à la connexion
+  const entreprise = await exigerEntrepriseCourante();
 
   const maintenant = new Date();
   const moisValide =
@@ -105,20 +94,6 @@ export default async function PageEtat({
 
       {/* Filtres */}
       <form className="flex flex-wrap items-end gap-3 rounded-2xl border border-bordure bg-surface p-4 print:hidden">
-        <label className="flex min-w-56 flex-1 flex-col gap-1 text-sm font-medium">
-          Entreprise
-          <select
-            name="entreprise"
-            defaultValue={entreprise?.id}
-            className="h-11 rounded-lg border border-bordure bg-surface px-3 text-base"
-          >
-            {liste.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.raison_sociale}
-              </option>
-            ))}
-          </select>
-        </label>
         {definition.parMois && (
           <label className="flex flex-col gap-1 text-sm font-medium">
             Mois

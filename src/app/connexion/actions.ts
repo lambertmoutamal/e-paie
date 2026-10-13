@@ -19,7 +19,7 @@ export async function seConnecter(_etat: EtatConnexion, formulaire: FormData): P
   if (error) return { erreur: messageErreurConnexion(error.code, error.status), email };
 
   // Nouvelle session : l'entreprise de travail est choisie à chaque connexion
-  // (l'écran de choix redirige directement vers l'accueil s'il n'y a qu'une entreprise).
+  // (une seule entreprise à la fois, montrée même s'il n'y en a qu'une).
   (await cookies()).delete({ name: COOKIE_ENTREPRISE, path: "/espace" });
   redirect("/espace/choisir-entreprise");
 }

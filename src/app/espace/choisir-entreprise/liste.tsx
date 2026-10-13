@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Briefcase, ChevronRight, Layers, LoaderCircle, Search } from "lucide-react";
+import { Briefcase, ChevronRight, LoaderCircle, Search } from "lucide-react";
 import { choisirEntrepriseEtContinuer } from "../actions-navigation";
 
 const COULEURS = ["bg-indigo-500", "bg-rose-500", "bg-emerald-500", "bg-amber-500", "bg-sky-500", "bg-violet-500", "bg-orange-500", "bg-teal-500"];
@@ -59,17 +59,6 @@ export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: stri
           </li>
         ))}
       </ul>
-      {entreprises.length > 1 && (
-      <button
-        type="button"
-        disabled={enCours}
-        onClick={() => choisir("toutes")}
-        className="mx-auto inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-marque hover:bg-marque-claire"
-      >
-        {enCours && choix === "toutes" ? <LoaderCircle size={16} className="animate-spin" aria-hidden /> : <Layers size={16} aria-hidden />}
-        Voir l&apos;ensemble de mes entreprises
-      </button>
-      )}
     </div>
   );
 }

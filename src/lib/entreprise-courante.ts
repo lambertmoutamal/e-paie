@@ -1,11 +1,12 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 
-export const COOKIE_ENTREPRISE = "dematpaie_entreprise";
-// Valeur du cookie quand la personne a choisi de voir toutes ses entreprises
-export const TOUTES = "toutes";
+import { COOKIE_ENTREPRISE } from "@/lib/entreprise-chemins";
+
+export { COOKIE_ENTREPRISE };
 
 export type EntrepriseAccessible = { id: string; raison_sociale: string };
 
@@ -16,19 +17,17 @@ export const entreprisesAccessibles = cache(async (): Promise<EntrepriseAccessib
   return data ?? [];
 });
 
-// Entreprise sur laquelle on travaille : celle choisie (si toujours accessible),
-// sinon la seule accessible, sinon aucune (vue de toutes les entreprises).
+// Entreprise sur laquelle on travaille : celle choisie à la connexion, si elle est
+// toujours accessible. On ne travaille jamais sur plusieurs entreprises à la fois.
 export const entrepriseCourante = cache(async (): Promise<EntrepriseAccessible | null> => {
   const liste = await entreprisesAccessibles();
   const choisie = (await cookies()).get(COOKIE_ENTREPRISE)?.value;
-  return liste.find((e) => e.id === choisie) ?? (liste.length === 1 ? liste[0] : null);
+  return liste.find((e) => e.id === choisie) ?? null;
 });
 
-// L'écran des entreprises a-t-il été passé depuis la connexion ? Il est montré à tous,
-// même avec une seule entreprise, pour que chacun voie à quoi il a accès.
-export const choixEntrepriseFait = cache(async (): Promise<boolean> => {
-  const liste = await entreprisesAccessibles();
-  if (liste.length === 0) return true;
-  const choisie = (await cookies()).get(COOKIE_ENTREPRISE)?.value;
-  return choisie === TOUTES || liste.some((e) => e.id === choisie);
-});
+// Pour les pages de travail : sans entreprise choisie, retour à l'écran de choix.
+export async function exigerEntrepriseCourante(): Promise<EntrepriseAccessible> {
+  const courante = await entrepriseCourante();
+  if (!courante) redirect("/espace/choisir-entreprise");
+  return courante;
+}

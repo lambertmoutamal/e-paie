@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import { Search, UserRound } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { exigerEntrepriseCourante } from "@/lib/entreprise-courante";
 import { champLie } from "@/lib/supabase/relations";
 import { Avatar } from "@/components/avatar";
 import { Badge, Carte, EtatVide, Ligne, ListeLignes, Page } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Recherche" };
 
-// Recherche d'un salarié dans toutes les entreprises accessibles (la base limite le résultat).
+// Recherche d'un salarié dans l'entreprise de travail.
 export default async function PageRecherche({ searchParams }: PageProps<"/espace/recherche">) {
   const { q } = await searchParams;
   const recherche = typeof q === "string" ? q.trim().slice(0, 60) : "";
   const { supabase } = await exigerUtilisateur();
+  const courante = await exigerEntrepriseCourante();
 
   let resultats: { id: string; entreprise_id: string; matricule: string; nom: string; prenoms: string; poste: string | null; statut: string; entreprises: unknown }[] = [];
   if (recherche.length >= 2) {
@@ -19,6 +21,7 @@ export default async function PageRecherche({ searchParams }: PageProps<"/espace
     const { data } = await supabase
       .from("salaries")
       .select("id, entreprise_id, matricule, nom, prenoms, poste, statut, entreprises(raison_sociale)")
+      .eq("entreprise_id", courante.id)
       .or(`nom.ilike.${motif},prenoms.ilike.${motif},matricule.ilike.${motif}`)
       .order("nom")
       .limit(50);

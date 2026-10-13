@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { libellePeriode } from "@/lib/bulletins/regles";
 import { enLettres } from "@/lib/paie/lettres";
+import { exigerEntrepriseCourante } from "@/lib/entreprise-courante";
 import { Page } from "@/components/ui";
 import { BoutonImprimer } from "../../boutons-export";
 
@@ -26,6 +27,8 @@ export default async function PageRecu({ params, searchParams }: PageProps<"/esp
   const numeroMois = Number(mois.slice(5, 7));
 
   const { supabase } = await exigerUtilisateur();
+  // Une seule entreprise à la fois : le reçu doit concerner l'entreprise de travail
+  if ((await exigerEntrepriseCourante()).id !== entrepriseId) notFound();
   const [{ data: entreprise }, { data: salarie }, { data: periode }] = await Promise.all([
     supabase.from("entreprises").select("raison_sociale, adresse, nif, numero_cnss").eq("id", entrepriseId).maybeSingle(),
     supabase.from("salaries").select("matricule, nom, prenoms, poste, date_embauche, date_sortie, motif_sortie").eq("id", salarieId).eq("entreprise_id", entrepriseId).maybeSingle(),

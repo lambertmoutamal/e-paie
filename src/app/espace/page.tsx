@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { CalendarClock, CalendarOff, FileCheck2, Inbox, MessagesSquare, TrendingDown, TrendingUp, Users } from "lucide-react";
@@ -9,7 +8,7 @@ import { valeurLiee } from "@/lib/supabase/relations";
 import { libellePeriode, salariesAttendus } from "@/lib/bulletins/regles";
 import { TYPES_CONTRAT } from "@/lib/contrats/regles";
 import { SUJETS_RECLAMATION } from "@/lib/reclamations/regles";
-import { choixEntrepriseFait, entrepriseCourante, entreprisesAccessibles } from "@/lib/entreprise-courante";
+import { exigerEntrepriseCourante } from "@/lib/entreprise-courante";
 import { absencesDuMois, compter, evolutionEffectif, pyramideDesAges, repartitionSexe, type AbsenceStat, type SalarieStat } from "@/lib/tableau-de-bord/calculs";
 import type { Echeance } from "@/components/echeances";
 import { GraphiqueAnneau, GraphiqueBarresHorizontales, GraphiqueEffectif, GraphiquePyramide } from "@/components/graphiques-dynamiques";
@@ -68,12 +67,11 @@ function CarteGraphique({ titre, sousTitre, children }: { titre: string; sousTit
 type SalarieMini = SalarieStat & { entreprise_id: string; date_naissance: string | null };
 
 export default async function TableauDeBord() {
-  // Plusieurs entreprises : le choix se fait d'abord, à la connexion
-  if (!(await choixEntrepriseFait())) redirect("/espace/choisir-entreprise");
+  // Une seule entreprise à la fois : celle choisie à la connexion
+  const courante = await exigerEntrepriseCourante();
 
   const { supabase } = await exigerUtilisateur();
-  const [courante, accessibles] = await Promise.all([entrepriseCourante(), entreprisesAccessibles()]);
-  const perimetre = courante ? [courante.id] : accessibles.map((e) => e.id);
+  const perimetre = [courante.id];
   const maintenant = new Date();
   const aujourdhui = maintenant.toISOString().slice(0, 10);
   const debutMois = `${aujourdhui.slice(0, 8)}01`;
@@ -125,13 +123,13 @@ export default async function TableauDeBord() {
       ).length
     : 0;
   const pyramide = pyramideDesAges(salaries, maintenant);
-  const lien = (chemin: string) => (courante ? `/espace/entreprises/${courante.id}${chemin}` : undefined);
+  const lien = (chemin: string) => `/espace/entreprises/${courante.id}${chemin}`;
 
   return (
     <div className="flex flex-col gap-3 lg:absolute lg:inset-0 lg:mx-auto lg:max-w-7xl lg:px-8 lg:pb-5 lg:pt-4">
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h1 className="text-xl font-bold tracking-tight">
-          Tableau de bord <span className="font-semibold text-marque">· {courante ? courante.raison_sociale : "Toutes mes entreprises"}</span>
+          Tableau de bord <span className="font-semibold text-marque">· {courante.raison_sociale}</span>
         </h1>
         <p className="text-sm capitalize text-doux">{JOUR_LONG.format(maintenant)}</p>
       </header>

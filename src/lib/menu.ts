@@ -1,6 +1,6 @@
 // Menu principal : groupes de tâches affichés dans la barre du haut avec un menu déroulant.
-// Les liens visent l'entreprise de travail choisie dans la barre ; sans entreprise choisie,
-// ils mènent au choix de l'entreprise.
+// Les liens visent l'entreprise de travail choisie à la connexion (une seule à la fois) ;
+// sans entreprise choisie, ils mènent à l'écran de choix.
 
 import { ETATS } from "@/lib/etats/catalogue";
 
@@ -18,7 +18,7 @@ export function groupesMenu({
   administrateur: boolean;
   voitAbonnement: boolean;
 }): GroupeMenu[] {
-  const e = (chemin: string) => (entrepriseId ? `/espace/entreprises/${entrepriseId}${chemin}` : "/espace/entreprises?choisir=1");
+  const e = (chemin: string) => (entrepriseId ? `/espace/entreprises/${entrepriseId}${chemin}` : "/espace/choisir-entreprise");
   const etat = (code: string) => `/espace/etats/${code}`;
 
   const sectionsEtats = (["Personnel", "Congés et absences", "Paie", "Déclarations"] as const).map((g) => ({
@@ -78,8 +78,12 @@ export function groupesMenu({
       libelle: "Paramètres",
       taches: [
         ...(entrepriseId ? [{ libelle: "Fiche de l'entreprise et utilisateurs", href: e("") }] : []),
-        { libelle: "Toutes les entreprises", href: "/espace/entreprises" },
-        ...(administrateur ? [{ libelle: "Nouvelle entreprise", href: "/espace/entreprises/nouvelle" }] : []),
+        ...(administrateur
+          ? [
+              { libelle: "Liste des entreprises", href: "/espace/entreprises", description: "Administration des entreprises du cabinet" },
+              { libelle: "Nouvelle entreprise", href: "/espace/entreprises/nouvelle" },
+            ]
+          : []),
         ...(adminPlateforme
           ? [
               { libelle: "Cabinets", href: "/espace/cabinets" },

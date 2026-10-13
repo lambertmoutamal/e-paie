@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { Briefcase, Plus } from "lucide-react";
+import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { Carte, EtatVide, LienBouton } from "@/components/ui";
 import { entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { ListeChoixEntreprises } from "./liste";
 
@@ -10,7 +11,27 @@ export const metadata: Metadata = { title: "Choisir l'entreprise" };
 export default async function PageChoisirEntreprise() {
   const { supabase } = await exigerUtilisateur();
   const liste = await entreprisesAccessibles();
-  if (liste.length === 0) redirect("/espace");
+  if (liste.length === 0) {
+    const { adminPlateforme, cabinets } = await droitsUtilisateur();
+    return (
+      <div className="mx-auto max-w-xl py-6">
+        <Carte>
+          <EtatVide
+            icone={Briefcase}
+            titre="Aucune entreprise ne vous est encore affectée"
+            texte="Demandez à l'administrateur de votre cabinet de vous donner accès à une entreprise."
+            action={
+              (adminPlateforme || cabinets.length > 0) && (
+                <LienBouton href="/espace/entreprises/nouvelle" icone={Plus}>
+                  Créer une entreprise
+                </LienBouton>
+              )
+            }
+          />
+        </Carte>
+      </div>
+    );
+  }
 
   // Nombre de salariés en poste par entreprise (la base limite aux entreprises accessibles)
   const { data: salaries } = await supabase.from("salaries").select("entreprise_id").eq("statut", "actif").limit(10000);

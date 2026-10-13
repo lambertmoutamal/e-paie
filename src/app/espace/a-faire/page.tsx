@@ -1,18 +1,24 @@
 import type { Metadata } from "next";
-import { Sparkles } from "lucide-react";
-import { mesActionsPaie, mesDemandesATraiter, mesReclamationsATraiter } from "@/lib/bulletins/actions-a-faire";
+import Link from "next/link";
+import { ArrowLeftRight, Sparkles } from "lucide-react";
+import { mesTachesEntrepriseCourante } from "@/lib/bulletins/actions-a-faire";
+import { exigerEntrepriseCourante } from "@/lib/entreprise-courante";
 import { CarteActionsPaie } from "@/components/actions-paie";
-import { Page } from "@/components/ui";
+import { Carte, Page } from "@/components/ui";
 
 export const metadata: Metadata = { title: "À faire" };
 
-// Tout ce qui attend la personne connectée : validations de paie, demandes d'absence, réclamations.
+// Ce qui attend la personne dans l'entreprise de travail (validations de paie, demandes
+// d'absence, réclamations), et un décompte pour ses autres entreprises.
 export default async function PageAFaire() {
-  const [actions, demandes, reclamations] = await Promise.all([mesActionsPaie(), mesDemandesATraiter(), mesReclamationsATraiter()]);
-  const total = actions.length + demandes.length + reclamations.length;
+  const courante = await exigerEntrepriseCourante();
+  const { actions, demandes, reclamations, nombre: total, ailleurs } = await mesTachesEntrepriseCourante();
   return (
     <Page>
-      <h1 className="text-2xl font-bold tracking-tight">À faire</h1>
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight">À faire</h1>
+        <p className="text-doux">{courante.raison_sociale}</p>
+      </header>
       {total ? (
         <CarteActionsPaie actions={actions} demandes={demandes} reclamations={reclamations} />
       ) : (
@@ -25,6 +31,20 @@ export default async function PageAFaire() {
             <p className="text-sm text-emerald-800/80">Les validations, demandes et réclamations qui vous attendent apparaîtront ici.</p>
           </div>
         </section>
+      )}
+      {ailleurs.length > 0 && (
+        <Carte titre="Dans vos autres entreprises" description="Pour les traiter, passez sur l'entreprise concernée.">
+          <ul className="flex flex-col gap-2">
+            {ailleurs.map((e) => (
+              <li key={e.entreprise_id}>
+                <Link href={`/espace/entreprises/${e.entreprise_id}`} className="inline-flex items-center gap-2 text-sm font-medium text-marque hover:underline">
+                  <ArrowLeftRight size={15} aria-hidden />
+                  {e.raison_sociale} : {e.nombre} action{e.nombre > 1 ? "s" : ""} à faire
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Carte>
       )}
     </Page>
   );
