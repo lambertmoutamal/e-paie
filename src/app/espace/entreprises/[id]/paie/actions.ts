@@ -9,6 +9,7 @@ import { alerterPaie } from "@/lib/notifications/alertes-paie";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import { estPdf, libellePeriode, lireCircuit, schemaPeriode, TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
 import { compterPages } from "@/lib/bulletins/pages";
+import { normaliserDate, schemaSalarie } from "@/lib/salaries/regles";
 
 // Toutes les écritures passent par le client de la personne connectée :
 // la base vérifie le rôle, l'abonnement, l'entreprise et que la période est en brouillon.
@@ -114,6 +115,63 @@ export async function deposerBulletin(
   // L'ancien fichier remplacé n'est plus référencé : on le retire du stockage.
   if (existant) await supabase.storage.from(ESPACE).remove([existant.fichier_chemin]);
   return { ok: true, remplace: Boolean(existant) };
+}
+
+export type ResultatCreationSalarie = { ok: true; salarieId: string; existant: boolean } | { ok: false; erreur: string };
+
+const TYPES_CONTRAT = ["cdi", "cdd", "stage", "apprentissage", "temporaire"] as const;
+
+// Dépôt en masse : création d'un salarié absent à partir des informations lues sur son
+// bulletin (vérifiées et complétées par l'utilisateur). Si le matricule existe déjà, on
+// rattache le bulletin à ce salarié sans rien modifier. Le contrat est créé lorsque son
+// type ou sa date de fin figure sur le bulletin. La base vérifie les droits.
+export async function creerSalarieDepuisBulletin(entrepriseId: string, donnees: unknown): Promise<ResultatCreationSalarie> {
+  const { supabase } = await exigerUtilisateur();
+  const lu = schemaSalarie().safeParse(donnees);
+  if (!lu.success) return { ok: false, erreur: lu.error.issues[0]?.message ?? "Fiche incomplète." };
+  const fiche = lu.data;
+  const brut = (donnees ?? {}) as Record<string, unknown>;
+
+  const { data: existant } = await supabase.from("salaries").select("id").eq("entreprise_id", entrepriseId).eq("matricule", fiche.matricule).maybeSingle();
+  if (existant) return { ok: true, salarieId: existant.id, existant: true };
+
+  // Date de sortie passée : le salarié est créé « sorti » (son bulletin reste déposé)
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const sortie = normaliserDate(brut.date_sortie);
+  const sorti = sortie && sortie >= fiche.date_embauche && sortie <= aujourdhui ? sortie : null;
+  const { data: cree, error } = await supabase
+    .from("salaries")
+    .insert({
+      ...fiche,
+      entreprise_id: entrepriseId,
+      ...(sorti ? { statut: "sorti", date_sortie: sorti, motif_sortie: "Indiquée sur le bulletin de paie" } : {}),
+    })
+    .select("id")
+    .single();
+  if (error || !cree) {
+    if (error?.code === "23505") {
+      return { ok: false, erreur: `${error.message}${error.details ?? ""}`.includes("telephone") ? "Ce téléphone est déjà utilisé par un autre salarié." : "Ce matricule existe déjà." };
+    }
+    return { ok: false, erreur: error?.code === "42501" ? "Vous n'avez pas le droit de créer des salariés dans cette entreprise." : "Le salarié n'a pas pu être créé." };
+  }
+
+  const type = TYPES_CONTRAT.find((t) => t === brut.type_contrat);
+  const finContrat = normaliserDate(brut.date_fin_contrat);
+  if (type || finContrat) {
+    const { error: erreurContrat } = await supabase.from("contrats").insert({
+      entreprise_id: entrepriseId,
+      salarie_id: cree.id,
+      type_contrat: type ?? "cdd",
+      poste: fiche.poste,
+      lieu_travail: fiche.localisation,
+      date_debut: fiche.date_embauche,
+      date_fin_prevue: finContrat && finContrat >= fiche.date_embauche ? finContrat : null,
+      statut: sorti ? "termine" : "en_cours",
+      ...(sorti ? { date_fin_effective: sorti } : {}),
+    });
+    if (erreurContrat) console.error("Contrat lu sur le bulletin non créé :", erreurContrat.code, erreurContrat.message);
+  }
+  return { ok: true, salarieId: cree.id, existant: false };
 }
 
 export async function retirerBulletin(entrepriseId: string, bulletinId: string) {

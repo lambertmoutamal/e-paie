@@ -222,3 +222,17 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   brouillon chez la personne qui l'a préparée (bandeau avec le motif) : elle peut **modifier** (remplacer)
   ou **supprimer** des bulletins, ou annuler tout le dépôt, puis renvoyer en validation.
 - Menu Paramètres : « Catalogue des modules » et « Demandes de démo » retirés.
+
+## 2026-10-13 — Création des salariés absents lors du dépôt en masse
+
+- Option **« Créer les salariés absents à partir de leur bulletin »** dans le découpage du PDF : pour
+  chaque page dont le matricule n'est pas connu, la fiche est lue sur le bulletin (matricule ou « Mat. »,
+  nom et prénoms ensemble ou séparés, sexe, dates de naissance, d'embauche/entrée, de fin de contrat et
+  de sortie, nationalité, poste/emploi, localisation, N° CNSS, téléphone, email, adresse, banque, N° de
+  compte, mode de paiement, type de contrat).
+- La fiche reste modifiable avant l'envoi ; matricule, nom, prénoms et date d'embauche sont obligatoires.
+  À l'envoi : le salarié est créé (« sorti » si une date de sortie passée figure sur le bulletin), son
+  contrat aussi si le type ou la date de fin est connu, puis le bulletin lui est joint. Un matricule
+  déjà existant est simplement rattaché (rien n'est modifié).
+- Fiche salarié : nouveaux champs **mode de paiement** (virement, espèces, chèque, mobile money) et
+  **localisation** (lieu de travail), aussi dans l'import Excel.

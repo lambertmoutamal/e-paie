@@ -2,17 +2,23 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleAlert, CircleCheck, Eye, FileStack, KeyRound, LoaderCircle, Upload } from "lucide-react";
+import { CircleAlert, CircleCheck, Eye, FileStack, KeyRound, LoaderCircle, Upload, UserPlus } from "lucide-react";
 import { libellePages, MOTIFS_DECOUPAGE, reconnaitreSalarie, regrouperPages, type Reconnaissance } from "@/lib/bulletins/decoupage";
 import { TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
+import { extraireFicheBulletin } from "@/lib/bulletins/extraction-fiche";
 import { classesBouton } from "@/components/ui";
-import { deposerBulletin } from "../actions";
+import { creerSalarieDepuisBulletin, deposerBulletin } from "../actions";
+import { champsManquants, FicheNouveauSalarie, ficheProposee, type FicheProposee } from "./fiche-nouveau-salarie";
 
 type SalarieAttendu = { id: string; matricule: string; nom: string; prenoms: string; aBulletin: boolean };
 
+// Valeur du choix « créer ce salarié à partir du bulletin »
+const NOUVEAU = "__nouveau__";
+
 type Groupe = {
   pages: number[];
-  salarieId: string; // "" = non attribué
+  salarieId: string; // "" = non attribué ; NOUVEAU = salarié à créer
+  fiche?: FicheProposee; // informations lues sur le bulletin (salarié à créer)
   motif?: string;
   methode?: "libelle" | "recherche" | "nom";
   resultat?: { ok: boolean; message: string };
@@ -89,6 +95,9 @@ export function DecoupageLot({
   const [analyse, setAnalyse] = useState<{ page: number; total: number } | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState<{ faits: number; total: number } | null>(null);
+  // Fiche lue sur chaque page, une seule fois à l'analyse (salariés absents à créer)
+  const [fichesLues, setFichesLues] = useState<FicheProposee[]>([]);
+  const [creerAbsents, setCreerAbsents] = useState(false);
 
   const parId = new Map(salaries.map((s) => [s.id, s]));
   const suffixe = `${annee}-${String(mois).padStart(2, "0")}`;
@@ -109,6 +118,8 @@ export function DecoupageLot({
       // pdf.js peut « consommer » le tableau transmis : on lui en donne une copie
       const textes = await lireTextePages(donnees.slice(), motDePasse, (page, total) => setAnalyse({ page, total }));
       const reconnus: Reconnaissance[] = textes.map((t) => reconnaitreSalarie(t, salaries));
+      setFichesLues(textes.map((t) => ficheProposee(extraireFicheBulletin(t))));
+      setCreerAbsents(false);
       setGroupes(
         regrouperPages(reconnus).map((g) => {
           const r = reconnus[g.pages[0] - 1];
@@ -139,6 +150,23 @@ export function DecoupageLot({
     }
   }
 
+  const lireFiche = (g: Groupe) => ({ ...(fichesLues[g.pages[0] - 1] ?? ficheProposee(extraireFicheBulletin(""))) });
+  // Page non attribuée (hors doublon) où un salarié a pu être lu : candidate à la création
+  const creable = (g: Groupe) => {
+    const f = fichesLues[g.pages[0] - 1];
+    return !g.salarieId && g.motif !== MOTIFS_DECOUPAGE.doublon && !!(f?.matricule || f?.nom);
+  };
+  const nbCreables = groupes.filter(creable).length;
+
+  function basculerCreation(actif: boolean) {
+    setCreerAbsents(actif);
+    setGroupes((avant) =>
+      avant.map((g) =>
+        actif && creable(g) ? { ...g, salarieId: NOUVEAU, fiche: g.fiche ?? lireFiche(g) } : !actif && g.salarieId === NOUVEAU && !g.resultat?.ok ? { ...g, salarieId: "" } : g,
+      ),
+    );
+  }
+
   async function apercu(pages: number[]) {
     if (!lot) return;
     const octets = await extrairePages(lot, pages);
@@ -148,30 +176,43 @@ export function DecoupageLot({
   }
 
   // Un même salarié choisi pour deux bulletins du lot : on bloque l'envoi.
+  // (pour un salarié à créer, la clé est son matricule)
+  const cle = (g: Groupe) => (g.salarieId === NOUVEAU ? `nouveau:${(g.fiche?.matricule ?? "").trim().toUpperCase()}` : g.salarieId);
   const comptes = new Map<string, number>();
-  for (const g of groupes) if (g.salarieId) comptes.set(g.salarieId, (comptes.get(g.salarieId) ?? 0) + 1);
+  for (const g of groupes) if (g.salarieId) comptes.set(cle(g), (comptes.get(cle(g)) ?? 0) + 1);
   const enDouble = new Set([...comptes].filter(([, n]) => n > 1).map(([id]) => id));
-  const aEnvoyer = groupes.filter((g) => g.salarieId && !g.resultat?.ok);
+  const incomplets = groupes.filter((g) => g.salarieId === NOUVEAU && !g.resultat?.ok && (!g.fiche || champsManquants(g.fiche).length > 0));
+  const aEnvoyer = groupes.filter((g) => g.salarieId && !g.resultat?.ok && !incomplets.includes(g));
   const sansBulletinDansLot = salaries.filter((s) => !comptes.has(s.id));
 
   async function envoyer() {
     if (!lot || enDouble.size) return;
     setEnvoi({ faits: 0, total: aEnvoyer.length });
     for (const g of aEnvoyer) {
-      const s = parId.get(g.salarieId)!;
       let resultat: Groupe["resultat"];
       try {
+        // Salarié absent : création à partir de la fiche lue sur le bulletin
+        let salarieId = g.salarieId;
+        let matricule = parId.get(g.salarieId)?.matricule ?? "";
+        let creation = "";
+        if (g.salarieId === NOUVEAU && g.fiche) {
+          const c = await creerSalarieDepuisBulletin(entrepriseId, g.fiche);
+          if (!c.ok) throw new Error(c.erreur);
+          salarieId = c.salarieId;
+          matricule = g.fiche.matricule.trim();
+          creation = c.existant ? "Rattaché au salarié existant · " : "Salarié créé · ";
+        }
         const octets = await extrairePages(lot, g.pages);
         if (octets.length > TAILLE_MAX_BULLETIN) {
-          resultat = { ok: false, message: "Bulletin trop lourd (2 Mo maximum)." };
+          resultat = { ok: false, message: `${creation}Bulletin trop lourd (2 Mo maximum).` };
         } else {
           const formulaire = new FormData();
-          formulaire.set("fichier", new File([octets as BlobPart], `${s.matricule}_${suffixe}.pdf`, { type: "application/pdf" }));
-          const r = await deposerBulletin(entrepriseId, periodeId, s.id, formulaire);
-          resultat = r.ok ? { ok: true, message: r.remplace ? "Remplacé" : "Déposé" } : { ok: false, message: r.erreur };
+          formulaire.set("fichier", new File([octets as BlobPart], `${matricule}_${suffixe}.pdf`, { type: "application/pdf" }));
+          const r = await deposerBulletin(entrepriseId, periodeId, salarieId, formulaire);
+          resultat = r.ok ? { ok: true, message: `${creation}${r.remplace ? "Remplacé" : "Déposé"}` } : { ok: false, message: `${creation}${r.erreur}` };
         }
-      } catch {
-        resultat = { ok: false, message: "Envoi interrompu (connexion ?). Réessayez." };
+      } catch (e) {
+        resultat = { ok: false, message: e instanceof Error && e.message && !e.message.includes("fetch") ? e.message : "Envoi interrompu (connexion ?). Réessayez." };
       }
       setGroupes((avant) => avant.map((x) => (x === g ? { ...x, resultat } : x)));
       setEnvoi((e) => e && { ...e, faits: e.faits + 1 });
@@ -263,6 +304,33 @@ export function DecoupageLot({
               {envoi ? `Envoi ${envoi.faits}/${envoi.total}…` : `Déposer ${aEnvoyer.length} bulletin(s)`}
             </button>
           </div>
+          {(nbCreables > 0 || creerAbsents) && (
+            <label className="flex items-start gap-3 rounded-xl border border-marque/30 bg-marque-claire/50 px-3 py-3 text-sm">
+              <input
+                type="checkbox"
+                checked={creerAbsents}
+                disabled={occupe}
+                onChange={(e) => basculerCreation(e.target.checked)}
+                className="mt-0.5 size-4 accent-[var(--marque)]"
+              />
+              <span>
+                <span className="flex items-center gap-1.5 font-semibold">
+                  <UserPlus size={15} aria-hidden />
+                  Créer les salariés absents à partir de leur bulletin
+                  {nbCreables > 0 && ` (${nbCreables})`}
+                </span>
+                <span className="block text-doux">
+                  Matricule, nom et prénoms, dates de naissance, d&apos;embauche et de fin, nationalité, poste, localisation, mode de paiement… sont lus sur
+                  chaque bulletin. Vérifiez et complétez la fiche (« Voir la fiche ») : le salarié est créé à l&apos;envoi et son bulletin lui est joint.
+                </span>
+              </span>
+            </label>
+          )}
+          {incomplets.length > 0 && (
+            <p role="alert" className="text-sm text-red-700">
+              {incomplets.length} fiche(s) de nouveau salarié incomplète(s) : complétez les champs marqués d&apos;une étoile (sinon le bulletin n&apos;est pas envoyé).
+            </p>
+          )}
           {enDouble.size > 0 && (
             <p role="alert" className="text-sm text-red-700">
               Un même salarié est choisi pour plusieurs bulletins : corrigez les lignes signalées avant l&apos;envoi.
@@ -277,10 +345,13 @@ export function DecoupageLot({
           <ul className="divide-y divide-bordure rounded-lg border border-bordure text-sm">
             {groupes.map((g, i) => {
               const s = g.salarieId ? parId.get(g.salarieId) : undefined;
-              const double = g.salarieId !== "" && enDouble.has(g.salarieId);
+              const double = g.salarieId !== "" && enDouble.has(cle(g));
+              const nouveau = g.salarieId === NOUVEAU && g.fiche;
+              const manquants = nouveau ? champsManquants(g.fiche!) : [];
               const aVerifier = g.methode === "recherche" || g.methode === "nom";
               return (
-                <li key={g.pages.join("-")} className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center">
+                <li key={g.pages.join("-")} className="flex flex-col gap-2 px-3 py-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-2">
                     {g.resultat?.ok ? (
                       <CircleCheck size={16} className="shrink-0 text-marque" aria-hidden />
@@ -294,6 +365,10 @@ export function DecoupageLot({
                       {g.resultat?.message ??
                         (double
                           ? "Salarié choisi plusieurs fois."
+                          : nouveau
+                            ? manquants.length
+                              ? `Nouveau salarié : à compléter (${manquants.join(", ")})`
+                              : `Nouveau salarié : ${g.fiche!.matricule} · ${g.fiche!.nom} ${g.fiche!.prenoms}`
                           : !g.salarieId
                             ? (g.motif ?? "Choisissez le salarié.")
                             : `${aVerifier ? "À vérifier (matricule trouvé sans libellé)" : "Matricule lu"}${s?.aBulletin ? " · remplacera le bulletin actuel" : ""}`)}
@@ -307,10 +382,19 @@ export function DecoupageLot({
                       id={`groupe-${i}`}
                       value={g.salarieId}
                       disabled={occupe || g.resultat?.ok}
-                      onChange={(e) => setGroupes((avant) => avant.map((x) => (x === g ? { ...x, salarieId: e.target.value, methode: "libelle", resultat: undefined } : x)))}
+                      onChange={(e) =>
+                        setGroupes((avant) =>
+                          avant.map((x) =>
+                            x === g
+                              ? { ...x, salarieId: e.target.value, methode: "libelle", resultat: undefined, fiche: e.target.value === NOUVEAU ? (x.fiche ?? lireFiche(x)) : x.fiche }
+                              : x,
+                          ),
+                        )
+                      }
                       className="h-9 max-w-64 rounded-lg border border-bordure bg-surface px-2 text-sm"
                     >
                       <option value="">— Ne pas déposer —</option>
+                      <option value={NOUVEAU}>+ Créer un nouveau salarié (fiche lue sur le bulletin)</option>
                       {salaries.map((x) => (
                         <option key={x.id} value={x.id}>
                           {x.matricule} · {x.nom} {x.prenoms}
@@ -321,6 +405,19 @@ export function DecoupageLot({
                       <Eye size={14} aria-hidden />
                     </button>
                   </div>
+                  </div>
+                  {nouveau && !g.resultat?.ok && (
+                    <details open={manquants.length > 0} className="rounded-lg border border-bordure bg-black/[.015]">
+                      <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-marque">Voir la fiche du nouveau salarié</summary>
+                      <div className="border-t border-bordure p-3">
+                        <FicheNouveauSalarie
+                          fiche={g.fiche!}
+                          desactive={occupe}
+                          onChange={(fiche) => setGroupes((avant) => avant.map((x) => (x === g ? { ...x, fiche, resultat: undefined } : x)))}
+                        />
+                      </div>
+                    </details>
+                  )}
                 </li>
               );
             })}
