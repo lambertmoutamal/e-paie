@@ -45,7 +45,7 @@ export function groupesMenu({
         { libelle: "Périodes et bulletins", href: e("/paie"), description: "Créer la période, déposer les bulletins" },
         { libelle: "Circuit de validation", href: e("/paie/circuit") },
         { libelle: "Registre des bulletins", href: etat("bulletins") },
-        { libelle: "Import des résultats de paie", href: "/espace/etats/livre-de-paie", bientot: true },
+        { libelle: "Import des résultats de paie", href: e("/paie"), description: "Ouvrir la période, puis « Résultats de paie »" },
       ],
     },
     {

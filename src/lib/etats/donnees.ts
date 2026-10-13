@@ -7,7 +7,47 @@ import { valeurLiee } from "@/lib/supabase/relations";
 import type { CodeEtat } from "./catalogue";
 
 export type Colonne = { cle: string; libelle: string; nombre?: boolean };
-export type ResultatEtat = { colonnes: Colonne[]; lignes: Record<string, string | number>[]; total?: Record<string, string | number> };
+export type ResultatEtat = {
+  colonnes: Colonne[];
+  lignes: Record<string, string | number>[];
+  total?: Record<string, string | number>;
+  // Liens complémentaires affichés sous le tableau (ex. reçus pour solde de tout compte)
+  liens?: { libelle: string; href: string }[];
+  remarque?: string;
+};
+
+// Colonnes des résultats de paie importés (livre de paie)
+const COLONNES_PAIE: Colonne[] = [
+  { cle: "jours_travailles", libelle: "Jours", nombre: true },
+  { cle: "salaire_base", libelle: "Salaire de base", nombre: true },
+  { cle: "heures_sup", libelle: "Heures sup.", nombre: true },
+  { cle: "primes", libelle: "Primes", nombre: true },
+  { cle: "avantages_nature", libelle: "Avantages en nature", nombre: true },
+  { cle: "brut", libelle: "Brut", nombre: true },
+  { cle: "brut_imposable", libelle: "Brut imposable", nombre: true },
+  { cle: "cnss_salarie", libelle: "CNSS salarié", nombre: true },
+  { cle: "cnamgs_salarie", libelle: "CNAMGS salarié", nombre: true },
+  { cle: "impot_revenu", libelle: "IRPP / ITS", nombre: true },
+  { cle: "autres_retenues", libelle: "Autres retenues", nombre: true },
+  { cle: "net_a_payer", libelle: "Net à payer", nombre: true },
+  { cle: "cnss_employeur", libelle: "CNSS employeur", nombre: true },
+  { cle: "cnamgs_employeur", libelle: "CNAMGS employeur", nombre: true },
+  { cle: "autres_charges_employeur", libelle: "Autres charges patronales", nombre: true },
+  { cle: "cout_total", libelle: "Coût total employeur", nombre: true },
+];
+const CHAMPS_PAIE =
+  "jours_travailles, salaire_base, heures_sup, primes, avantages_nature, brut, brut_imposable, cnss_salarie, cnamgs_salarie, impot_revenu, autres_retenues, net_a_payer, cnss_employeur, cnamgs_employeur, autres_charges_employeur, rubriques";
+const SANS_RESULTATS = "Aucun résultat de paie importé pour cette sélection : importez l'Excel du logiciel de paie depuis la période de paie (Paie → Périodes et bulletins → Résultats de paie).";
+
+type LignePaie = Record<string, unknown> & { rubriques?: Record<string, number> | null };
+const n = (v: unknown) => (v === null || v === undefined ? 0 : Number(v));
+
+// Totaux des colonnes chiffrées
+function totaliser(colonnes: Colonne[], lignes: Record<string, string | number>[], libelle: string) {
+  const total: Record<string, string | number> = { [colonnes[0].cle]: libelle };
+  for (const c of colonnes) if (c.nombre) total[c.cle] = lignes.reduce((s, l) => s + (typeof l[c.cle] === "number" ? (l[c.cle] as number) : 0), 0);
+  return total;
+}
 
 const date = (d: string | null | undefined) => (d ? d.split("-").reverse().join("/") : "");
 const nom = (lie: unknown) => `${valeurLiee(lie, "nom") ?? ""} ${valeurLiee(lie, "prenoms") ?? ""}`.trim();
@@ -286,6 +326,137 @@ export async function chargerEtat(
           statut: STATUTS_RECLAMATION[r.statut as StatutReclamation].libelle,
           resolue: date(r.resolue_le?.slice(0, 10)),
         })),
+      };
+    }
+
+    case "livre-de-paie": {
+      const { data: periode } = await supabase.from("periodes_paie").select("id").eq("entreprise_id", entrepriseId).eq("annee", annee).eq("mois", mois).maybeSingle();
+      const { data } = periode
+        ? await supabase.from("resultats_paie").select(`${CHAMPS_PAIE}, salaries(matricule, nom, prenoms)`).eq("periode_id", periode.id)
+        : { data: [] as LignePaie[] };
+      const resultats = (data ?? []) as LignePaie[];
+      // Les autres colonnes du fichier (rubriques) s'ajoutent à droite
+      const rubriques = [...new Set(resultats.flatMap((r) => Object.keys(r.rubriques ?? {})))].sort((a, b) => a.localeCompare(b, "fr"));
+      const colonnes: Colonne[] = [
+        { cle: "matricule", libelle: "Matricule" },
+        { cle: "nom", libelle: "Nom et prénoms" },
+        ...COLONNES_PAIE,
+        ...rubriques.map((r) => ({ cle: `rub:${r}`, libelle: r, nombre: true })),
+      ];
+      const lignes = resultats
+        .map((r) => {
+          const ligne: Record<string, string | number> = { matricule: valeurLiee(r.salaries, "matricule") ?? "", nom: nom(r.salaries) };
+          for (const c of COLONNES_PAIE) if (c.cle !== "cout_total" && r[c.cle] !== null && r[c.cle] !== undefined) ligne[c.cle] = n(r[c.cle]);
+          ligne.cout_total = n(r.brut) + n(r.cnss_employeur) + n(r.cnamgs_employeur) + n(r.autres_charges_employeur);
+          for (const k of rubriques) if (r.rubriques?.[k] !== undefined) ligne[`rub:${k}`] = Number(r.rubriques[k]);
+          return ligne;
+        })
+        .sort((a, b) => String(a.nom).localeCompare(String(b.nom), "fr"));
+      return { colonnes, lignes, total: lignes.length ? totaliser(colonnes, lignes, "Total") : undefined, remarque: lignes.length ? undefined : SANS_RESULTATS };
+    }
+
+    case "solde-tout-compte": {
+      const { data: sortis } = await supabase
+        .from("salaries")
+        .select("id, matricule, nom, prenoms, date_sortie, motif_sortie")
+        .eq("entreprise_id", entrepriseId)
+        .gte("date_sortie", debut)
+        .lte("date_sortie", fin)
+        .order("date_sortie");
+      const { data: periode } = await supabase.from("periodes_paie").select("id").eq("entreprise_id", entrepriseId).eq("annee", annee).eq("mois", mois).maybeSingle();
+      const ids = (sortis ?? []).map((x) => x.id);
+      const { data: resultats } =
+        periode && ids.length
+          ? await supabase.from("resultats_paie").select("salarie_id, brut, net_a_payer, rubriques").eq("periode_id", periode.id).in("salarie_id", ids)
+          : { data: [] as { salarie_id: string; brut: number | null; net_a_payer: number | null; rubriques: Record<string, number> | null }[] };
+      const resultatDe = new Map((resultats ?? []).map((r) => [r.salarie_id, r]));
+      const lignes = (sortis ?? []).map((x) => {
+        const r = resultatDe.get(x.id);
+        return {
+          matricule: x.matricule,
+          nom: `${x.nom} ${x.prenoms}`,
+          sortie: date(x.date_sortie),
+          motif: x.motif_sortie ?? "",
+          brut: r ? n(r.brut) : "",
+          net: r ? n(r.net_a_payer) : "Non importé",
+        };
+      });
+      return {
+        colonnes: [
+          { cle: "matricule", libelle: "Matricule" },
+          { cle: "nom", libelle: "Nom et prénoms" },
+          { cle: "sortie", libelle: "Date de sortie" },
+          { cle: "motif", libelle: "Motif" },
+          { cle: "brut", libelle: "Brut du mois", nombre: true },
+          { cle: "net", libelle: "Net versé (solde de tout compte)", nombre: true },
+        ],
+        lignes,
+        liens: (sortis ?? [])
+          .filter((x) => resultatDe.has(x.id))
+          .map((x) => ({ libelle: `Reçu pour solde de tout compte — ${x.nom} ${x.prenoms}`, href: `/espace/etats/solde-tout-compte/recu?entreprise=${entrepriseId}&salarie=${x.id}&mois=${annee}-${String(mois).padStart(2, "0")}` })),
+        remarque: lignes.length ? undefined : "Aucun salarié sorti ce mois-ci.",
+      };
+    }
+
+    case "dts":
+    case "das": {
+      const { data } = await supabase
+        .from("resultats_paie")
+        .select(`${CHAMPS_PAIE}, salarie_id, periodes_paie!inner(annee, mois), salaries(matricule, nom, prenoms, numero_cnss)`)
+        .eq("entreprise_id", entrepriseId)
+        .eq("periodes_paie.annee", annee);
+      // Cumuls de l'année par salarié
+      const parSalarie = new Map<string, { salarie: unknown; mois: Set<number>; sommes: Record<string, number> }>();
+      for (const r of (data ?? []) as LignePaie[]) {
+        const id = String(r.salarie_id);
+        const x = parSalarie.get(id) ?? { salarie: r.salaries, mois: new Set<number>(), sommes: {} };
+        x.mois.add(Number(valeurLiee(r.periodes_paie, "mois")));
+        for (const c of COLONNES_PAIE) if (c.cle !== "cout_total") x.sommes[c.cle] = (x.sommes[c.cle] ?? 0) + n(r[c.cle]);
+        parSalarie.set(id, x);
+      }
+      const base = (x: { salarie: unknown; mois: Set<number> }) => ({
+        matricule: valeurLiee(x.salarie, "matricule") ?? "",
+        cnss: valeurLiee(x.salarie, "numero_cnss") ?? "",
+        nom: nom(x.salarie),
+        mois: x.mois.size,
+      });
+      const colonnes: Colonne[] =
+        code === "dts"
+          ? [
+              { cle: "matricule", libelle: "Matricule" },
+              { cle: "nom", libelle: "Nom et prénoms" },
+              { cle: "mois", libelle: "Mois payés", nombre: true },
+              { cle: "brut", libelle: "Brut annuel", nombre: true },
+              { cle: "avantages_nature", libelle: "Avantages en nature", nombre: true },
+              { cle: "brut_imposable", libelle: "Brut imposable annuel", nombre: true },
+              { cle: "impot_revenu", libelle: "IRPP / ITS retenu", nombre: true },
+              { cle: "net_a_payer", libelle: "Net annuel versé", nombre: true },
+            ]
+          : [
+              { cle: "matricule", libelle: "Matricule" },
+              { cle: "cnss", libelle: "N° CNSS" },
+              { cle: "nom", libelle: "Nom et prénoms" },
+              { cle: "mois", libelle: "Mois payés", nombre: true },
+              { cle: "brut", libelle: "Salaire brut annuel", nombre: true },
+              { cle: "cnss_salarie", libelle: "CNSS salarié", nombre: true },
+              { cle: "cnss_employeur", libelle: "CNSS employeur", nombre: true },
+              { cle: "cnamgs_salarie", libelle: "CNAMGS salarié", nombre: true },
+              { cle: "cnamgs_employeur", libelle: "CNAMGS employeur", nombre: true },
+            ];
+      const lignes = [...parSalarie.values()]
+        .map((x) => {
+          const ligne: Record<string, string | number> = base(x);
+          for (const c of colonnes) if (c.nombre && c.cle !== "mois") ligne[c.cle] = Math.round((x.sommes[c.cle] ?? 0) * 100) / 100;
+          return ligne;
+        })
+        .sort((a, b) => String(a.nom).localeCompare(String(b.nom), "fr"));
+      return {
+        colonnes,
+        lignes,
+        total: lignes.length ? totaliser(colonnes, lignes, "Total") : undefined,
+        remarque: lignes.length
+          ? "Présentation générique des cumuls annuels : elle sera adaptée au formulaire officiel dès réception du modèle."
+          : `Aucun résultat de paie importé pour ${annee}.`,
       };
     }
 

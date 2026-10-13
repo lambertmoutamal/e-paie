@@ -61,3 +61,13 @@ export function BoutonsExport({
     </div>
   );
 }
+
+// Bouton « Imprimer » seul (reçus, documents à signer)
+export function BoutonImprimer({ libelle = "Imprimer" }: { libelle?: string }) {
+  return (
+    <button type="button" onClick={() => window.print()} className={`${classesBouton("principal", "petit")} print:hidden`}>
+      <Printer size={14} aria-hidden />
+      {libelle}
+    </button>
+  );
+}

@@ -188,6 +188,14 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
   réclamations à traiter apparaissent aussi dans « À faire ». Bulletin → gestionnaire de paie ; autres
   sujets → RH ; à défaut, administrateurs.
 
+## Résultats de paie et états de paie
+
+- Chaque mois : **Paie → Périodes et bulletins** → ouvrez la période → carte **« Résultats de paie (Excel) »**.
+  Choisissez l'Excel exporté du logiciel de paie (.xlsx, une ligne par salarié avec une colonne « Matricule »),
+  vérifiez la correspondance des colonnes, puis cliquez sur « Importer ».
+- Les états se trouvent dans le menu **États** : livre de paie, soldes de tout compte (avec le reçu à imprimer),
+  DTS et DAS (choisissez l'année ; par défaut l'année écoulée).
+
 ## Commandes utiles
 
 | Commande | Rôle |

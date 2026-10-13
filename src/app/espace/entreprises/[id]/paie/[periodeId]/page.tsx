@@ -65,6 +65,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
     supabase.rpc("nb_validateurs_possibles", { p_periode_id: periodeId }),
   ]);
   if (!entreprise || !periode) notFound();
+  const { count: nbResultats } = await supabase.from("resultats_paie").select("id", { count: "exact", head: true }).eq("periode_id", periodeId);
 
   const titre = libellePeriode(periode.annee, periode.mois);
   const statut = STATUTS_PERIODE[periode.statut as StatutPeriode];
@@ -108,6 +109,17 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
         <Statistique icone={FileCheck2} libelle="Bulletins déposés" valeur={bulletins?.length ?? 0} />
         <Statistique icone={CircleAlert} libelle="Bulletins manquants" valeur={manquants} />
       </div>
+
+      <Link
+        href={`/espace/entreprises/${id}/paie/${periodeId}/resultats`}
+        className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-bordure bg-surface px-4 py-3 text-sm shadow-[0_1px_3px_rgba(27,30,46,.05)] hover:border-marque/40"
+      >
+        <span>
+          <strong>Résultats de paie (Excel)</strong> :{" "}
+          {nbResultats ? `${nbResultats} salarié(s) importé(s)` : "aucun import pour ce mois"} — ils alimentent le livre de paie, la DTS et la DAS.
+        </span>
+        <span className="font-semibold text-marque">{nbResultats ? "Voir / réimporter" : "Importer"} →</span>
+      </Link>
 
       <Carte
         titre="Circuit de validation"

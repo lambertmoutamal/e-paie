@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Skills Claude Code installés (code externe, hors application)
     ".claude/**",
+    // Lecteur PDF copié tel quel (code externe)
+    "public/pdfjs/**",
   ]),
 ]);
 

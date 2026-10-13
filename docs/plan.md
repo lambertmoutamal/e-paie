@@ -26,6 +26,8 @@ Organisation des modules inspirée des SIRH du marché (référence : Nibelis), 
 | — | Congés prévisionnels ; contrats : import du document signé ou rédaction dans DématPaie (modèles, import Word, champs automatiques, PDF) |
 | — | Réglages personnalisables des congés (types, ancienneté, règles, qui valide), date du dernier congé |
 | 11 | Réclamations : ouverture depuis le portail (sujet, bulletin, pièce jointe), échanges, résolution et clôture, traitement selon le sujet, alertes |
+| — | Nouvelle interface : navigation par groupes, tableau de bord (indicateurs, graphiques, pyramide des âges), choix de l'entreprise à la connexion, états exportables |
+| — | Import Excel mensuel des résultats de paie ; livre de paie, soldes de tout compte (reçu imprimable), DTS et DAS (format générique) |
 
 ## À venir
 

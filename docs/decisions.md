@@ -163,3 +163,15 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   (effectif, **pyramide des âges**, contrats, hommes/femmes, absences par type, réclamations par sujet).
   La liste « À faire » a sa propre page, ouverte par la cloche.
 
+
+## 2026-10-13 — Résultats de paie (import Excel mensuel) et états de paie
+
+- Les montants de paie viennent de l'**Excel du logiciel de paie**, importé chaque mois dans la période
+  (Paie → période → « Résultats de paie »). Une ligne par salarié, rattachée par le **matricule**.
+  Les colonnes sont reconnues d'après leur titre (brut, CNSS, IRPP, net…) et la correspondance peut être
+  corrigée avant l'envoi ; toute autre colonne chiffrée est gardée comme « rubrique ».
+- Un nouvel import **remplace** les lignes des mêmes salariés. Import et suppression possibles seulement
+  par ceux qui déposent les bulletins, et seulement tant que la période est **en brouillon**.
+- États produits : **livre de paie** (mensuel, avec coût employeur et rubriques), **soldes de tout compte**
+  (salariés sortis dans le mois + **reçu imprimable** à faire signer, montant en lettres), **DTS** et **DAS**
+  (cumuls annuels par salarié). DTS et DAS sont au **format générique** en attendant les modèles officiels.
