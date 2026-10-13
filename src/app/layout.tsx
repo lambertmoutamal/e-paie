@@ -21,7 +21,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="fr" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* Certaines extensions du navigateur (antivirus, bloqueurs) ajoutent des attributs à <body>
+          avant le chargement : on ignore ces seules différences (le contenu reste contrôlé). */}
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
