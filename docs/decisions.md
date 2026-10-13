@@ -185,3 +185,5 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   chaque page). Une page d'une autre entreprise (lien d'une alerte) demande d'abord de basculer.
 - Changement d'entreprise : menu du compte (initiales, en haut à droite). La page « À faire » indique
   seulement le nombre d'actions en attente dans les autres entreprises.
+- L'écran de choix (`/choix-entreprise`) est **hors du cadre de l'espace** : ni menus, ni recherche, ni cloche ;
+  seulement le logo et « Se déconnecter ». « Changer d'entreprise » quitte d'abord l'entreprise actuelle.
