@@ -239,3 +239,7 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   du premier téléchargement enregistrées (non modifiables), visibles par l'employeur, apposées sur
   l'« exemplaire émargé » (copie employeur générée à la demande, avec l'empreinte du bulletin d'origine).
 - Le salarié en est informé dans son espace (« Télécharger votre bulletin vaut accusé de réception »).
+- 2026-10-15 : **Twilio n'offre pas d'essai au Gabon** (constaté sur la console). Ajout de l'envoi par
+  **Meta (WhatsApp Cloud API)**, prioritaire s'il est configuré (numéro de test gratuit pour les essais,
+  pas d'intermédiaire en production). Twilio reste possible ; sans configuration, envoi simulé.
+  Retours « reçu / lu / échec » de Meta acceptés seulement s'ils sont signés avec le secret de l'application.

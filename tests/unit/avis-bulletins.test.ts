@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, test } from "vitest";
-import { messageAvisBulletin, signatureTwilioValide, statutDepuisTwilio, statutSuivant } from "@/lib/notifications/regles-avis";
+import { corpsMessageMeta, messageAvisBulletin, signatureMetaValide, signatureTwilioValide, statutDepuisMeta, statutDepuisTwilio, statutSuivant } from "@/lib/notifications/regles-avis";
 
 describe("Avis de bulletin par WhatsApp", () => {
   test("le message ne contient que le prénom, la période, l'entreprise et le lien", () => {
@@ -29,5 +29,38 @@ describe("Avis de bulletin par WhatsApp", () => {
     expect(signatureTwilioValide("autre-jeton", url, params, signature)).toBe(false);
     expect(signatureTwilioValide("jeton-secret", url, { ...params, MessageStatus: "read" }, signature)).toBe(false);
     expect(signatureTwilioValide("jeton-secret", url, params, null)).toBe(false);
+  });
+});
+
+describe("Envoi par Meta (WhatsApp Cloud API)", () => {
+  const message = { texte: "Bonjour Awa", variables: { "2": "octobre 2026", "1": "Awa", "10": "dix" } };
+
+  test("modèle approuvé : variables dans l'ordre {{1}}, {{2}}… ; numéro sans « + »", () => {
+    expect(corpsMessageMeta("+241 77 12 34 56", message, { nom: "avis_bulletin", langue: "fr" })).toEqual({
+      messaging_product: "whatsapp",
+      to: "24177123456",
+      type: "template",
+      template: {
+        name: "avis_bulletin",
+        language: { code: "fr" },
+        components: [{ type: "body", parameters: [{ type: "text", text: "Awa" }, { type: "text", text: "octobre 2026" }, { type: "text", text: "dix" }] }],
+      },
+    });
+  });
+
+  test("sans modèle : simple texte", () => {
+    expect(corpsMessageMeta("+24177123456", message)).toEqual({ messaging_product: "whatsapp", to: "24177123456", type: "text", text: { body: "Bonjour Awa" } });
+  });
+
+  test("statuts Meta et signature des appels", () => {
+    expect(statutDepuisMeta("delivered")).toBe("recu");
+    expect(statutDepuisMeta("read")).toBe("lu");
+    expect(statutDepuisMeta("failed")).toBe("echec");
+    const corps = '{"entry":[]}';
+    const signature = `sha256=${createHmac("sha256", "secret-app").update(corps).digest("hex")}`;
+    expect(signatureMetaValide("secret-app", corps, signature)).toBe(true);
+    expect(signatureMetaValide("secret-app", `${corps} `, signature)).toBe(false);
+    expect(signatureMetaValide("autre", corps, signature)).toBe(false);
+    expect(signatureMetaValide("secret-app", corps, null)).toBe(false);
   });
 });

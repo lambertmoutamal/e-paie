@@ -58,3 +58,49 @@ export function signatureTwilioValide(jeton: string, url: string, parametres: Re
   const b = Buffer.from(signature);
   return a.length === b.length && timingSafeEqual(a, b);
 }
+
+// ---------------------------------------------------------------------
+// Meta (WhatsApp Cloud API)
+// ---------------------------------------------------------------------
+
+// Statut signalé par Meta → statut de l'avis
+export function statutDepuisMeta(statutMeta: string): StatutAvis | null {
+  switch (statutMeta) {
+    case "sent":
+      return "envoye";
+    case "delivered":
+      return "recu";
+    case "read":
+      return "lu";
+    case "failed":
+      return "echec";
+    default:
+      return null;
+  }
+}
+
+// Corps du message pour Meta : modèle approuvé (variables {{1}}, {{2}}… dans l'ordre)
+// ou, sans modèle, simple texte (accepté seulement si le destinataire a écrit dans les 24 h).
+export function corpsMessageMeta(numero: string, message: { texte: string; variables: Record<string, string> }, modele?: { nom: string; langue: string }) {
+  const to = numero.replace(/\D/g, "");
+  if (!modele) return { messaging_product: "whatsapp", to, type: "text", text: { body: message.texte } };
+  const parametres = Object.keys(message.variables)
+    .sort((a, b) => Number(a) - Number(b))
+    .map((cle) => ({ type: "text", text: message.variables[cle] }));
+  return {
+    messaging_product: "whatsapp",
+    to,
+    type: "template",
+    template: { name: modele.nom, language: { code: modele.langue }, components: parametres.length ? [{ type: "body", parameters: parametres }] : [] },
+  };
+}
+
+// Vérifie que l'appel vient bien de Meta (en-tête X-Hub-Signature-256 = « sha256=… »,
+// HMAC-SHA256 du corps brut avec le secret de l'application).
+export function signatureMetaValide(secret: string, corpsBrut: string, entete: string | null): boolean {
+  if (!secret || !entete?.startsWith("sha256=")) return false;
+  const attendue = `sha256=${createHmac("sha256", secret).update(corpsBrut, "utf8").digest("hex")}`;
+  const a = Buffer.from(attendue);
+  const b = Buffer.from(entete);
+  return a.length === b.length && timingSafeEqual(a, b);
+}

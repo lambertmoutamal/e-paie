@@ -179,7 +179,21 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
   période indique « Émargé le … » pour chaque bulletin, et le lien « Exemplaire émargé » donne la copie
   employeur avec la mention d'émargement (le fichier d'origine n'est pas modifié). Le registre des
   bulletins (menu États) a une colonne « Émargé le ».
-- **Configuration** (`.env.local`) : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` et
+- **Envoi par Meta (recommandé, Twilio n'offrant pas d'essai au Gabon)** :
+  1. developers.facebook.com → **Créer une application** (type « Entreprise ») → ajouter le produit **WhatsApp**.
+  2. Page **Configuration de l'API** : Meta fournit un **numéro de test**. Copiez le **jeton d'accès** et
+     l'**identifiant du numéro de téléphone** dans `META_WHATSAPP_JETON` et `META_WHATSAPP_NUMERO_ID`.
+  3. Dans « À », **ajoutez votre numéro** (code de vérification reçu sur WhatsApp) : le numéro de test
+     n'écrit qu'aux numéros ajoutés (5 au maximum).
+  4. Essai sans modèle : envoyez d'abord un message WhatsApp au numéro de test (fenêtre de 24 h), puis
+     publiez une paie d'essai. En production : créez le modèle `avis_bulletin` (catégorie « Utilité »,
+     français, texte ci-dessus) dans WhatsApp Manager et mettez son nom dans `META_WHATSAPP_MODELE_BULLETIN`.
+  5. Le jeton de la page de test dure 24 h : pour la production, créez un jeton permanent
+     (Paramètres de l'entreprise → Utilisateurs système).
+  6. Suivi « reçu / lu » : dans WhatsApp → Configuration, adresse de rappel `https://<votre site>/api/meta/whatsapp`,
+     jeton de vérification = `META_WHATSAPP_JETON_VERIFICATION`, abonnement au champ « messages » ;
+     `META_APP_SECRET` = clé secrète de l'application (Paramètres → Général).
+- **Ou par Twilio** (`.env.local`) : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` et
   `TWILIO_WHATSAPP_MODELE_BULLETIN` (identifiant `HX…` du modèle ci-dessus, approuvé par WhatsApp,
   catégorie « Utility »). Twilio signale « reçu / lu / échec » à l'adresse `/api/twilio/statut` (appel signé).
   Sans configuration, en développement, les messages s'affichent dans la console.

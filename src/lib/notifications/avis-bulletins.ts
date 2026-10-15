@@ -3,7 +3,7 @@ import { clientSupabaseAdmin } from "@/lib/supabase/admin";
 import { adresseSite } from "@/lib/email/envoyer";
 import { libellePeriode } from "@/lib/bulletins/regles";
 import { envoyerWhatsApp } from "./whatsapp";
-import { messageAvisBulletin } from "./regles-avis";
+import { messageAvisBulletin, statutSuivant, type StatutAvis } from "./regles-avis";
 
 export type BilanAvis = { envoyes: number; echecs: number; sansNumero: number; sansAccord: number; dejaPrevenus: number };
 
@@ -27,9 +27,6 @@ export async function envoyerAvisBulletins(periodeId: string): Promise<BilanAvis
   const prevenus = new Set((avis ?? []).filter((a) => a.statut !== "echec").map((a) => a.bulletin_id));
 
   const lien = `${adresseSite()}/portail`;
-  const jeton = process.env.TWILIO_AUTH_TOKEN;
-  const adresseRetour = jeton ? `${adresseSite()}/api/twilio/statut` : undefined;
-  const modele = process.env.TWILIO_WHATSAPP_MODELE_BULLETIN;
 
   for (const b of bulletins ?? []) {
     const s = b.salaries as unknown as { prenoms: string; telephone: string | null; accord_whatsapp_le: string | null } | null;
@@ -48,7 +45,7 @@ export async function envoyerAvisBulletins(periodeId: string): Promise<BilanAvis
     const message = messageAvisBulletin({ prenoms: s.prenoms, periode: libellePeriode(periode.annee, periode.mois).toLowerCase(), entreprise, lien });
     const trace = { bulletin_id: b.id, entreprise_id: periode.entreprise_id, periode_id: periodeId, salarie_id: b.salarie_id };
     try {
-      const sid = await envoyerWhatsApp(s.telephone, message, { modele, adresseRetour });
+      const sid = await envoyerWhatsApp(s.telephone, message, "bulletin");
       await admin.from("avis_bulletins").insert({ ...trace, statut: sid ? "envoye" : "simule", message_sid: sid });
       bilan.envoyes++;
     } catch (erreur) {
@@ -58,4 +55,18 @@ export async function envoyerAvisBulletins(periodeId: string): Promise<BilanAvis
     }
   }
   return bilan;
+}
+
+// Retour du fournisseur (Meta ou Twilio) : met à jour l'avis correspondant, sans jamais
+// faire reculer son statut (« lu » reste « lu »).
+export async function mettreAJourAvis(identifiant: string, nouveau: StatutAvis, erreur?: string): Promise<void> {
+  const admin = clientSupabaseAdmin();
+  const { data: avis } = await admin.from("avis_bulletins").select("id, statut").eq("message_sid", identifiant).maybeSingle();
+  if (!avis) return;
+  const statut = statutSuivant(avis.statut as StatutAvis, nouveau);
+  if (statut === avis.statut) return;
+  await admin
+    .from("avis_bulletins")
+    .update({ statut, mis_a_jour_le: new Date().toISOString(), erreur: statut === "echec" ? (erreur ?? "Échec signalé par le fournisseur").slice(0, 300) : null })
+    .eq("id", avis.id);
 }
