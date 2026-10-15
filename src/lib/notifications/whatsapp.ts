@@ -26,7 +26,7 @@ export async function envoyerWhatsApp(numero: string, message: { texte: string; 
 async function envoyerParMeta(numero: string, message: { texte: string; variables: Record<string, string> }, usage: UsageWhatsApp): Promise<string | null> {
   const nomModele = usage === "bulletin" ? process.env.META_WHATSAPP_MODELE_BULLETIN : process.env.META_WHATSAPP_MODELE_ALERTE;
   const corps = corpsMessageMeta(numero, message, nomModele ? { nom: nomModele, langue: process.env.META_WHATSAPP_LANGUE || "fr" } : undefined);
-  const version = process.env.META_WHATSAPP_VERSION || "v22.0";
+  const version = process.env.META_WHATSAPP_VERSION || "v25.0";
   const reponse = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(process.env.META_WHATSAPP_NUMERO_ID!)}/messages`, {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.META_WHATSAPP_JETON}`, "Content-Type": "application/json" },
