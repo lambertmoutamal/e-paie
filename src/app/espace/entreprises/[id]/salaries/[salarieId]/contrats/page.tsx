@@ -9,6 +9,7 @@ import { Badge, Carte, classesBouton, EtatVide, Page } from "@/components/ui";
 import { EnTeteSalarie } from "../en-tete-salarie";
 import { chargerDossier, lienFichier } from "../donnees";
 import { activerContrat, ajouterAvenant, creerContrat, joindreContratSigne, renouvelerContrat, terminerContrat } from "../actions-dossier";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Contrats" };
 
@@ -41,6 +42,7 @@ type Modele = { id: string; nom: string; categorie: string };
 const OPTIONS_TYPE = Object.entries(TYPES_CONTRAT).map(([valeur, libelle]) => ({ valeur, libelle }));
 
 export default async function PageContrats({ params }: PageProps<"/espace/entreprises/[id]/salaries/[salarieId]/contrats">) {
+  await connection(); // page calculée à chaque visite (elle lit la date du jour)
   const { id, salarieId } = await params;
   const { supabase, salarie, entreprise, modifiable } = await chargerDossier(id, salarieId);
 

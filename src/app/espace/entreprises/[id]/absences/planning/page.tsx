@@ -8,6 +8,7 @@ import { ActionEnLigne, Champ, ChoixListe, Formulaire } from "@/components/formu
 import { Carte, classesBouton, EtatVide, Page } from "@/components/ui";
 import { confirmerPrevision, prevoirConge, supprimerPrevision } from "../actions";
 import { chargerContexte, EnTeteAbsences } from "../commun";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Planning des absences" };
 
@@ -25,6 +26,7 @@ function moisDecale(annee: number, mois: number, decalage: number) {
 }
 
 export default async function PagePlanning({ params, searchParams }: PageProps<"/espace/entreprises/[id]/absences/planning">) {
+  await connection(); // page calculée à chaque visite (elle lit la date du jour)
   const { id } = await params;
   const { mois: parametre } = await searchParams;
   const maintenant = new Date();
