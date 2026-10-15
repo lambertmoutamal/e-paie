@@ -229,3 +229,19 @@ export async function importerSalaries(
   refresh();
   return { crees, misAJour, ...contrats };
 }
+
+// Accord du salarié pour recevoir l'avis de ses bulletins par WhatsApp (recueilli par
+// l'employeur, par exemple à l'embauche). Le salarié peut aussi le donner ou le retirer
+// lui-même depuis son espace.
+export async function definirAccordWhatsAppSalarie(entrepriseId: string, salarieId: string, accord: boolean): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const { data, error } = await supabase
+    .from("salaries")
+    .update({ accord_whatsapp_le: accord ? new Date().toISOString() : null })
+    .eq("id", salarieId)
+    .eq("entreprise_id", entrepriseId)
+    .select("id");
+  if (error || !data?.length) return { erreur: messageErreurBase(error?.code ?? "42501") };
+  refresh();
+  return { succes: accord ? "Accord enregistré." : "Accord retiré." };
+}

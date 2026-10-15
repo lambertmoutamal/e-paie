@@ -272,10 +272,11 @@ export async function chargerEtat(
       if (!periode) return { colonnes: [{ cle: "info", libelle: "Information" }], lignes: [{ info: `Aucune période de paie pour ${libellePeriode(annee, mois)}.` }] };
       const { data } = await supabase
         .from("bulletins")
-        .select("fichier_nom, depose_le, empreinte_sha256, salaries(matricule, nom, prenoms)")
+        .select("fichier_nom, depose_le, empreinte_sha256, salaries(matricule, nom, prenoms), emargements_bulletins(emarge_le)")
         .eq("periode_id", periode.id)
         .order("depose_le");
       const statut = STATUTS_PERIODE[periode.statut as StatutPeriode].libelle;
+      const emarges = (data ?? []).filter((b) => valeurLiee(b.emargements_bulletins, "emarge_le")).length;
       return {
         colonnes: [
           { cle: "matricule", libelle: "Matricule" },
@@ -284,6 +285,7 @@ export async function chargerEtat(
           { cle: "depose", libelle: "Déposé le" },
           { cle: "statut", libelle: "Statut de la période" },
           { cle: "publie", libelle: "Publié le" },
+          { cle: "emarge", libelle: "Émargé le (reçu par le salarié)" },
           { cle: "empreinte", libelle: "Empreinte (SHA-256)" },
         ],
         lignes: (data ?? []).map((b) => ({
@@ -293,9 +295,10 @@ export async function chargerEtat(
           depose: date(b.depose_le?.slice(0, 10)),
           statut,
           publie: date(periode.publiee_le?.slice(0, 10)),
+          emarge: date(valeurLiee(b.emargements_bulletins, "emarge_le")?.slice(0, 10)) || "Non émargé",
           empreinte: b.empreinte_sha256,
         })),
-        total: { matricule: `${data?.length ?? 0} bulletin(s)` },
+        total: { matricule: `${data?.length ?? 0} bulletin(s)`, emarge: `${emarges} émargé(s)` },
       };
     }
 

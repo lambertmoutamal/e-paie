@@ -42,7 +42,7 @@ export async function alerterPaie(periodeId: string, seulementPour?: string): Pr
           commentaire: d.commentaire,
           lien,
         });
-        const envois = [envoyerEmail(d.email, emailActionPaie(contenu, lien))];
+        const envois: Promise<unknown>[] = [envoyerEmail(d.email, emailActionPaie(contenu, lien))];
         if (d.whatsapp) envois.push(envoyerWhatsApp(d.whatsapp, { texte: contenu.whatsapp, variables: contenu.variables }));
         const resultats = await Promise.allSettled(envois);
         for (const r of resultats) if (r.status === "rejected") console.error("Alerte de paie non envoyée :", r.reason);

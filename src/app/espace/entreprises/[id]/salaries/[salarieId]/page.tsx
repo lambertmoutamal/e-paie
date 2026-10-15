@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { LogOut, RotateCcw } from "lucide-react";
+import { LogOut, MessageCircle, RotateCcw } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { formaterDate } from "@/lib/abonnements/phases";
-import { Champ, Formulaire } from "@/components/formulaire";
+import { ActionEnLigne, Champ, Formulaire } from "@/components/formulaire";
 import { Carte, classesBouton, Page } from "@/components/ui";
 import { EnTeteSalarie } from "./en-tete-salarie";
-import { enregistrerSortie, modifierSalarie, reintegrerSalarie } from "../actions";
+import { definirAccordWhatsAppSalarie, enregistrerSortie, modifierSalarie, reintegrerSalarie } from "../actions";
 import { ChampsSalarie } from "../champs-salarie";
 
 export const metadata: Metadata = { title: "Fiche salarié" };
@@ -19,7 +19,7 @@ export default async function PageSalarie({ params }: PageProps<"/espace/entrepr
   const [{ data: salarie }, { data: entreprise }, { data: peutGerer }] = await Promise.all([
     supabase
       .from("salaries")
-      .select("id, matricule, nom, prenoms, sexe, date_naissance, nationalite, poste, localisation, date_embauche, telephone, email, adresse, numero_cnss, numero_cnamgs, banque, numero_compte, mode_paiement, statut, date_sortie, motif_sortie, modifie_le")
+      .select("id, matricule, nom, prenoms, sexe, date_naissance, nationalite, poste, localisation, date_embauche, telephone, email, adresse, numero_cnss, numero_cnamgs, banque, numero_compte, mode_paiement, accord_whatsapp_le, statut, date_sortie, motif_sortie, modifie_le")
       .eq("id", salarieId)
       .eq("entreprise_id", id)
       .maybeSingle(),
@@ -53,6 +53,26 @@ export default async function PageSalarie({ params }: PageProps<"/espace/entrepr
             <ChampsSalarie fiche={salarie} lectureSeule />
           </div>
         )}
+      </Carte>
+
+      <Carte titre="Avis de bulletin par WhatsApp" description="Message envoyé à la publication de la paie, avec le lien de l'espace salarié (jamais le bulletin lui-même).">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="flex items-center gap-2 text-sm">
+            <MessageCircle size={18} className={salarie.accord_whatsapp_le ? "text-emerald-600" : "text-doux"} aria-hidden />
+            {!salarie.telephone
+              ? "Aucun numéro de téléphone : ajoutez-le dans la fiche pour pouvoir prévenir ce salarié."
+              : salarie.accord_whatsapp_le
+                ? `Le salarié a accepté de recevoir les avis par WhatsApp (depuis le ${formaterDate(salarie.accord_whatsapp_le)}).`
+                : "Le salarié n'a pas encore accepté de recevoir les avis par WhatsApp."}
+          </p>
+          {modifiable && salarie.telephone && (
+            <ActionEnLigne
+              action={definirAccordWhatsAppSalarie.bind(null, id, salarie.id, !salarie.accord_whatsapp_le)}
+              libelle={salarie.accord_whatsapp_le ? "Retirer l'accord" : "Le salarié a donné son accord"}
+              variante={salarie.accord_whatsapp_le ? "discret" : "secondaire"}
+            />
+          )}
+        </div>
       </Carte>
 
       {modifiable && !sorti && (

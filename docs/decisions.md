@@ -229,3 +229,13 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   espèces, chèque, mobile money), **localisation** (lieu de travail) et **N° CNAMGS**.
 - La création automatique des salariés absents à partir de leur bulletin, essayée le 13/10, a été
   **retirée le 14/10** à la demande de l'utilisateur : le dépôt en masse ne crée jamais de salarié.
+
+## 2026-10-15 — Avis WhatsApp et émargement électronique des bulletins
+
+- Option retenue : **message WhatsApp avec un lien** vers l'espace salarié (jamais le PDF), envoyé à la
+  publication aux salariés qui ont un numéro et ont **donné leur accord** (fiche ou espace salarié).
+  Suivi par bulletin : envoyé, reçu, lu, échec ; bouton de renvoi aux salariés pas encore prévenus.
+- **Le téléchargement du bulletin par le salarié vaut émargement** (accusé de réception) : date et heure
+  du premier téléchargement enregistrées (non modifiables), visibles par l'employeur, apposées sur
+  l'« exemplaire émargé » (copie employeur générée à la demande, avec l'empreinte du bulletin d'origine).
+- Le salarié en est informé dans son espace (« Télécharger votre bulletin vaut accusé de réception »).

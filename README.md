@@ -169,6 +169,21 @@ Elles seules voient aussi un bandeau et une carte « À faire » dès qu'elles s
 
 Sans configuration Twilio, en développement, les messages WhatsApp s'affichent dans la console.
 
+## Avis de bulletin par WhatsApp et émargement électronique
+
+- À la **publication** de la paie, chaque salarié qui a un numéro et qui a **donné son accord** reçoit un
+  WhatsApp : « Bonjour {{1}}, votre bulletin de paie de {{2}} ({{3}}) est disponible. Consultez-le ici : {{4}} ».
+  Le bulletin ne passe jamais par WhatsApp : le lien ouvre l'espace salarié (connexion par code).
+- **Accord** : sur la fiche du salarié (« Le salarié a donné son accord ») ou par le salarié dans son espace.
+- **Émargement** : le téléchargement du bulletin par le salarié vaut accusé de réception. La page de la
+  période indique « Émargé le … » pour chaque bulletin, et le lien « Exemplaire émargé » donne la copie
+  employeur avec la mention d'émargement (le fichier d'origine n'est pas modifié). Le registre des
+  bulletins (menu États) a une colonne « Émargé le ».
+- **Configuration** (`.env.local`) : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` et
+  `TWILIO_WHATSAPP_MODELE_BULLETIN` (identifiant `HX…` du modèle ci-dessus, approuvé par WhatsApp,
+  catégorie « Utility »). Twilio signale « reçu / lu / échec » à l'adresse `/api/twilio/statut` (appel signé).
+  Sans configuration, en développement, les messages s'affichent dans la console.
+
 ## Congés et absences
 
 - Côté entreprise : ouvrez l'entreprise, puis le module **Congés & absences** (onglets

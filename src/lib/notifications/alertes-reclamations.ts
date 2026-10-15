@@ -8,7 +8,7 @@ import { envoyerWhatsApp } from "./whatsapp";
 // Appelées après la réponse à l'utilisateur : un échec d'envoi est seulement noté.
 
 async function envoyer(email: string | null, whatsapp: string | null, contenu: ReturnType<typeof contenuReponseSalarie>, lien: string) {
-  const envois: Promise<void>[] = [];
+  const envois: Promise<unknown>[] = [];
   if (email) envois.push(envoyerEmail(email, emailActionPaie(contenu, lien)));
   if (whatsapp) envois.push(envoyerWhatsApp(whatsapp, { texte: contenu.whatsapp, variables: contenu.variables }));
   for (const r of await Promise.allSettled(envois)) if (r.status === "rejected") console.error("Alerte de réclamation non envoyée :", r.reason);

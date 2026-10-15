@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CircleAlert, CircleCheck, FileCheck2, FileText, Lock, Send, Trash2, Undo2, Users } from "lucide-react";
+import { CircleAlert, CircleCheck, FileCheck2, FileSignature, FileText, Lock, MessageCircle, Send, Trash2, Undo2, Users } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { formaterDate } from "@/lib/abonnements/phases";
 import { libellePeriode, libelleRole, salariesAttendus, STATUTS_PERIODE, type EtapeCircuit, type StatutPeriode } from "@/lib/bulletins/regles";
 import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, classesBouton, EnTetePage, EtatVide, Page, Statistique } from "@/components/ui";
-import { annulerDepot, deciderEtape, publierPeriode, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
+import { annulerDepot, deciderEtape, publierPeriode, renvoyerAvis, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
+import { LIBELLES_AVIS, type StatutAvis } from "@/lib/notifications/regles-avis";
 import { DecisionEtape } from "./decision-etape";
 import { DepotUnique } from "./depot-bulletins";
 import { ModesDepot } from "./modes-depot";
@@ -43,7 +44,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
       .maybeSingle(),
     supabase
       .from("salaries")
-      .select("id, matricule, nom, prenoms, statut, date_embauche, date_sortie, telephone")
+      .select("id, matricule, nom, prenoms, statut, date_embauche, date_sortie, telephone, accord_whatsapp_le")
       .eq("entreprise_id", id)
       .order("nom")
       .order("prenoms"),
@@ -65,7 +66,14 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
     supabase.rpc("nb_validateurs_possibles", { p_periode_id: periodeId }),
   ]);
   if (!entreprise || !periode) notFound();
-  const { count: nbResultats } = await supabase.from("resultats_paie").select("id", { count: "exact", head: true }).eq("periode_id", periodeId);
+  const [{ count: nbResultats }, { data: avis }, { data: emargements }] = await Promise.all([
+    supabase.from("resultats_paie").select("id", { count: "exact", head: true }).eq("periode_id", periodeId),
+    supabase.from("avis_bulletins").select("bulletin_id, statut, erreur, envoye_le").eq("periode_id", periodeId).order("envoye_le"),
+    supabase.from("emargements_bulletins").select("bulletin_id, emarge_le").in("bulletin_id", (bulletins ?? []).map((b) => b.id)),
+  ]);
+  // Dernier avis par bulletin, et date d'émargement (premier téléchargement par le salarié)
+  const avisParBulletin = new Map((avis ?? []).map((a) => [a.bulletin_id, a]));
+  const emargeLe = new Map((emargements ?? []).map((e) => [e.bulletin_id, e.emarge_le as string]));
 
   const titre = libellePeriode(periode.annee, periode.mois);
   const statut = STATUTS_PERIODE[periode.statut as StatutPeriode];
@@ -84,6 +92,9 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
   const lignes = [...attendus, ...horsListe].sort((a, b) => Number(parSalarie.has(a.id)) - Number(parSalarie.has(b.id)));
   const manquants = attendus.filter((s) => !parSalarie.has(s.id)).length;
   const sansTelephone = (salaries ?? []).filter((s) => parSalarie.has(s.id) && !s.telephone).length;
+  const sansAccord = (salaries ?? []).filter((s) => parSalarie.has(s.id) && s.telephone && !s.accord_whatsapp_le).length;
+  const nbEmarges = (bulletins ?? []).filter((b) => emargeLe.has(b.id)).length;
+  const compteAvis = (statuts: StatutAvis[]) => [...avisParBulletin.values()].filter((a) => statuts.includes(a.statut as StatutAvis)).length;
   // Paie refusée par un validateur : elle revient en brouillon chez qui l'a préparée
   const dernierEvenement = historique?.[0];
   const refusee = periode.statut === "brouillon" && dernierEvenement?.action === "refus";
@@ -234,6 +245,36 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
               Publiée aux salariés le {formaterDate(periode.publiee_le)}.
             </p>
           )}
+          {periode.statut === "publiee" && (
+            <div className="flex flex-col gap-3 rounded-xl border border-bordure p-3">
+              <div className="grid gap-2 text-sm sm:grid-cols-2">
+                <p className="flex items-center gap-2">
+                  <MessageCircle size={16} className="text-emerald-600" aria-hidden />
+                  <span>
+                    <strong>Avis WhatsApp</strong> : {compteAvis(["envoye", "recu", "lu", "simule"])} envoyé(s), dont {compteAvis(["recu", "lu"])} reçu(s) et{" "}
+                    {compteAvis(["lu"])} lu(s){compteAvis(["echec"]) ? ` · ${compteAvis(["echec"])} échec(s)` : ""}
+                  </span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <FileSignature size={16} className="text-marque" aria-hidden />
+                  <span>
+                    <strong>Émargement</strong> : {nbEmarges} bulletin(s) sur {bulletins?.length ?? 0} téléchargé(s) par le salarié
+                  </span>
+                </p>
+              </div>
+              {(sansTelephone > 0 || sansAccord > 0) && (
+                <p className="text-xs text-doux">
+                  Non prévenus par WhatsApp : {sansTelephone} sans numéro de téléphone, {sansAccord} sans accord (à recueillir sur la fiche du salarié, ou par le
+                  salarié depuis son espace).
+                </p>
+              )}
+              {peutPublier === true && (
+                <div className="flex justify-end">
+                  <ActionEnLigne action={renvoyerAvis.bind(null, id, periodeId)} libelle="Envoyer l'avis aux salariés pas encore prévenus" />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </Carte>
 
@@ -304,6 +345,25 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
                   </div>
                   {!b && <Badge teinte="ambre">Manquant</Badge>}
                   {b && !idsAttendus.has(s.id) && <Badge>Hors période</Badge>}
+                  {b && periode.statut === "publiee" && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {avisParBulletin.has(b.id) && (
+                        <Badge teinte={avisParBulletin.get(b.id)!.statut === "echec" ? "rouge" : "bleu"}>
+                          WhatsApp : {LIBELLES_AVIS[avisParBulletin.get(b.id)!.statut as StatutAvis]}
+                        </Badge>
+                      )}
+                      {emargeLe.has(b.id) ? <Badge teinte="vert">Émargé le {formaterDate(emargeLe.get(b.id)!)}</Badge> : <Badge>Non émargé</Badge>}
+                      <a
+                        href={`/espace/entreprises/${id}/paie/${periodeId}/emarge/${b.id}`}
+                        target="_blank"
+                        rel="noopener"
+                        className="text-xs font-medium text-marque hover:underline"
+                        title="Exemplaire employeur avec la mention d'émargement"
+                      >
+                        Exemplaire émargé
+                      </a>
+                    </div>
+                  )}
                   {modifiable && (
                     <div className="flex items-start gap-2">
                       <DepotUnique entrepriseId={id} periodeId={periodeId} salarieId={s.id} libelle={b ? "Remplacer" : "Déposer"} />
