@@ -104,3 +104,19 @@ export function signatureMetaValide(secret: string, corpsBrut: string, entete: s
   const b = Buffer.from(entete);
   return a.length === b.length && timingSafeEqual(a, b);
 }
+
+// Refus de Meta ou Twilio → explication en français (affichée à l'utilisateur)
+export function expliquerRefusWhatsApp(message: string): string {
+  if (/131030|allowed list|liste/i.test(message)) {
+    return "Ce numéro n'est pas autorisé par le numéro de test Meta : ajoutez-le dans « Destinataire » (Meta → WhatsApp → Faites un essai) et confirmez le code reçu.";
+  }
+  if (/131047|131026|re-engagement|24 hours|24 h/i.test(message)) {
+    return "WhatsApp n'autorise ce message que si la personne vous a écrit dans les dernières 24 h : envoyez d'abord « bonjour » au numéro WhatsApp de DématPaie, puis réessayez.";
+  }
+  if (/\(401\)|OAuthException|code\D+190|expired|Session has expired|access token/i.test(message)) {
+    return "Le jeton Meta n'est plus valide (le jeton de test expire après 24 h) : générez-en un nouveau, collez-le dans .env.local et relancez DématPaie.";
+  }
+  if (/132001|template/i.test(message)) return "Le modèle de message WhatsApp est introuvable ou pas encore approuvé.";
+  if (/63016|63015|Twilio/i.test(message)) return `Twilio a refusé le message : ${message.slice(0, 160)}`;
+  return `Le message n'a pas pu être envoyé : ${message.slice(0, 200)}`;
+}

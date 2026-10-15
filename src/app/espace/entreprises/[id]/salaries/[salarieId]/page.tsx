@@ -6,7 +6,7 @@ import { formaterDate } from "@/lib/abonnements/phases";
 import { ActionEnLigne, Champ, Formulaire } from "@/components/formulaire";
 import { Carte, classesBouton, Page } from "@/components/ui";
 import { EnTeteSalarie } from "./en-tete-salarie";
-import { definirAccordWhatsAppSalarie, enregistrerSortie, modifierSalarie, reintegrerSalarie } from "../actions";
+import { definirAccordWhatsAppSalarie, enregistrerSortie, envoyerWhatsAppEssai, modifierSalarie, reintegrerSalarie } from "../actions";
 import { ChampsSalarie } from "../champs-salarie";
 
 export const metadata: Metadata = { title: "Fiche salarié" };
@@ -66,11 +66,14 @@ export default async function PageSalarie({ params }: PageProps<"/espace/entrepr
                 : "Le salarié n'a pas encore accepté de recevoir les avis par WhatsApp."}
           </p>
           {modifiable && salarie.telephone && (
-            <ActionEnLigne
-              action={definirAccordWhatsAppSalarie.bind(null, id, salarie.id, !salarie.accord_whatsapp_le)}
-              libelle={salarie.accord_whatsapp_le ? "Retirer l'accord" : "Le salarié a donné son accord"}
-              variante={salarie.accord_whatsapp_le ? "discret" : "secondaire"}
-            />
+            <div className="flex flex-wrap items-start gap-2">
+              {salarie.accord_whatsapp_le && <ActionEnLigne action={envoyerWhatsAppEssai.bind(null, id, salarie.id)} libelle="Envoyer un message WhatsApp d'essai" />}
+              <ActionEnLigne
+                action={definirAccordWhatsAppSalarie.bind(null, id, salarie.id, !salarie.accord_whatsapp_le)}
+                libelle={salarie.accord_whatsapp_le ? "Retirer l'accord" : "Le salarié a donné son accord"}
+                variante={salarie.accord_whatsapp_le ? "discret" : "secondaire"}
+              />
+            </div>
           )}
         </div>
       </Carte>

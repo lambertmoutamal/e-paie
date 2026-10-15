@@ -64,3 +64,13 @@ describe("Envoi par Meta (WhatsApp Cloud API)", () => {
     expect(signatureMetaValide("secret-app", corps, null)).toBe(false);
   });
 });
+
+describe("Refus WhatsApp expliqués en français", () => {
+  test("cas courants de Meta", async () => {
+    const { expliquerRefusWhatsApp } = await import("@/lib/notifications/regles-avis");
+    expect(expliquerRefusWhatsApp('Meta a refusé le message WhatsApp (400) : {"error":{"message":"(#131030) Recipient phone number not in allowed list"}}')).toContain("Destinataire");
+    expect(expliquerRefusWhatsApp("(#131047) Re-engagement message")).toContain("24 h");
+    expect(expliquerRefusWhatsApp('Meta a refusé le message WhatsApp (401) : {"error":{"type":"OAuthException","code":190}}')).toContain("jeton");
+    expect(expliquerRefusWhatsApp("autre chose")).toContain("autre chose");
+  });
+});

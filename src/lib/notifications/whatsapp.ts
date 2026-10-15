@@ -14,7 +14,8 @@ import { corpsMessageMeta } from "./regles-avis";
 // en production, il est simplement ignoré (l'email reste envoyé).
 // Renvoie l'identifiant du message chez le fournisseur, ou null si l'envoi est simulé.
 
-export type UsageWhatsApp = "alerte" | "bulletin";
+// « essai » : message de test en texte simple, sans modèle
+export type UsageWhatsApp = "alerte" | "bulletin" | "essai";
 
 export async function envoyerWhatsApp(numero: string, message: { texte: string; variables: Record<string, string> }, usage: UsageWhatsApp = "alerte"): Promise<string | null> {
   if (process.env.META_WHATSAPP_JETON && process.env.META_WHATSAPP_NUMERO_ID) return envoyerParMeta(numero, message, usage);
@@ -24,7 +25,7 @@ export async function envoyerWhatsApp(numero: string, message: { texte: string; 
 }
 
 async function envoyerParMeta(numero: string, message: { texte: string; variables: Record<string, string> }, usage: UsageWhatsApp): Promise<string | null> {
-  const nomModele = usage === "bulletin" ? process.env.META_WHATSAPP_MODELE_BULLETIN : process.env.META_WHATSAPP_MODELE_ALERTE;
+  const nomModele = usage === "bulletin" ? process.env.META_WHATSAPP_MODELE_BULLETIN : usage === "alerte" ? process.env.META_WHATSAPP_MODELE_ALERTE : undefined;
   const corps = corpsMessageMeta(numero, message, nomModele ? { nom: nomModele, langue: process.env.META_WHATSAPP_LANGUE || "fr" } : undefined);
   const version = process.env.META_WHATSAPP_VERSION || "v25.0";
   const reponse = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(process.env.META_WHATSAPP_NUMERO_ID!)}/messages`, {
@@ -42,7 +43,7 @@ async function envoyerParMeta(numero: string, message: { texte: string; variable
 async function envoyerParTwilio(numero: string, message: { texte: string; variables: Record<string, string> }, usage: UsageWhatsApp): Promise<string | null> {
   const sid = process.env.TWILIO_ACCOUNT_SID!;
   const jeton = process.env.TWILIO_AUTH_TOKEN!;
-  const modele = usage === "bulletin" ? process.env.TWILIO_WHATSAPP_MODELE_BULLETIN : process.env.TWILIO_WHATSAPP_MODELE;
+  const modele = usage === "bulletin" ? process.env.TWILIO_WHATSAPP_MODELE_BULLETIN : usage === "alerte" ? process.env.TWILIO_WHATSAPP_MODELE : undefined;
 
   const corps = new URLSearchParams({ From: process.env.TWILIO_WHATSAPP_FROM!, To: `whatsapp:${numero}` });
   // Twilio signale « reçu », « lu » ou « échec » à cette adresse (appels signés)
