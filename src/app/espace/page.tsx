@@ -7,7 +7,7 @@ import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { valeurLiee } from "@/lib/supabase/relations";
 import { TYPES_CONTRAT } from "@/lib/contrats/regles";
 import { SUJETS_RECLAMATION } from "@/lib/reclamations/regles";
-import { exigerEntrepriseCourante } from "@/lib/entreprise-courante";
+import { exigerEntrepriseCourante, idEntrepriseMemorise } from "@/lib/entreprise-courante";
 import { absencesDuMois, compter, evolutionEffectif, pyramideDesAges, repartitionSexe, type AbsenceStat, type SalarieStat } from "@/lib/tableau-de-bord/calculs";
 import type { Echeance } from "@/components/echeances";
 import { GraphiqueAnneau, GraphiqueBarresHorizontales, GraphiqueEffectif, GraphiquePyramide } from "@/components/graphiques-dynamiques";
@@ -66,18 +66,18 @@ function CarteGraphique({ titre, sousTitre, children }: { titre: string; sousTit
 type SalarieMini = SalarieStat & { entreprise_id: string; date_naissance: string | null };
 
 export default async function TableauDeBord() {
-  // Une seule entreprise à la fois : celle choisie à la connexion
-  const courante = await exigerEntrepriseCourante();
-
-  const { supabase } = await exigerUtilisateur();
-  const perimetre = [courante.id];
+  const [{ supabase }, idMemorise] = await Promise.all([exigerUtilisateur(), idEntrepriseMemorise()]);
+  const perimetre = [idMemorise];
   const maintenant = new Date();
   const aujourdhui = maintenant.toISOString().slice(0, 10);
   const debutMois = `${aujourdhui.slice(0, 8)}01`;
 
   // Toutes les lectures sont limitées par la base au périmètre de la personne
-  const [{ data: salariesBruts }, { data: contrats }, { data: absencesBrutes }, { data: reclamations }, { data: echeancesBrutes }] =
+  // Lancées en même temps que la vérification de l'entreprise (une seule attente au lieu de deux)
+  const [courante, { data: salariesBruts }, { data: contrats }, { data: absencesBrutes }, { data: reclamations }, { data: echeancesBrutes }] =
     await Promise.all([
+      // Une seule entreprise à la fois : celle choisie à la connexion (sinon, écran de choix)
+      exigerEntrepriseCourante(),
       supabase.from("salaries").select("entreprise_id, sexe, date_naissance, date_embauche, date_sortie, statut").in("entreprise_id", perimetre).limit(5000),
       supabase.from("contrats").select("type_contrat").in("entreprise_id", perimetre).eq("statut", "en_cours").neq("nature", "avenant").limit(5000),
       supabase

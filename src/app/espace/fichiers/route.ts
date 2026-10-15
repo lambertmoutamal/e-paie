@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { clientSupabaseServeur } from "@/lib/supabase/serveur";
 import { COMPARTIMENT } from "@/lib/stockage/fichiers";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 // Seuls ces espaces de stockage privés peuvent être ouverts par ce lien.
 const COMPARTIMENTS_AUTORISES = new Set([COMPARTIMENT, "bulletins", "absences", "reclamations"]);
@@ -15,7 +16,7 @@ export async function GET(requete: NextRequest) {
   }
 
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) return NextResponse.redirect(new URL("/connexion", requete.url));
 
   const { data, error } = await supabase.storage.from(compartiment).createSignedUrl(chemin, 60);

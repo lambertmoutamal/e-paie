@@ -7,6 +7,7 @@ import { libellePeriode } from "@/lib/bulletins/regles";
 import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, EtatVide, Page } from "@/components/ui";
 import { definirAccordWhatsApp } from "./actions";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 export const metadata: Metadata = { title: "Mes bulletins" };
 
@@ -25,7 +26,7 @@ type Bulletin = { bulletin_id: string; salarie_id: string; raison_sociale: strin
 
 export default async function PageMesBulletins() {
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) redirect("/portail/connexion");
 
   const [{ data: emplois }, { data: bulletins }, { data: emargements }, { data: accords }] = await Promise.all([

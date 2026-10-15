@@ -8,6 +8,7 @@ import { SUJETS_RECLAMATION } from "@/lib/reclamations/regles";
 import { Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
 import { Carte, Page } from "@/components/ui";
 import { ouvrirReclamation } from "../actions";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 export const metadata: Metadata = { title: "Nouvelle réclamation" };
 
@@ -17,7 +18,7 @@ type Bulletin = { bulletin_id: string; salarie_id: string; annee: number; mois: 
 export default async function PageNouvelleReclamation({ searchParams }: PageProps<"/portail/reclamations/nouvelle">) {
   const { emploi: choisi } = await searchParams;
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) redirect("/portail/connexion");
 
   const [{ data: emplois }, { data: bulletins }] = await Promise.all([supabase.rpc("mes_emplois"), supabase.rpc("mes_bulletins")]);

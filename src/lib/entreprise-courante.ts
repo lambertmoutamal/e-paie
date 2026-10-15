@@ -25,6 +25,13 @@ export const entrepriseCourante = cache(async (): Promise<EntrepriseAccessible |
   return liste.find((e) => e.id === choisie) ?? null;
 });
 
+// Identifiant mémorisé, NON vérifié : permet de lancer les lectures d'une page en même temps
+// que la vérification (exigerEntrepriseCourante), au lieu de l'attendre. Sans danger : la base
+// ne renvoie que les données accessibles, et la page redirige si l'entreprise ne l'est pas.
+export async function idEntrepriseMemorise(): Promise<string> {
+  return (await cookies()).get(COOKIE_ENTREPRISE)?.value ?? "00000000-0000-0000-0000-000000000000";
+}
+
 // Pour les pages de travail : sans entreprise choisie, retour à l'écran de choix.
 export async function exigerEntrepriseCourante(): Promise<EntrepriseAccessible> {
   const courante = await entrepriseCourante();

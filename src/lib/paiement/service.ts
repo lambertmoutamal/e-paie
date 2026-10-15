@@ -1,5 +1,6 @@
 import "server-only";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { UtilisateurConnecte } from "@/lib/auth/connecte";
 import { clientSupabaseAdmin } from "@/lib/supabase/admin";
 import { adresseSite, alerterEquipe } from "@/lib/email/envoyer";
 import { emailAlerte } from "@/lib/email/modeles";
@@ -12,7 +13,7 @@ type Resultat = { erreur: string } | { paiementId: string; urlRedirection: strin
 // Vérifie d'abord, au nom de la personne connectée, qu'elle administre bien ce titulaire.
 export async function lancerPaiement(
   supabase: SupabaseClient,
-  utilisateur: User,
+  utilisateur: UtilisateurConnecte,
   abonnementId: string,
   duree: DureeAbonnement,
   telephoneSaisi: string,

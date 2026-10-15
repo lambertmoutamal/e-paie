@@ -243,3 +243,12 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   **Meta (WhatsApp Cloud API)**, prioritaire s'il est configuré (numéro de test gratuit pour les essais,
   pas d'intermédiaire en production). Twilio reste possible ; sans configuration, envoi simulé.
   Retours « reçu / lu / échec » de Meta acceptés seulement s'ils sont signés avec le secret de l'application.
+
+## 2026-10-15 — Rapidité
+
+- La base (Supabase) répond en 0,4 à 2 s par échange depuis le Gabon : on limite le nombre d'échanges
+  successifs par page. La session est vérifiée **sur place** (signature contrôlée avec la clé publique du
+  projet, `getClaims`) au lieu d'un appel à Supabase à chaque page ; le tableau de bord et la page de paie
+  lancent toutes leurs lectures en même temps.
+- Pour les essais en local : mode production (`npm run build` puis `npx next start -p 3001`), bien plus
+  rapide et plus léger que le mode développement.

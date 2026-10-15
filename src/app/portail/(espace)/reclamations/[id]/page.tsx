@@ -8,6 +8,7 @@ import { FilReclamation, type MessageFil } from "@/components/fil-reclamation";
 import { ChampFichier, Formulaire, ZoneTexte } from "@/components/formulaire";
 import { Badge, Carte, classesBouton, Page } from "@/components/ui";
 import { cloturerReclamation, repondreReclamation } from "../actions";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 export const metadata: Metadata = { title: "Réclamation" };
 
@@ -16,7 +17,7 @@ type Reclamation = { id: string; salarie_id: string; raison_sociale: string; suj
 export default async function PageReclamation({ params }: PageProps<"/portail/reclamations/[id]">) {
   const { id } = await params;
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) redirect("/portail/connexion");
 
   const [{ data: liste }, { data: messages }, { data: emplois }] = await Promise.all([

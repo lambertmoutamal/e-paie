@@ -34,6 +34,9 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
     { data: motifBlocage },
     { data: peutPublier },
     { data: nbValidateurs },
+    { count: nbResultats },
+    { data: avis },
+    { data: emargements },
   ] = await Promise.all([
     supabase.from("entreprises").select("raison_sociale").eq("id", id).maybeSingle(),
     supabase
@@ -64,13 +67,11 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
     supabase.rpc("motif_blocage_validation", { p_periode_id: periodeId }),
     supabase.rpc("peut_publier", { p_entreprise_id: id }),
     supabase.rpc("nb_validateurs_possibles", { p_periode_id: periodeId }),
-  ]);
-  if (!entreprise || !periode) notFound();
-  const [{ count: nbResultats }, { data: avis }, { data: emargements }] = await Promise.all([
     supabase.from("resultats_paie").select("id", { count: "exact", head: true }).eq("periode_id", periodeId),
     supabase.from("avis_bulletins").select("bulletin_id, statut, erreur, envoye_le").eq("periode_id", periodeId).order("envoye_le"),
-    supabase.from("emargements_bulletins").select("bulletin_id, emarge_le").in("bulletin_id", (bulletins ?? []).map((b) => b.id)),
+    supabase.from("emargements_bulletins").select("bulletin_id, emarge_le, bulletins!inner(periode_id)").eq("bulletins.periode_id", periodeId),
   ]);
+  if (!entreprise || !periode) notFound();
   // Dernier avis par bulletin, et date d'émargement (premier téléchargement par le salarié)
   const avisParBulletin = new Map((avis ?? []).map((a) => [a.bulletin_id, a]));
   const emargeLe = new Map((emargements ?? []).map((e) => [e.bulletin_id, e.emarge_le as string]));

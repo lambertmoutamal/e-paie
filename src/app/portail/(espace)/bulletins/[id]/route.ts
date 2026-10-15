@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { clientSupabaseServeur } from "@/lib/supabase/serveur";
 import { libellePeriode } from "@/lib/bulletins/regles";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 // Ouvre un bulletin du salarié connecté : la base ne renvoie le fichier que s'il
 // s'agit de SON bulletin et qu'il est publié ; lien temporaire de 60 secondes.
@@ -9,7 +10,7 @@ import { libellePeriode } from "@/lib/bulletins/regles";
 export async function GET(requete: NextRequest, { params }: RouteContext<"/portail/bulletins/[id]">) {
   const { id } = await params;
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) return NextResponse.redirect(new URL("/portail/connexion", requete.url));
 
   const [{ data: chemin }, { data: bulletins }] = await Promise.all([
