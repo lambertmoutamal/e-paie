@@ -1,12 +1,15 @@
 import { describe, expect, test } from "vitest";
-import { associerFichiers, bornesMois, estPdf, libellePeriode, lireCircuit, lireNomFichier, moisProposes, salariesAttendus } from "@/lib/bulletins/regles";
+import { anneesProposees, associerFichiers, bornesMois, estPdf, libellePeriode, lireCircuit, lireNomFichier, NOMS_MOIS, salariesAttendus } from "@/lib/bulletins/regles";
 
 describe("périodes", () => {
-  test("mois proposés dans l'ordre du calendrier, de janvier à décembre", () => {
-    const liste = moisProposes(new Date(Date.UTC(2026, 9, 16))).map((m) => m.libelle);
-    expect(liste).toHaveLength(15);
-    expect(liste.slice(0, 4)).toEqual(["Octobre 2025", "Novembre 2025", "Décembre 2025", "Janvier 2026"]);
-    expect(liste.slice(-3)).toEqual(["Octobre 2026", "Novembre 2026", "Décembre 2026"]);
+  test("années proposées : elles avancent toutes seules avec la date du jour", () => {
+    expect(anneesProposees(new Date(Date.UTC(2026, 9, 16)))).toEqual([2024, 2025, 2026, 2027]);
+    expect(anneesProposees(new Date(Date.UTC(2027, 0, 1)))).toEqual([2025, 2026, 2027, 2028]);
+  });
+
+  test("mois dans l'ordre du calendrier, de janvier à décembre", () => {
+    expect(NOMS_MOIS).toHaveLength(12);
+    expect([NOMS_MOIS[0], NOMS_MOIS[11]]).toEqual(["Janvier", "Décembre"]);
   });
 
   test("libellé et bornes du mois (années bissextiles comprises)", () => {

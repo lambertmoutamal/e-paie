@@ -21,17 +21,11 @@ export function libellePeriode(annee: number, mois: number): string {
   return `${NOMS_MOIS[mois - 1]} ${annee}`;
 }
 
-// Mois proposés à la création d'une période : les 12 derniers mois et les 2 suivants,
-// dans l'ordre du calendrier (janvier → décembre, année par année).
-export function moisProposes(aujourdhui = new Date()): { valeur: string; libelle: string }[] {
-  const liste = [];
-  for (let decalage = -12; decalage <= 2; decalage++) {
-    const d = new Date(Date.UTC(aujourdhui.getUTCFullYear(), aujourdhui.getUTCMonth() + decalage, 1));
-    const annee = d.getUTCFullYear();
-    const mois = d.getUTCMonth() + 1;
-    liste.push({ valeur: `${annee}-${String(mois).padStart(2, "0")}`, libelle: libellePeriode(annee, mois) });
-  }
-  return liste;
+// Années proposées à la création d'une période : les 2 précédentes, l'année en cours et la
+// suivante. La liste avance toute seule au 1er janvier.
+export function anneesProposees(aujourdhui = new Date()): number[] {
+  const annee = aujourdhui.getUTCFullYear();
+  return [annee - 2, annee - 1, annee, annee + 1];
 }
 
 export const schemaPeriode = z.object({

@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CalendarRange, Workflow } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { libellePeriode, moisProposes, STATUTS_PERIODE, type EtapeCircuit, type StatutPeriode } from "@/lib/bulletins/regles";
-import { ChoixListe, Formulaire } from "@/components/formulaire";
+import { anneesProposees, libellePeriode, STATUTS_PERIODE, type EtapeCircuit, type StatutPeriode } from "@/lib/bulletins/regles";
+import { Formulaire } from "@/components/formulaire";
 import { Badge, Carte, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
 import { creerPeriode } from "./actions";
+import { ChoixPeriode } from "./choix-periode";
 
 export const metadata: Metadata = { title: "Paie et bulletins" };
 
@@ -25,12 +26,9 @@ export default async function PagePeriodes({ params }: PageProps<"/espace/entrep
   ]);
   if (!entreprise) notFound();
 
-  const existantes = new Set((periodes ?? []).map((p) => `${p.annee}-${String(p.mois).padStart(2, "0")}`));
-  const proposes = moisProposes();
-  const disponibles = proposes.filter((m) => !existantes.has(m.valeur));
-  // Par défaut : le mois en cours (suivi des 2 mois à venir), sinon le dernier mois libre.
-  const moisEnCours = proposes[proposes.length - 3].valeur;
-  const parDefaut = disponibles.find((m) => m.valeur === moisEnCours) ?? disponibles[disponibles.length - 1];
+  const existantes = (periodes ?? []).map((p) => `${p.annee}-${String(p.mois).padStart(2, "0")}`);
+  // Par défaut : le mois en cours
+  const aujourdhui = new Date();
 
   return (
     <Page>
@@ -77,10 +75,15 @@ export default async function PagePeriodes({ params }: PageProps<"/espace/entrep
         )}
       </Carte>
 
-      {peutDeposer === true && disponibles.length > 0 && (
+      {peutDeposer === true && (
         <Carte titre="Nouvelle période">
           <Formulaire action={creerPeriode.bind(null, id)} libelleBouton="Créer la période" colonnes={2}>
-            <ChoixListe nom="periode" libelle="Mois de paie" requis options={disponibles} valeurInitiale={parDefaut.valeur} />
+            <ChoixPeriode
+              annees={anneesProposees(aujourdhui)}
+              existantes={existantes}
+              anneeInitiale={aujourdhui.getUTCFullYear()}
+              moisInitial={aujourdhui.getUTCMonth() + 1}
+            />
           </Formulaire>
         </Carte>
       )}
