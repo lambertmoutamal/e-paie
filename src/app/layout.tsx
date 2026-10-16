@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   },
   description:
     "Plateforme de paie zéro papier pour les cabinets comptables et les entreprises.",
+  // Logo DématPaie dans l'onglet du navigateur ; version image pour l'écran d'accueil de l'iPhone
+  icons: {
+    icon: [{ url: "/logo-dematpaie.svg", type: "image/svg+xml" }, { url: "/icone-salarie/192", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icone-salarie/180", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
