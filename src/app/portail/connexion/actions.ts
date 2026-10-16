@@ -58,15 +58,15 @@ async function envoyerCode(telephone: string, canal: Canal): Promise<string | nu
   }
 
   const supabase = await clientSupabaseServeur();
-  const { error } = await supabase.auth.signInWithOtp({ phone: telephone, options: { shouldCreateUser: false, channel: canal } });
+  // Supabase crée le code et le confie à la fonction d'envoi de la base, qui le transmet par
+  // WhatsApp (Meta) : le canal demandé à Supabase reste donc « sms ».
+  const { error } = await supabase.auth.signInWithOtp({ phone: telephone, options: { shouldCreateUser: false, channel: "sms" } });
   if (error) {
     console.error("Portail : envoi du code impossible :", error.code, error.message);
     if (error.code === "over_sms_send_rate_limit" || error.code === "over_request_rate_limit") {
       return "Trop de demandes. Patientez quelques minutes puis réessayez.";
     }
-    return canal === "whatsapp"
-      ? "Le code n'a pas pu être envoyé par WhatsApp. Essayez par SMS."
-      : "Le code n'a pas pu être envoyé. Vérifiez le numéro ou réessayez dans un instant.";
+    return `Le code n'a pas pu être envoyé par ${canal === "whatsapp" ? "WhatsApp" : "SMS"}. Vérifiez le numéro ou réessayez dans un instant.`;
   }
   return null;
 }

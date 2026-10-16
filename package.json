@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:securite": "vitest run --config vitest.securite.config.mts",
     "db:migrer": "node --env-file=.env.local scripts/migrer.mjs",
+    "whatsapp:coffre": "node --env-file=.env.local scripts/coffre-whatsapp.mjs",
     "admin:promouvoir": "node --env-file=.env.local scripts/promouvoir-admin.mjs",
     "verifier:secrets": "node --env-file=.env.local scripts/verifier-secrets.mjs"
   },

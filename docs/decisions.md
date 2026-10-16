@@ -266,3 +266,13 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   signature visuelle (image), pas d'une signature électronique certifiée.
 - Connexion directe à la base : le port 5432 du pooler Supabase est coupé depuis ce poste (ECONNRESET) ;
   le port 6543 fonctionne (migrations et tests de sécurité lancés avec ce port).
+
+## 2026-10-16 — Code de connexion des salariés par WhatsApp
+
+- Twilio n'étant pas disponible au Gabon, le code de connexion à l'espace salarié est **envoyé par
+  WhatsApp (Meta)**. Supabase crée et vérifie toujours le code ; il appelle la fonction
+  `envoyer_code_whatsapp` de la base (« Send SMS hook ») qui transmet le code à Meta (extension pg_net).
+- Les réglages Meta sont rangés dans le **coffre-fort de Supabase (Vault)** par `npm run whatsapp:coffre`
+  (jamais dans le code). Essais : texte simple (24 h après un message du salarié) ; production : modèle
+  « authentification » approuvé (`META_WHATSAPP_MODELE_CODE`).
+- La fonction n'est exécutable que par le service d'authentification de Supabase (test de sécurité).

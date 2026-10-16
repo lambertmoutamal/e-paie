@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { CircleAlert, Info, LoaderCircle, MessageCircle, Smartphone } from "lucide-react";
+import { CircleAlert, Info, LoaderCircle, MessageCircle } from "lucide-react";
 import { INDICATIFS, masquerTelephone, type Canal } from "@/lib/portail/regles";
 import { classesBouton } from "@/components/ui";
 import { demanderCode, verifierCode } from "./actions";
@@ -52,26 +52,12 @@ export function FormulairePortail() {
         <p className="text-xs text-doux">Le numéro que vous avez donné à votre employeur.</p>
       </div>
 
-      <fieldset className="flex flex-col gap-1.5">
-        <legend className="mb-1.5 text-sm font-medium">Recevoir le code par</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {(
-            [
-              ["sms", "SMS", Smartphone],
-              ["whatsapp", "WhatsApp", MessageCircle],
-            ] as const
-          ).map(([valeur, libelle, Icone]) => (
-            <label
-              key={valeur}
-              className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border border-bordure bg-surface text-sm font-medium has-checked:border-marque has-checked:bg-marque-claire has-checked:text-marque"
-            >
-              <input type="radio" name="canal" value={valeur} defaultChecked={(saisie?.canal ?? "sms") === valeur} className="sr-only" />
-              <Icone size={18} aria-hidden />
-              {libelle}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {/* Le code est envoyé par WhatsApp (Twilio et ses SMS ne sont pas disponibles au Gabon) */}
+      <input type="hidden" name="canal" value="whatsapp" />
+      <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+        <MessageCircle size={18} className="shrink-0" aria-hidden />
+        Vous recevrez votre code de connexion sur WhatsApp.
+      </p>
 
       {saisie?.erreur && <Alerte texte={saisie.erreur} />}
 
