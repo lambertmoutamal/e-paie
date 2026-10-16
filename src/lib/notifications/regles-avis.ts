@@ -12,12 +12,13 @@ export const LIBELLES_AVIS: Record<StatutAvis, string> = {
   echec: "Échec",
 };
 
-// Texte du message (identique au modèle à faire approuver par WhatsApp) et ses variables.
+// Texte du message (identique au modèle « avis_bulletin » approuvé par WhatsApp) et ses variables.
+// Le modèle ne peut pas se terminer par une variable : d'où la phrase après le lien.
 // Le message ne contient ni montant ni fichier : seulement le lien de l'espace salarié.
 export function messageAvisBulletin(p: { prenoms: string; periode: string; entreprise: string; lien: string }) {
   const variables = { "1": p.prenoms, "2": p.periode, "3": p.entreprise, "4": p.lien };
   return {
-    texte: `Bonjour ${p.prenoms}, votre bulletin de paie de ${p.periode} (${p.entreprise}) est disponible. Consultez-le ici : ${p.lien}`,
+    texte: `Bonjour ${p.prenoms}, votre bulletin de paie de ${p.periode} (${p.entreprise}) est disponible dans votre espace salarié : ${p.lien}. Le télécharger vaut accusé de réception.`,
     variables,
   };
 }

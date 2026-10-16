@@ -172,7 +172,8 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
 ## Avis de bulletin par WhatsApp et émargement électronique
 
 - À la **publication** de la paie, chaque salarié qui a un numéro et qui a **donné son accord** reçoit un
-  WhatsApp : « Bonjour {{1}}, votre bulletin de paie de {{2}} ({{3}}) est disponible. Consultez-le ici : {{4}} ».
+  WhatsApp (modèle `avis_bulletin`) : « Bonjour {{1}}, votre bulletin de paie de {{2}} ({{3}}) est disponible dans votre espace
+  salarié : {{4}}. Le télécharger vaut accusé de réception. »
   Le bulletin ne passe jamais par WhatsApp : le lien ouvre l'espace salarié (connexion par code).
 - **Accord** : sur la fiche du salarié (« Le salarié a donné son accord ») ou par le salarié dans son espace.
 - **Émargement** : le téléchargement du bulletin par le salarié vaut accusé de réception. La page de la

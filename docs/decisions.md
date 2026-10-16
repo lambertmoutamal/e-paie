@@ -276,3 +276,11 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   (jamais dans le code). Essais : texte simple (24 h après un message du salarié) ; production : modèle
   « authentification » approuvé (`META_WHATSAPP_MODELE_CODE`).
 - La fonction n'est exécutable que par le service d'authentification de Supabase (test de sécurité).
+
+## 2026-10-16 — Modèles WhatsApp
+
+- `avis_bulletin` (Utilitaire, français) créé sur le compte WhatsApp de DématPaie (texte terminé par une
+  phrase, Meta refusant un modèle qui finit par une variable).
+- `code_connexion` (Authentification) **refusé sur le compte de test** : Meta réserve les modèles
+  d'authentification aux entreprises vérifiées avec leur propre numéro. D'ici là, le code de connexion
+  part en texte simple (livré si le salarié a écrit au numéro dans les 24 h).

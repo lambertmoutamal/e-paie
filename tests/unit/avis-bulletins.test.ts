@@ -5,7 +5,7 @@ import { corpsMessageMeta, messageAvisBulletin, signatureMetaValide, signatureTw
 describe("Avis de bulletin par WhatsApp", () => {
   test("le message ne contient que le prénom, la période, l'entreprise et le lien", () => {
     const m = messageAvisBulletin({ prenoms: "Awa", periode: "octobre 2026", entreprise: "SOGEA", lien: "https://dematpaie.ga/portail" });
-    expect(m.texte).toBe("Bonjour Awa, votre bulletin de paie de octobre 2026 (SOGEA) est disponible. Consultez-le ici : https://dematpaie.ga/portail");
+    expect(m.texte).toBe("Bonjour Awa, votre bulletin de paie de octobre 2026 (SOGEA) est disponible dans votre espace salarié : https://dematpaie.ga/portail. Le télécharger vaut accusé de réception.");
     expect(m.variables).toEqual({ "1": "Awa", "2": "octobre 2026", "3": "SOGEA", "4": "https://dematpaie.ga/portail" });
   });
 
