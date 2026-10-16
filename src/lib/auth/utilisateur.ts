@@ -2,18 +2,19 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { clientSupabaseServeur } from "@/lib/supabase/serveur";
+import { utilisateurConnecte } from "./connecte";
 
 // Point d'entrée unique de toute page ou action de l'espace privé :
-// vérifie la session auprès de Supabase et renvoie un client qui agit
+// vérifie la session (sur place, sans aller-retour réseau) et renvoie un client qui agit
 // au nom de la personne connectée (donc soumis aux règles RLS).
 // « cache » : un seul appel par requête, même si la mise en page et la page l'utilisent.
 export const exigerUtilisateur = cache(async () => {
   const supabase = await clientSupabaseServeur();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect("/connexion");
+  const utilisateur = await utilisateurConnecte(supabase);
+  if (!utilisateur) redirect("/connexion");
   // Les comptes salariés n'ont accès qu'au portail
-  if (data.user.app_metadata?.type === "salarie") redirect("/portail");
-  return { supabase, utilisateur: data.user };
+  if (utilisateur.app_metadata.type === "salarie") redirect("/portail");
+  return { supabase, utilisateur };
 });
 
 export async function estAdminPlateforme(supabase: Awaited<ReturnType<typeof clientSupabaseServeur>>) {

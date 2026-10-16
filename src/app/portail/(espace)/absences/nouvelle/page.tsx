@@ -7,6 +7,7 @@ import { formaterJours } from "@/lib/absences/regles";
 import { Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
 import { Carte, Page } from "@/components/ui";
 import { demanderAbsence } from "../actions";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 export const metadata: Metadata = { title: "Nouvelle demande" };
 
@@ -16,7 +17,7 @@ type TypeAbsence = { id: string; libelle: string; jours_max: number | null; just
 export default async function PageNouvelleDemande({ searchParams }: PageProps<"/portail/absences/nouvelle">) {
   const { emploi: choisi } = await searchParams;
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) redirect("/portail/connexion");
 
   const { data: emplois } = await supabase.rpc("mes_emplois");

@@ -8,12 +8,13 @@ import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire
 import { schemaMessageReclamation, schemaNouvelleReclamation } from "@/lib/reclamations/regles";
 import { deposerPiece, retirerPiece } from "@/lib/reclamations/pieces";
 import { alerterPersonnelReclamation } from "@/lib/notifications/alertes-reclamations";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 // Le salarié agit avec sa propre session : la base vérifie qu'il s'agit de SA réclamation.
 
 async function session() {
   const supabase = await clientSupabaseServeur();
-  const { data } = await supabase.auth.getUser();
+  const data = { user: await utilisateurConnecte(supabase) };
   if (!data.user) redirect("/portail/connexion");
   return supabase;
 }

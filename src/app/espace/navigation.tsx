@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { Briefcase, ChevronDown, LoaderCircle, Menu, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import type { GroupeMenu, TacheMenu } from "@/lib/menu";
-import { choisirEntreprise } from "./actions-navigation";
 
 // Menus déroulants de la barre du haut (ordinateur) : un groupe = une liste de tâches.
 export function MenuGroupes({ groupes }: { groupes: GroupeMenu[] }) {
-  const chemin = usePathname();
   const [ouvert, setOuvert] = useState<string | null>(null);
   const zone = useRef<HTMLUListElement>(null);
 
@@ -29,14 +27,6 @@ export function MenuGroupes({ groupes }: { groupes: GroupeMenu[] }) {
 
   return (
     <ul ref={zone} className="flex items-center gap-0.5">
-      <li>
-        <Link
-          href="/espace"
-          className={`inline-flex h-10 items-center rounded-full px-3.5 text-sm font-semibold transition ${chemin === "/espace" ? "bg-white text-marque-fonce" : "text-white/85 hover:bg-white/10 hover:text-white"}`}
-        >
-          Tableau de bord
-        </Link>
-      </li>
       {groupes.map((g) => {
         const estOuvert = ouvert === g.id;
         return (
@@ -125,9 +115,6 @@ export function MenuMobile({ groupes }: { groupes: GroupeMenu[] }) {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-3">
-            <Link href="/espace" className="mb-2 block rounded-xl bg-marque-claire px-4 py-3 font-semibold text-marque-fonce">
-              Tableau de bord
-            </Link>
             {groupes.map((g) => (
               <details key={g.id} className="mb-2 rounded-xl border border-bordure">
                 <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-semibold">
@@ -143,37 +130,5 @@ export function MenuMobile({ groupes }: { groupes: GroupeMenu[] }) {
         </div>
       )}
     </>
-  );
-}
-
-// Choix de l'entreprise de travail, toujours visible dans la barre du haut.
-export function SelecteurEntreprise({ entreprises, courante }: { entreprises: { id: string; raison_sociale: string }[]; courante: string | null }) {
-  const [enCours, demarrer] = useTransition();
-  if (entreprises.length === 0) return null;
-  return (
-    <label className="relative flex items-center">
-      <span className="sr-only">Entreprise de travail</span>
-      {enCours ? (
-        <LoaderCircle size={15} className="pointer-events-none absolute left-3 animate-spin text-white/80" aria-hidden />
-      ) : (
-        <Briefcase size={15} className="pointer-events-none absolute left-3 text-white/80" aria-hidden />
-      )}
-      <select
-        value={courante ?? "toutes"}
-        disabled={enCours}
-        onChange={(ev) => demarrer(() => choisirEntreprise(ev.target.value))}
-        className="h-10 max-w-48 cursor-pointer appearance-none truncate rounded-full border border-white/25 bg-white/10 pl-9 pr-8 text-sm font-semibold text-white outline-none hover:bg-white/15 focus:ring-2 focus:ring-white/40 sm:max-w-60"
-      >
-        <option value="toutes" className="text-foreground">
-          Toutes mes entreprises
-        </option>
-        {entreprises.map((e) => (
-          <option key={e.id} value={e.id} className="text-foreground">
-            {e.raison_sociale}
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={14} className="pointer-events-none absolute right-3 text-white/80" aria-hidden />
-    </label>
   );
 }

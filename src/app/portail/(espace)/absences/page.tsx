@@ -6,6 +6,7 @@ import { clientSupabaseServeur } from "@/lib/supabase/serveur";
 import { formaterJours, libelleDates, STATUTS_DEMANDE, type StatutDemande } from "@/lib/absences/regles";
 import { Badge, Carte, classesBouton, EtatVide, Page } from "@/components/ui";
 import { annulerMaDemande } from "./actions";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 export const metadata: Metadata = { title: "Mes absences" };
 
@@ -28,7 +29,7 @@ type Demande = {
 export default async function PageMesAbsences({ searchParams }: PageProps<"/portail/absences">) {
   const { envoyee } = await searchParams;
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) redirect("/portail/connexion");
 
   const [{ data: emplois }, { data: demandes }] = await Promise.all([supabase.rpc("mes_emplois"), supabase.rpc("mes_demandes_absence")]);

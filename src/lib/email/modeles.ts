@@ -13,11 +13,13 @@ export function echapper(valeur: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function gabarit({ titre, paragraphes, bouton, note }: {
+function gabarit({ titre, paragraphes, bouton, note, reponseAttendue }: {
   titre: string;
   paragraphes: string[];
   bouton?: { libelle: string; lien: string };
   note?: string;
+  // Email d'une personne (cabinet) : on peut y répondre directement
+  reponseAttendue?: boolean;
 }): string {
   const corps = paragraphes
     .map((p) => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#33384d">${p}</p>`)
@@ -45,7 +47,7 @@ function gabarit({ titre, paragraphes, bouton, note }: {
   ${corps}${action}${remarque}
 </td></tr>
 </table>
-<p style="margin:16px 0 0;font-size:12px;color:#8a90a6">DématPaie · La paie zéro papier<br>Email automatique, merci de ne pas y répondre.</p>
+<p style="margin:16px 0 0;font-size:12px;color:#8a90a6">DématPaie · La paie zéro papier<br>${reponseAttendue ? "Répondez directement à cet email pour joindre le cabinet." : "Email automatique, merci de ne pas y répondre."}</p>
 </td></tr></table></body></html>`;
 }
 
@@ -175,5 +177,76 @@ export function emailActionPaie(
       note: "Vous recevez cet email car votre rôle sur DématPaie vous permet d'agir sur cette paie.",
     }),
     texte: `${c.titre},\n\n${c.paragraphes.join("\n\n")}\n\n${c.bouton} : ${lien}\n`,
+  };
+}
+
+// ---------------------------------------------------------------------
+// Demandes de prise en charge d'une entreprise par un cabinet
+// ---------------------------------------------------------------------
+
+// Au(x) administrateur(s) du cabinet choisi
+export function emailNouvelleDemandeEntreprise(p: { cabinet: string; entreprise: string; nbSalaries: number; contact: string; lien: string }): Email {
+  const e = echapper(p.entreprise);
+  return {
+    sujet: `Nouvelle demande : ${p.entreprise} souhaite vous confier sa paie`,
+    html: gabarit({
+      titre: "Une entreprise souhaite vous confier sa paie",
+      paragraphes: [
+        `<strong>${e}</strong> (${p.nbSalaries} salarié${p.nbSalaries > 1 ? "s" : ""}) a choisi le cabinet <strong>${echapper(p.cabinet)}</strong> sur DématPaie pour gérer sa paie.`,
+        `Contact : ${echapper(p.contact)}.`,
+        "Ouvrez la demande pour l'accepter ou demander des informations complémentaires à l'entreprise.",
+      ],
+      bouton: { libelle: "Voir la demande", lien: p.lien },
+    }),
+    texte: `${p.entreprise} (${p.nbSalaries} salarié(s)) souhaite confier sa paie au cabinet ${p.cabinet}.\nContact : ${p.contact}\nVoir la demande : ${p.lien}`,
+  };
+}
+
+// À l'entreprise : demande bien transmise
+export function emailAccuseDemandeEntreprise(p: { nom: string; entreprise: string; cabinet: string }): Email {
+  return {
+    sujet: `Votre demande a été transmise au cabinet ${p.cabinet}`,
+    html: gabarit({
+      titre: `Merci ${echapper(p.nom)}`,
+      paragraphes: [
+        `La demande de <strong>${echapper(p.entreprise)}</strong> a bien été transmise au cabinet <strong>${echapper(p.cabinet)}</strong> pour validation.`,
+        "Dès que le cabinet l'aura acceptée, vous recevrez un email pour activer votre accès à DématPaie. Le cabinet peut aussi vous écrire pour demander des informations complémentaires.",
+      ],
+      note: "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.",
+    }),
+    texte: `Merci ${p.nom},\n\nLa demande de ${p.entreprise} a été transmise au cabinet ${p.cabinet} pour validation. Vous recevrez un email dès qu'elle sera acceptée.`,
+  };
+}
+
+// Du cabinet à l'entreprise : demande d'informations (réponse directe au cabinet)
+export function emailDemandeInformations(p: { cabinet: string; entreprise: string; message: string; auteur: string }): Email {
+  const message = echapper(p.message).replaceAll(/\r?\n/g, "<br>");
+  return {
+    sujet: `${p.cabinet} : informations complémentaires pour ${p.entreprise}`,
+    html: gabarit({
+      titre: "Le cabinet vous demande des informations",
+      paragraphes: [
+        `Le cabinet <strong>${echapper(p.cabinet)}</strong> étudie la demande de <strong>${echapper(p.entreprise)}</strong> et vous écrit :`,
+        `<span style="display:block;padding:12px 16px;background:#f6f7fb;border-left:3px solid #4f46e5;border-radius:6px">${message}</span>`,
+        `— ${echapper(p.auteur)}`,
+      ],
+      reponseAttendue: true,
+    }),
+    texte: `Le cabinet ${p.cabinet} étudie la demande de ${p.entreprise} et vous écrit :\n\n${p.message}\n\n— ${p.auteur}\n\nRépondez directement à cet email pour joindre le cabinet.`,
+  };
+}
+
+// À l'entreprise : demande refusée par le cabinet
+export function emailDemandeRefusee(p: { entreprise: string; cabinet: string }): Email {
+  return {
+    sujet: `Votre demande auprès du cabinet ${p.cabinet}`,
+    html: gabarit({
+      titre: "Demande non retenue",
+      paragraphes: [
+        `Le cabinet <strong>${echapper(p.cabinet)}</strong> n'a pas pu donner suite à la demande de <strong>${echapper(p.entreprise)}</strong>.`,
+        "Vous pouvez choisir un autre cabinet, ou gérer vous-même votre paie (mode autonome), depuis « Créer une nouvelle entreprise » sur la page de connexion de DématPaie.",
+      ],
+    }),
+    texte: `Le cabinet ${p.cabinet} n'a pas pu donner suite à la demande de ${p.entreprise}. Vous pouvez choisir un autre cabinet ou gérer vous-même votre paie depuis « Créer une nouvelle entreprise ».`,
   };
 }

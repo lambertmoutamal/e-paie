@@ -9,7 +9,7 @@ import { envoyerWhatsApp } from "./whatsapp";
 // est seulement noté dans le journal du serveur, il ne bloque jamais l'action.
 
 async function envoyer(email: string | null, whatsapp: string | null, contenu: ReturnType<typeof contenuNouvelleDemande>, lien: string) {
-  const envois: Promise<void>[] = [];
+  const envois: Promise<unknown>[] = [];
   if (email) envois.push(envoyerEmail(email, emailActionPaie(contenu, lien)));
   if (whatsapp) envois.push(envoyerWhatsApp(whatsapp, { texte: contenu.whatsapp, variables: contenu.variables }));
   for (const r of await Promise.allSettled(envois)) if (r.status === "rejected") console.error("Alerte d'absence non envoyée :", r.reason);

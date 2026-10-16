@@ -12,13 +12,16 @@ export const COLONNES_IMPORT = [
   { cle: "date_naissance", libelle: "Date de naissance", obligatoire: false, exemple: "14/02/1990" },
   { cle: "nationalite", libelle: "Nationalité", obligatoire: false, exemple: "Gabonaise" },
   { cle: "poste", libelle: "Poste", obligatoire: false, exemple: "Comptable" },
+  { cle: "localisation", libelle: "Localisation", obligatoire: false, exemple: "Port-Gentil" },
   { cle: "date_embauche", libelle: "Date d'embauche", obligatoire: true, exemple: "01/03/2022" },
   { cle: "telephone", libelle: "Téléphone", obligatoire: false, exemple: "+241 77 12 34 56" },
   { cle: "email", libelle: "Email", obligatoire: false, exemple: "awa.ndong@exemple.ga" },
   { cle: "adresse", libelle: "Adresse", obligatoire: false, exemple: "Quartier Louis, Libreville" },
   { cle: "numero_cnss", libelle: "N° CNSS", obligatoire: false, exemple: "123456789" },
+  { cle: "numero_cnamgs", libelle: "N° CNAMGS", obligatoire: false, exemple: "1234567890" },
   { cle: "banque", libelle: "Banque", obligatoire: false, exemple: "BGFIBank" },
   { cle: "numero_compte", libelle: "N° de compte (RIB)", obligatoire: false, exemple: "40001 00010 12345678901 23" },
+  { cle: "mode_paiement", libelle: "Mode de paiement", obligatoire: false, exemple: "Virement" },
   { cle: "type_contrat", libelle: "Type de contrat", obligatoire: false, exemple: "CDD" },
   { cle: "salaire_base", libelle: "Salaire de base", obligatoire: false, exemple: "350000" },
   { cle: "date_fin_prevue", libelle: "Date de fin de contrat", obligatoire: false, exemple: "28/02/2027" },
@@ -55,11 +58,22 @@ const SYNONYMES: Record<string, CleColonne> = {
   cnss: "numero_cnss",
   ncnss: "numero_cnss",
   numerocnss: "numero_cnss",
+  cnamgs: "numero_cnamgs",
+  ncnamgs: "numero_cnamgs",
+  numerocnamgs: "numero_cnamgs",
   rib: "numero_compte",
   ndecompterib: "numero_compte",
   numerodecompte: "numero_compte",
   compte: "numero_compte",
   fonction: "poste",
+  lieudetravail: "localisation",
+  lieutravail: "localisation",
+  site: "localisation",
+  affectation: "localisation",
+  modepaiement: "mode_paiement",
+  modedepaiement: "mode_paiement",
+  modedereglement: "mode_paiement",
+  paiement: "mode_paiement",
   contrat: "type_contrat",
   typecontrat: "type_contrat",
   salaire: "salaire_base",
@@ -104,6 +118,25 @@ export function normaliserTelephoneSalarie(valeur: string, indicatif: string): s
   if (!brut) return null;
   if (brut.startsWith("+") || brut.startsWith("00")) return normaliserTelephone(brut);
   return normaliserTelephone(`${indicatif}${brut}`);
+}
+
+// Mode de paiement du salaire : « Virement bancaire », « Espèces », « Airtel Money »…
+export const MODES_PAIEMENT = {
+  virement: "Virement bancaire",
+  especes: "Espèces",
+  cheque: "Chèque",
+  mobile_money: "Mobile money",
+} as const;
+export type ModePaiement = keyof typeof MODES_PAIEMENT;
+
+export function normaliserModePaiement(valeur: string): ModePaiement | null {
+  const v = normaliserEntete(valeur);
+  if (!v) return null;
+  if (v.includes("virement") || v.includes("banque") || v.includes("bancaire")) return "virement";
+  if (v.includes("espece") || v.includes("cash") || v.includes("caisse")) return "especes";
+  if (v.includes("cheque")) return "cheque";
+  if (v.includes("mobile") || v.includes("airtel") || v.includes("moov") || v.includes("momo")) return "mobile_money";
+  return (Object.keys(MODES_PAIEMENT) as ModePaiement[]).find((m) => normaliserEntete(m) === v) ?? null;
 }
 
 const FORMAT_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -213,6 +246,12 @@ function champsSalarie(indicatif: string) {
         }),
       nationalite: texteFacultatif,
       poste: texteFacultatif,
+      // Champs ajoutés après coup : absents des anciens fichiers, ils deviennent « null »
+      localisation: z
+        .string()
+        .trim()
+        .optional()
+        .transform((v) => (v ? v : null)),
       date_embauche: z.unknown().transform((v, ctx) => {
         const d = normaliserDate(v);
         if (!d) ctx.addIssue({ code: "custom", message: "Date d'embauche obligatoire et valide (JJ/MM/AAAA)." });
@@ -235,8 +274,23 @@ function champsSalarie(indicatif: string) {
         .transform((v) => (v === "" ? null : v)),
       adresse: texteFacultatif,
       numero_cnss: texteFacultatif,
+      numero_cnamgs: z
+        .string()
+        .trim()
+        .optional()
+        .transform((v) => (v ? v : null)),
       banque: texteFacultatif,
       numero_compte: texteFacultatif,
+      mode_paiement: z
+        .string()
+        .trim()
+        .optional()
+        .transform((v, ctx) => {
+          if (!v) return null;
+          const m = normaliserModePaiement(v);
+          if (!m) ctx.addIssue({ code: "custom", message: "Mode de paiement inconnu (virement, espèces, chèque ou mobile money)." });
+          return m;
+        }),
   };
 }
 

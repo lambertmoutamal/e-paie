@@ -8,6 +8,7 @@ import { Badge, Carte, EtatVide, Page } from "@/components/ui";
 import { annulerAbsence, deciderDemande, saisirAbsence } from "./actions";
 import { chargerContexte, EnTeteAbsences, lienJustificatif } from "./commun";
 import { AnnulationAbsence, DecisionDemande } from "./formulaires";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Congés et absences" };
 
@@ -15,6 +16,7 @@ const CHAMPS =
   "id, salarie_id, prevalidee_le, debut, fin, debut_apres_midi, fin_midi, nb_jours, statut, motif, justificatif_chemin, saisie_rh, commentaire_decision, cree_le, decide_le, salaries(nom, prenoms, matricule), types_absence(libelle, nature, deduit_solde)";
 
 export default async function PageDemandes({ params }: PageProps<"/espace/entreprises/[id]/absences">) {
+  await connection(); // page calculée à chaque visite (elle lit la date du jour)
   const { id } = await params;
   const { supabase, entreprise, peutGerer } = await chargerContexte(id);
   const aujourdhui = new Date().toISOString().slice(0, 10);

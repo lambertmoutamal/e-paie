@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { configSupabase } from "@/lib/supabase/config";
+import { COOKIE_ENTREPRISE, exigeEntrepriseChoisie } from "@/lib/entreprise-chemins";
 
 // Exécuté avant chaque page : rafraîchit la session et protège l'espace privé.
 export async function proxy(requete: NextRequest) {
@@ -38,19 +39,29 @@ export async function proxy(requete: NextRequest) {
     return reponse;
   }
 
+  // Espace du personnel, y compris l'écran de choix de l'entreprise (hors du cadre de l'espace)
+  const pagePersonnel = chemin.startsWith("/espace") || chemin === "/choix-entreprise";
+
   // Un compte salarié n'entre jamais dans l'espace du personnel.
-  if (connecte && salarie && (chemin.startsWith("/espace") || chemin === "/connexion")) {
+  const pageAuth = chemin === "/connexion" || chemin === "/nouvelle-entreprise" || chemin.startsWith("/nouvelle-entreprise/");
+  if (connecte && salarie && (pagePersonnel || pageAuth)) {
     return rediriger(requete, reponse, "/portail");
   }
-  if (!connecte && chemin.startsWith("/espace")) {
+  if (!connecte && pagePersonnel) {
     return rediriger(requete, reponse, "/connexion");
   }
-  if (connecte && chemin === "/connexion") {
+  // Une fois connecté, on ne crée plus d'entreprise : cela se fait uniquement depuis la connexion
+  if (connecte && pageAuth) {
     return rediriger(requete, reponse, "/espace");
   }
   // Compte tout juste activé (ou mot de passe oublié) : il faut d'abord choisir un mot de passe.
-  if (motDePasseADefinir && chemin.startsWith("/espace") && chemin !== "/espace/mot-de-passe") {
+  if (motDePasseADefinir && pagePersonnel && chemin !== "/espace/mot-de-passe") {
     return rediriger(requete, reponse, "/espace/mot-de-passe");
+  }
+  // Une seule entreprise à la fois : elle se choisit d'abord (les pages vérifient ensuite
+  // que l'entreprise mémorisée est bien accessible).
+  if (connecte && exigeEntrepriseChoisie(chemin) && !requete.cookies.get(COOKIE_ENTREPRISE)?.value) {
+    return rediriger(requete, reponse, "/choix-entreprise");
   }
   return reponse;
 }
@@ -63,5 +74,5 @@ function rediriger(requete: NextRequest, reponse: NextResponse, chemin: string) 
 }
 
 export const config = {
-  matcher: ["/espace/:path*", "/connexion", "/portail", "/portail/:path*"],
+  matcher: ["/espace/:path*", "/choix-entreprise", "/connexion", "/nouvelle-entreprise", "/nouvelle-entreprise/:path*", "/portail", "/portail/:path*"],
 };

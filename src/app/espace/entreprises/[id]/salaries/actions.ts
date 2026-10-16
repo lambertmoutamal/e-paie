@@ -4,6 +4,8 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { envoyerWhatsApp } from "@/lib/notifications/whatsapp";
+import { expliquerRefusWhatsApp } from "@/lib/notifications/regles-avis";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import {
   MAX_LIGNES_IMPORT,
@@ -228,4 +230,46 @@ export async function importerSalaries(
 
   refresh();
   return { crees, misAJour, ...contrats };
+}
+
+// Accord du salarié pour recevoir l'avis de ses bulletins par WhatsApp (recueilli par
+// l'employeur, par exemple à l'embauche). Le salarié peut aussi le donner ou le retirer
+// lui-même depuis son espace.
+export async function definirAccordWhatsAppSalarie(entrepriseId: string, salarieId: string, accord: boolean): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const { data, error } = await supabase
+    .from("salaries")
+    .update({ accord_whatsapp_le: accord ? new Date().toISOString() : null })
+    .eq("id", salarieId)
+    .eq("entreprise_id", entrepriseId)
+    .select("id");
+  if (error || !data?.length) return { erreur: messageErreurBase(error?.code ?? "42501") };
+  refresh();
+  return { succes: accord ? "Accord enregistré." : "Accord retiré." };
+}
+
+// Message WhatsApp d'essai au salarié : vérifie que son numéro et l'envoi fonctionnent,
+// sans attendre la publication d'une paie. Réservé à qui gère les salariés de l'entreprise,
+// et seulement si le salarié a donné son accord.
+export async function envoyerWhatsAppEssai(entrepriseId: string, salarieId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const [{ data: autorise }, { data: s }, { data: entreprise }] = await Promise.all([
+    supabase.rpc("peut_gerer_salaries", { p_entreprise_id: entrepriseId }),
+    supabase.from("salaries").select("prenoms, telephone, accord_whatsapp_le").eq("id", salarieId).eq("entreprise_id", entrepriseId).maybeSingle(),
+    supabase.from("entreprises").select("raison_sociale").eq("id", entrepriseId).maybeSingle(),
+  ]);
+  if (autorise !== true || !s) return { erreur: "Vous ne pouvez pas envoyer de message à ce salarié." };
+  if (!s.telephone) return { erreur: "Ajoutez d'abord le numéro de téléphone du salarié." };
+  if (!s.accord_whatsapp_le) return { erreur: "Le salarié doit d'abord avoir donné son accord (bouton ci-dessus)." };
+
+  const texte = `Bonjour ${s.prenoms}, ceci est un message d'essai de DématPaie pour ${entreprise?.raison_sociale ?? "votre employeur"}. Votre numéro est bien enregistré : vous recevrez ici l'avis de vos bulletins de paie.`;
+  try {
+    const identifiant = await envoyerWhatsApp(s.telephone, { texte, variables: {} }, "essai");
+    return identifiant
+      ? { succes: "Message d'essai envoyé : il doit arriver dans quelques secondes sur WhatsApp." }
+      : { succes: "Envoi simulé : WhatsApp n'est pas configuré (le message s'affiche dans la fenêtre du serveur)." };
+  } catch (erreur) {
+    console.error("Message WhatsApp d'essai non envoyé :", erreur);
+    return { erreur: expliquerRefusWhatsApp(erreur instanceof Error ? erreur.message : String(erreur)) };
+  }
 }

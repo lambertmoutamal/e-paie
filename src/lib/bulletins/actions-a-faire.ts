@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
+import { entrepriseCourante } from "@/lib/entreprise-courante";
 import type { MotifAlerte } from "@/lib/notifications/messages-paie";
 
 export type ActionPaie = {
@@ -60,3 +61,36 @@ export const mesReclamationsATraiter = cache(async (): Promise<ReclamationATrait
   return (data ?? []) as ReclamationATraiter[];
 });
 
+
+export type TachesEntreprise = {
+  actions: ActionPaie[];
+  demandes: DemandeATraiter[];
+  reclamations: ReclamationATraiter[];
+  nombre: number;
+  // Ce qui attend la personne dans ses autres entreprises (à traiter après avoir basculé)
+  ailleurs: { entreprise_id: string; raison_sociale: string; nombre: number }[];
+};
+
+// Une seule entreprise à la fois : les tâches de l'entreprise de travail, et un simple
+// décompte pour les autres.
+export const mesTachesEntrepriseCourante = cache(async (): Promise<TachesEntreprise> => {
+  const [courante, actions, demandes, reclamations] = await Promise.all([entrepriseCourante(), mesActionsPaie(), mesDemandesATraiter(), mesReclamationsATraiter()]);
+  const ici = (x: { entreprise_id: string }) => x.entreprise_id === courante?.id;
+  const ailleurs = new Map<string, { entreprise_id: string; raison_sociale: string; nombre: number }>();
+  for (const x of [...actions, ...demandes, ...reclamations]) {
+    if (ici(x)) continue;
+    const e = ailleurs.get(x.entreprise_id) ?? { entreprise_id: x.entreprise_id, raison_sociale: x.raison_sociale, nombre: 0 };
+    e.nombre += 1;
+    ailleurs.set(x.entreprise_id, e);
+  }
+  const t = { actions: actions.filter(ici), demandes: demandes.filter(ici), reclamations: reclamations.filter(ici) };
+  return { ...t, nombre: t.actions.length + t.demandes.length + t.reclamations.length, ailleurs: [...ailleurs.values()].sort((a, b) => a.raison_sociale.localeCompare(b.raison_sociale, "fr")) };
+});
+
+// Demandes d'entreprises en attente pour les cabinets que la personne administre
+// (la base ne compte que celles de ses cabinets).
+export const mesDemandesEntreprises = cache(async (): Promise<number> => {
+  const { supabase } = await exigerUtilisateur();
+  const { count } = await supabase.from("demandes_entreprise").select("id", { count: "exact", head: true }).eq("statut", "en_attente");
+  return count ?? 0;
+});

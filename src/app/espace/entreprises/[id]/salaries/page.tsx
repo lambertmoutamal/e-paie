@@ -5,12 +5,14 @@ import { FileSpreadsheet, Search, UserPlus, Users } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { formaterDate } from "@/lib/abonnements/phases";
 import { Badge, Carte, classesBouton, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Salariés" };
 
 const PAR_PAGE = 50;
 
 export default async function PageSalaries({ params, searchParams }: PageProps<"/espace/entreprises/[id]/salaries">) {
+  await connection(); // page calculée à chaque visite (elle lit la date du jour)
   const { id } = await params;
   const { q, statut, page } = await searchParams;
   const recherche = typeof q === "string" ? q.trim().slice(0, 60) : "";

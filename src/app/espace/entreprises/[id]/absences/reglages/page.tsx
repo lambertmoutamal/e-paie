@@ -16,12 +16,14 @@ import {
   retirerJourFerie,
 } from "../actions";
 import { chargerContexte, EnTeteAbsences } from "../commun";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Réglages des congés" };
 
 const texte = (v: number | string | null | undefined) => (v === null || v === undefined ? "" : String(v).replace(".", ","));
 
 export default async function PageReglages({ params }: PageProps<"/espace/entreprises/[id]/absences/reglages">) {
+  await connection(); // page calculée à chaque visite (elle lit la date du jour)
   const { id } = await params;
   const { supabase, entreprise, peutGerer } = await chargerContexte(id);
   const debutAnnee = `${new Date().getUTCFullYear()}-01-01`;

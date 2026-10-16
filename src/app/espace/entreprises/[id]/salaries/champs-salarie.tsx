@@ -1,4 +1,5 @@
 import { Champ, ChoixListe, TitreGroupe } from "@/components/formulaire";
+import { MODES_PAIEMENT } from "@/lib/salaries/regles";
 
 export type FicheSalarie = {
   matricule: string;
@@ -8,13 +9,16 @@ export type FicheSalarie = {
   date_naissance: string | null;
   nationalite: string | null;
   poste: string | null;
+  localisation: string | null;
   date_embauche: string;
   telephone: string | null;
   email: string | null;
   adresse: string | null;
   numero_cnss: string | null;
+  numero_cnamgs: string | null;
   banque: string | null;
   numero_compte: string | null;
+  mode_paiement: string | null;
 };
 
 // Champs communs à la création et à la modification d'une fiche salarié.
@@ -41,8 +45,10 @@ export function ChampsSalarie({ fiche, lectureSeule }: { fiche?: FicheSalarie; l
 
       <TitreGroupe>Emploi</TitreGroupe>
       <Champ nom="poste" libelle="Poste" valeurInitiale={fiche?.poste} desactive={d} />
+      <Champ nom="localisation" libelle="Localisation (lieu de travail)" valeurInitiale={fiche?.localisation} desactive={d} />
       <Champ nom="date_embauche" libelle="Date d'embauche" type="date" requis valeurInitiale={fiche?.date_embauche} desactive={d} />
       <Champ nom="numero_cnss" libelle="N° CNSS" valeurInitiale={fiche?.numero_cnss} desactive={d} />
+      <Champ nom="numero_cnamgs" libelle="N° CNAMGS" valeurInitiale={fiche?.numero_cnamgs} desactive={d} />
 
       <TitreGroupe>Contact</TitreGroupe>
       <Champ
@@ -57,6 +63,14 @@ export function ChampsSalarie({ fiche, lectureSeule }: { fiche?: FicheSalarie; l
       <Champ nom="adresse" libelle="Adresse" pleineLargeur valeurInitiale={fiche?.adresse} desactive={d} />
 
       <TitreGroupe>Paiement du salaire</TitreGroupe>
+      <ChoixListe
+        nom="mode_paiement"
+        libelle="Mode de paiement"
+        valeurInitiale={fiche?.mode_paiement ?? ""}
+        desactive={d}
+        pleineLargeur
+        options={Object.entries(MODES_PAIEMENT).map(([valeur, libelle]) => ({ valeur, libelle }))}
+      />
       <Champ nom="banque" libelle="Banque" valeurInitiale={fiche?.banque} desactive={d} />
       <Champ nom="numero_compte" libelle="N° de compte (RIB)" valeurInitiale={fiche?.numero_compte} desactive={d} />
     </>

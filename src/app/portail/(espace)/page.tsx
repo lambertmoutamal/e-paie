@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Briefcase, Download, FileText, Inbox } from "lucide-react";
+import { Briefcase, CircleCheck, Download, FileText, Inbox, MessageCircle } from "lucide-react";
 import { clientSupabaseServeur } from "@/lib/supabase/serveur";
 import { formaterDate } from "@/lib/abonnements/phases";
 import { libellePeriode } from "@/lib/bulletins/regles";
+import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, EtatVide, Page } from "@/components/ui";
+import { definirAccordWhatsApp } from "./actions";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 export const metadata: Metadata = { title: "Mes bulletins" };
 
@@ -23,10 +26,18 @@ type Bulletin = { bulletin_id: string; salarie_id: string; raison_sociale: strin
 
 export default async function PageMesBulletins() {
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) redirect("/portail/connexion");
 
-  const [{ data: emplois }, { data: bulletins }] = await Promise.all([supabase.rpc("mes_emplois"), supabase.rpc("mes_bulletins")]);
+  const [{ data: emplois }, { data: bulletins }, { data: emargements }, { data: accords }] = await Promise.all([
+    supabase.rpc("mes_emplois"),
+    supabase.rpc("mes_bulletins"),
+    // La base ne renvoie que les émargements du salarié connecté
+    supabase.from("emargements_bulletins").select("bulletin_id, emarge_le"),
+    supabase.rpc("mon_accord_whatsapp"),
+  ]);
+  const recuLe = new Map((emargements ?? []).map((e) => [e.bulletin_id, e.emarge_le as string]));
+  const accordWhatsApp = accords === true;
   const listeEmplois = (emplois ?? []) as Emploi[];
   const listeBulletins = (bulletins ?? []) as Bulletin[];
   const plusieursEmployeurs = new Set(listeEmplois.map((e) => e.raison_sociale)).size > 1;
@@ -75,6 +86,14 @@ export default async function PageMesBulletins() {
             ))}
           </div>
 
+          <p className="flex items-start gap-2 rounded-xl border border-marque/20 bg-marque-claire/60 px-4 py-3 text-sm text-marque-nuit">
+            <CircleCheck size={16} className="mt-0.5 shrink-0" aria-hidden />
+            <span>
+              <strong>Télécharger votre bulletin vaut accusé de réception</strong> (émargement électronique) : votre employeur voit la date à
+              laquelle vous l&apos;avez reçu, comme une signature sur sa copie.
+            </span>
+          </p>
+
           {listeBulletins.length === 0 ? (
             <Carte>
               <EtatVide icone={FileText} titre="Aucun bulletin pour l'instant" texte="Vos bulletins apparaîtront ici dès que votre employeur les aura publiés." />
@@ -99,6 +118,7 @@ export default async function PageMesBulletins() {
                           <span className="block truncate text-sm text-doux">
                             {plusieursEmployeurs ? `${b.raison_sociale} · ` : ""}
                             {b.publie_le ? `Publié le ${formaterDate(b.publie_le)}` : "Publié"}
+                            {recuLe.has(b.bulletin_id) ? ` · reçu le ${formaterDate(recuLe.get(b.bulletin_id)!)}` : ""}
                           </span>
                         </span>
                         {b.type === "rectificatif" && <Badge teinte="ambre">Rectificatif</Badge>}
@@ -110,6 +130,21 @@ export default async function PageMesBulletins() {
               </Carte>
             ))
           )}
+          <Carte titre="Avis par WhatsApp" description="Recevez un message WhatsApp dès qu'un nouveau bulletin est disponible.">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="flex items-center gap-2 text-sm">
+                <MessageCircle size={18} className={accordWhatsApp ? "text-emerald-600" : "text-doux"} aria-hidden />
+                {accordWhatsApp
+                  ? "Vous recevez l'avis de vos bulletins par WhatsApp (le message contient seulement un lien vers cet espace)."
+                  : "Vous ne recevez pas d'avis par WhatsApp."}
+              </p>
+              <ActionEnLigne
+                action={definirAccordWhatsApp.bind(null, !accordWhatsApp)}
+                libelle={accordWhatsApp ? "Ne plus recevoir" : "Recevoir les avis par WhatsApp"}
+                variante={accordWhatsApp ? "discret" : "secondaire"}
+              />
+            </div>
+          </Carte>
         </>
       )}
     </Page>

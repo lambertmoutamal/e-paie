@@ -148,7 +148,7 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 
 - Barre du haut organisée en **groupes avec menus déroulants** (Salariés, Paie, Absences, Réclamations,
   États, Paramètres) et **sélecteur d'entreprise de travail** (mémorisé sur l'appareil).
-- **Tableau de bord** : indicateurs clés (effectif, entrées, sorties, absentéisme, bulletins, demandes,
+- **Tableau de bord** : indicateurs clés (effectif, entrées, sorties, fins de CDD ; absentéisme, bulletins, demandes et réclamations retirés le 13/10,
   réclamations, fins de CDD) et graphiques (effectif et mouvements sur 12 mois, contrats, hommes/femmes,
   absences par type, réclamations par sujet).
 - **États** exportables en Excel et imprimables en PDF : personnel, entrées et sorties, contrats et échéances,
@@ -156,10 +156,113 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - **Livre de paie, DTS, DAS et soldes de tout compte** : produits à partir de l'**import Excel mensuel** des
   résultats de paie (choix de l'utilisateur) — prochaine étape ; il faudra un exemple du fichier du logiciel
   de paie et les modèles officiels de DTS et DAS.
-- **Choix de l'entreprise à la connexion** (si plusieurs entreprises accessibles) : écran dédié, choix
+- **Écran des entreprises à la connexion**, montré à tous (une ou plusieurs entreprises accessibles) : choix
   redemandé à chaque connexion ; possibilité de voir « toutes mes entreprises » ; changement possible depuis
   la barre du haut.
 - **Tableau de bord sur un seul écran** (sans défilement sur ordinateur) : 8 indicateurs et 6 graphiques
   (effectif, **pyramide des âges**, contrats, hommes/femmes, absences par type, réclamations par sujet).
   La liste « À faire » a sa propre page, ouverte par la cloche.
 
+
+## 2026-10-13 — Résultats de paie (import Excel mensuel) et états de paie
+
+- Les montants de paie viennent de l'**Excel du logiciel de paie**, importé chaque mois dans la période
+  (Paie → période → « Résultats de paie »). Une ligne par salarié, rattachée par le **matricule**.
+  Les colonnes sont reconnues d'après leur titre (brut, CNSS, IRPP, net…) et la correspondance peut être
+  corrigée avant l'envoi ; toute autre colonne chiffrée est gardée comme « rubrique ».
+- Un nouvel import **remplace** les lignes des mêmes salariés. Import et suppression possibles seulement
+  par ceux qui déposent les bulletins, et seulement tant que la période est **en brouillon**.
+- États produits : **livre de paie** (mensuel, avec coût employeur et rubriques), **soldes de tout compte**
+  (salariés sortis dans le mois + **reçu imprimable** à faire signer, montant en lettres), **DTS** et **DAS**
+  (cumuls annuels par salarié). DTS et DAS sont au **format générique** en attendant les modèles officiels.
+
+## 2026-10-13 — Une seule entreprise à la fois
+
+- À la connexion, chacun voit la ou les entreprises auxquelles il a accès et en choisit **une**.
+  Il n'existe plus de vue « toutes mes entreprises » : tableau de bord, états, recherche, « À faire »
+  et cloche portent uniquement sur l'entreprise de travail.
+- Sans entreprise choisie, l'espace renvoie vers l'écran de choix (contrôle dans `proxy.ts`, puis dans
+  chaque page). Une page d'une autre entreprise (lien d'une alerte) demande d'abord de basculer.
+- Changement d'entreprise : menu du compte (initiales, en haut à droite). La page « À faire » indique
+  seulement le nombre d'actions en attente dans les autres entreprises.
+- L'écran de choix (`/choix-entreprise`) est **hors du cadre de l'espace** : ni menus, ni recherche, ni cloche ;
+  seulement le logo et « Se déconnecter ». « Changer d'entreprise » quitte d'abord l'entreprise actuelle.
+
+## 2026-10-13 — Création d'entreprise depuis la page de connexion uniquement
+
+- On ne crée plus d'entreprise depuis l'espace connecté (page, menu et boutons retirés ; la page
+  `/nouvelle-entreprise` redirige vers l'espace si l'on est déjà connecté).
+- Page de connexion → **« Créer une nouvelle entreprise »** : le cabinet saisit son email et son mot de
+  passe, puis la fiche de l'entreprise. Elle est rattachée à son cabinet (nom du cabinet demandé s'il en
+  gère plusieurs) ; la base refuse si la personne n'administre pas ce cabinet. Un nouveau client sans
+  compte passe par « Essayer gratuitement 30 jours ».
+
+## 2026-10-13 — « Créer une nouvelle entreprise » : autonome ou confiée à un cabinet
+
+- Le formulaire de la page de connexion est rempli par **l'entreprise, sans compte** : fiche (dont
+  **N° CNAMGS employeur**, désormais sur toutes les fiches entreprise), personne à contacter, puis
+  **qui fait la paie** (puces) :
+  - **Autonome** : inscription habituelle (email d'activation, essai 30 jours) ; la fiche complète est reprise ;
+  - **Paie gérée par un cabinet** : choix du cabinet inscrit et du nombre de salariés, bouton
+    « Transmettre au cabinet <nom> ». La demande est enregistrée et les administrateurs du cabinet
+    reçoivent un email ; l'entreprise reçoit un accusé de réception.
+- Le cabinet traite la demande dans **Paramètres → Demandes d'entreprises** (aussi signalée par la cloche
+  et « À faire ») : **accepter** (l'entreprise est créée chez lui en mode cabinet et le contact reçoit son
+  accès d'administrateur de l'entreprise), **refuser** (email à l'entreprise) ou **demander des informations**
+  (email à l'entreprise, qui répond directement à l'adresse du membre du cabinet).
+- Un cabinet déjà inscrit garde son propre lien « Ajouter une entreprise cliente » (avec ses identifiants).
+- Sécurité : chaque cabinet ne voit que ses demandes ; aucune écriture directe (dépôt par le serveur,
+  traitement par des fonctions qui vérifient le cabinet) ; aucune fonction ouverte aux visiteurs.
+
+## 2026-10-13 — Annulation du dépôt des bulletins
+
+- Tant que la paie n'est pas envoyée en validation, la personne qui dépose peut **annuler le dépôt**
+  (tous les bulletins du mois retirés d'un coup, après confirmation).
+- Une fois envoyée, plus d'annulation : seul un validateur peut la **refuser**. Elle revient alors en
+  brouillon chez la personne qui l'a préparée (bandeau avec le motif) : elle peut **modifier** (remplacer)
+  ou **supprimer** des bulletins, ou annuler tout le dépôt, puis renvoyer en validation.
+- Menu Paramètres : « Catalogue des modules » et « Demandes de démo » retirés.
+
+## 2026-10-13 — Fiche salarié : mode de paiement, localisation, N° CNAMGS
+
+- Nouveaux champs de la fiche salarié (formulaire et import Excel) : **mode de paiement** (virement,
+  espèces, chèque, mobile money), **localisation** (lieu de travail) et **N° CNAMGS**.
+- La création automatique des salariés absents à partir de leur bulletin, essayée le 13/10, a été
+  **retirée le 14/10** à la demande de l'utilisateur : le dépôt en masse ne crée jamais de salarié.
+
+## 2026-10-15 — Avis WhatsApp et émargement électronique des bulletins
+
+- Option retenue : **message WhatsApp avec un lien** vers l'espace salarié (jamais le PDF), envoyé à la
+  publication aux salariés qui ont un numéro et ont **donné leur accord** (fiche ou espace salarié).
+  Suivi par bulletin : envoyé, reçu, lu, échec ; bouton de renvoi aux salariés pas encore prévenus.
+- **Le téléchargement du bulletin par le salarié vaut émargement** (accusé de réception) : date et heure
+  du premier téléchargement enregistrées (non modifiables), visibles par l'employeur, apposées sur
+  l'« exemplaire émargé » (copie employeur générée à la demande, avec l'empreinte du bulletin d'origine).
+- Le salarié en est informé dans son espace (« Télécharger votre bulletin vaut accusé de réception »).
+- 2026-10-15 : **Twilio n'offre pas d'essai au Gabon** (constaté sur la console). Ajout de l'envoi par
+  **Meta (WhatsApp Cloud API)**, prioritaire s'il est configuré (numéro de test gratuit pour les essais,
+  pas d'intermédiaire en production). Twilio reste possible ; sans configuration, envoi simulé.
+  Retours « reçu / lu / échec » de Meta acceptés seulement s'ils sont signés avec le secret de l'application.
+
+## 2026-10-15 — Rapidité
+
+- La base (Supabase) répond en 0,4 à 2 s par échange depuis le Gabon : on limite le nombre d'échanges
+  successifs par page. La session est vérifiée **sur place** (signature contrôlée avec la clé publique du
+  projet, `getClaims`) au lieu d'un appel à Supabase à chaque page ; le tableau de bord et la page de paie
+  lancent toutes leurs lectures en même temps.
+- Pour les essais en local : mode production (`npm run build` puis `npx next start -p 3001`), bien plus
+  rapide et plus léger que le mode développement.
+
+## 2026-10-16 — Signature et cachet de l'employeur sur les bulletins
+
+- **Une signature unique de l'entreprise** et son **cachet** (images PNG/JPEG) sont déposés sur la fiche
+  de l'entreprise, avec l'**emplacement** de la case « Émargement employeur », tracé une fois sur un
+  bulletin modèle (enregistré en fractions de la page, donc valable quel que soit le format du PDF).
+- **À la validation finale**, chaque bulletin reçoit le cachet (moitié gauche de la case) et la
+  signature (moitié droite). Le fichier d'origine est conservé ; une version signée est enregistrée à
+  côté (avec sa propre empreinte) et c'est elle que le salarié télécharge et que reprend l'exemplaire
+  émargé. Bouton « Apposer signature et cachet » pour une paie déjà approuvée.
+- La version signée n'est modifiable que par le serveur (protection en base, testée). Il s'agit d'une
+  signature visuelle (image), pas d'une signature électronique certifiée.
+- Connexion directe à la base : le port 5432 du pooler Supabase est coupé depuis ce poste (ECONNRESET) ;
+  le port 6543 fonctionne (migrations et tests de sécurité lancés avec ce port).

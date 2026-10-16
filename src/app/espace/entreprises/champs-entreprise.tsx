@@ -5,6 +5,7 @@ export type FicheEntreprise = {
   nif: string | null;
   rccm: string | null;
   numero_cnss: string | null;
+  numero_cnamgs: string | null;
   adresse: string | null;
   telephone: string | null;
   email: string | null;
@@ -24,6 +25,7 @@ export function ChampsEntreprise({ fiche }: { fiche?: FicheEntreprise }) {
       <Champ nom="nif" libelle="NIF" valeurInitiale={fiche?.nif} />
       <Champ nom="rccm" libelle="RCCM" valeurInitiale={fiche?.rccm} />
       <Champ nom="numero_cnss" libelle="N° employeur CNSS" valeurInitiale={fiche?.numero_cnss} />
+      <Champ nom="numero_cnamgs" libelle="N° employeur CNAMGS" valeurInitiale={fiche?.numero_cnamgs} />
       <Champ nom="telephone" libelle="Téléphone" type="tel" valeurInitiale={fiche?.telephone} />
       <Champ nom="email" libelle="Email de l'entreprise" type="email" valeurInitiale={fiche?.email} />
       <Champ nom="adresse" libelle="Adresse" valeurInitiale={fiche?.adresse} />

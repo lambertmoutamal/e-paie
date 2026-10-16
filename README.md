@@ -119,6 +119,11 @@ n'est laissée. Comptez 1 à 2 minutes selon la connexion.
 
 - Les prospects s'inscrivent sur `/inscription` (cabinet ou entreprise, essai ou Pro).
   Ils reçoivent un email d'activation ; leur espace et leur essai de 30 jours sont créés au clic.
+- Page de connexion → **« Créer une nouvelle entreprise »** : l'entreprise choisit **Autonome** (compte créé,
+  essai 30 jours) ou **Paie gérée par un cabinet** (demande transmise au cabinet choisi). Le cabinet
+  l'accepte, la refuse ou demande des informations dans **Paramètres → Demandes d'entreprises**.
+- Un cabinet déjà inscrit ajoute lui-même un client par le lien « Ajouter une entreprise cliente »
+  (avec ses identifiants). La création n'est pas possible depuis l'espace connecté.
 - Cycle : essai ou abonnement actif → **30 jours de lecture seule** → **blocage total**.
 - L'administrateur plateforme gère les abonnements et le prix des formules dans
   **Abonnements** (menu de gauche) ; l'équipe reçoit un email à chaque inscription et à chaque
@@ -164,6 +169,35 @@ Elles seules voient aussi un bandeau et une carte « À faire » dès qu'elles s
 
 Sans configuration Twilio, en développement, les messages WhatsApp s'affichent dans la console.
 
+## Avis de bulletin par WhatsApp et émargement électronique
+
+- À la **publication** de la paie, chaque salarié qui a un numéro et qui a **donné son accord** reçoit un
+  WhatsApp : « Bonjour {{1}}, votre bulletin de paie de {{2}} ({{3}}) est disponible. Consultez-le ici : {{4}} ».
+  Le bulletin ne passe jamais par WhatsApp : le lien ouvre l'espace salarié (connexion par code).
+- **Accord** : sur la fiche du salarié (« Le salarié a donné son accord ») ou par le salarié dans son espace.
+- **Émargement** : le téléchargement du bulletin par le salarié vaut accusé de réception. La page de la
+  période indique « Émargé le … » pour chaque bulletin, et le lien « Exemplaire émargé » donne la copie
+  employeur avec la mention d'émargement (le fichier d'origine n'est pas modifié). Le registre des
+  bulletins (menu États) a une colonne « Émargé le ».
+- **Envoi par Meta (recommandé, Twilio n'offrant pas d'essai au Gabon)** :
+  1. developers.facebook.com → **Créer une application** (type « Entreprise ») → ajouter le produit **WhatsApp**.
+  2. Page **Configuration de l'API** : Meta fournit un **numéro de test**. Copiez le **jeton d'accès** et
+     l'**identifiant du numéro de téléphone** dans `META_WHATSAPP_JETON` et `META_WHATSAPP_NUMERO_ID`.
+  3. Dans « À », **ajoutez votre numéro** (code de vérification reçu sur WhatsApp) : le numéro de test
+     n'écrit qu'aux numéros ajoutés (5 au maximum).
+  4. Essai sans modèle : envoyez d'abord un message WhatsApp au numéro de test (fenêtre de 24 h), puis
+     publiez une paie d'essai. En production : créez le modèle `avis_bulletin` (catégorie « Utilité »,
+     français, texte ci-dessus) dans WhatsApp Manager et mettez son nom dans `META_WHATSAPP_MODELE_BULLETIN`.
+  5. Le jeton de la page de test dure 24 h : pour la production, créez un jeton permanent
+     (Paramètres de l'entreprise → Utilisateurs système).
+  6. Suivi « reçu / lu » : dans WhatsApp → Configuration, adresse de rappel `https://<votre site>/api/meta/whatsapp`,
+     jeton de vérification = `META_WHATSAPP_JETON_VERIFICATION`, abonnement au champ « messages » ;
+     `META_APP_SECRET` = clé secrète de l'application (Paramètres → Général).
+- **Ou par Twilio** (`.env.local`) : `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` et
+  `TWILIO_WHATSAPP_MODELE_BULLETIN` (identifiant `HX…` du modèle ci-dessus, approuvé par WhatsApp,
+  catégorie « Utility »). Twilio signale « reçu / lu / échec » à l'adresse `/api/twilio/statut` (appel signé).
+  Sans configuration, en développement, les messages s'affichent dans la console.
+
 ## Congés et absences
 
 - Côté entreprise : ouvrez l'entreprise, puis le module **Congés & absences** (onglets
@@ -187,6 +221,14 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
 - Entreprise : module **Self-service** de l'entreprise (`/espace/entreprises/<id>/reclamations`) ; les
   réclamations à traiter apparaissent aussi dans « À faire ». Bulletin → gestionnaire de paie ; autres
   sujets → RH ; à défaut, administrateurs.
+
+## Résultats de paie et états de paie
+
+- Chaque mois : **Paie → Périodes et bulletins** → ouvrez la période → carte **« Résultats de paie (Excel) »**.
+  Choisissez l'Excel exporté du logiciel de paie (.xlsx, une ligne par salarié avec une colonne « Matricule »),
+  vérifiez la correspondance des colonnes, puis cliquez sur « Importer ».
+- Les états se trouvent dans le menu **États** : livre de paie, soldes de tout compte (avec le reçu à imprimer),
+  DTS et DAS (choisissez l'année ; par défaut l'année écoulée).
 
 ## Commandes utiles
 

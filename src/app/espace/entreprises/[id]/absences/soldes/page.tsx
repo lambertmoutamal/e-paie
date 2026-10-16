@@ -6,6 +6,7 @@ import { Champ, Formulaire } from "@/components/formulaire";
 import { Carte, Page } from "@/components/ui";
 import { definirSoldeInitial } from "../actions";
 import { chargerContexte, EnTeteAbsences } from "../commun";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Soldes de congés" };
 
@@ -22,6 +23,7 @@ type Solde = {
 };
 
 export default async function PageSoldes({ params }: PageProps<"/espace/entreprises/[id]/absences/soldes">) {
+  await connection(); // page calculée à chaque visite (elle lit la date du jour)
   const { id } = await params;
   const { supabase, entreprise, peutGerer } = await chargerContexte(id);
   const [{ data: salaries }, { data: soldes }, { data: parametres }, { data: derniers }, { data: initiaux }] = await Promise.all([

@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { CalendarClock, CalendarOff, FileCheck2, Inbox, MessagesSquare, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { CalendarClock, TrendingDown, TrendingUp, Users } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { valeurLiee } from "@/lib/supabase/relations";
-import { libellePeriode, salariesAttendus } from "@/lib/bulletins/regles";
 import { TYPES_CONTRAT } from "@/lib/contrats/regles";
 import { SUJETS_RECLAMATION } from "@/lib/reclamations/regles";
-import { choixEntrepriseFait, entrepriseCourante, entreprisesAccessibles } from "@/lib/entreprise-courante";
+import { exigerEntrepriseCourante, idEntrepriseMemorise } from "@/lib/entreprise-courante";
 import { absencesDuMois, compter, evolutionEffectif, pyramideDesAges, repartitionSexe, type AbsenceStat, type SalarieStat } from "@/lib/tableau-de-bord/calculs";
 import type { Echeance } from "@/components/echeances";
 import { GraphiqueAnneau, GraphiqueBarresHorizontales, GraphiqueEffectif, GraphiquePyramide } from "@/components/graphiques-dynamiques";
@@ -68,19 +66,18 @@ function CarteGraphique({ titre, sousTitre, children }: { titre: string; sousTit
 type SalarieMini = SalarieStat & { entreprise_id: string; date_naissance: string | null };
 
 export default async function TableauDeBord() {
-  // Plusieurs entreprises : le choix se fait d'abord, à la connexion
-  if (!(await choixEntrepriseFait())) redirect("/espace/choisir-entreprise");
-
-  const { supabase } = await exigerUtilisateur();
-  const [courante, accessibles] = await Promise.all([entrepriseCourante(), entreprisesAccessibles()]);
-  const perimetre = courante ? [courante.id] : accessibles.map((e) => e.id);
+  const [{ supabase }, idMemorise] = await Promise.all([exigerUtilisateur(), idEntrepriseMemorise()]);
+  const perimetre = [idMemorise];
   const maintenant = new Date();
   const aujourdhui = maintenant.toISOString().slice(0, 10);
   const debutMois = `${aujourdhui.slice(0, 8)}01`;
 
   // Toutes les lectures sont limitées par la base au périmètre de la personne
-  const [{ data: salariesBruts }, { data: contrats }, { data: absencesBrutes }, { count: demandesAttente }, { data: reclamations }, { data: periodes }, { data: echeancesBrutes }] =
+  // Lancées en même temps que la vérification de l'entreprise (une seule attente au lieu de deux)
+  const [courante, { data: salariesBruts }, { data: contrats }, { data: absencesBrutes }, { data: reclamations }, { data: echeancesBrutes }] =
     await Promise.all([
+      // Une seule entreprise à la fois : celle choisie à la connexion (sinon, écran de choix)
+      exigerEntrepriseCourante(),
       supabase.from("salaries").select("entreprise_id, sexe, date_naissance, date_embauche, date_sortie, statut").in("entreprise_id", perimetre).limit(5000),
       supabase.from("contrats").select("type_contrat").in("entreprise_id", perimetre).eq("statut", "en_cours").neq("nature", "avenant").limit(5000),
       supabase
@@ -91,15 +88,7 @@ export default async function TableauDeBord() {
         .lte("debut", `${aujourdhui.slice(0, 8)}31`)
         .gte("fin", debutMois)
         .limit(5000),
-      supabase.from("demandes_absence").select("id", { count: "exact", head: true }).in("entreprise_id", perimetre).eq("statut", "en_attente"),
       supabase.from("reclamations").select("sujet").in("entreprise_id", perimetre).in("statut", ["ouverte", "en_cours"]).limit(2000),
-      supabase
-        .from("periodes_paie")
-        .select("entreprise_id, annee, mois, bulletins(count)")
-        .in("entreprise_id", perimetre)
-        .order("annee", { ascending: false })
-        .order("mois", { ascending: false })
-        .limit(1),
       supabase.rpc("echeances_contrats", { p_jours: 30 }),
     ]);
 
@@ -115,43 +104,23 @@ export default async function TableauDeBord() {
   );
   const echeances = ((echeancesBrutes ?? []) as Echeance[]).filter((e) => perimetre.includes(e.entreprise_id));
   const finsCdd = echeances.filter((e) => e.nature === "fin_contrat").length;
-  const derniere = periodes?.[0];
-  const nbBulletins = derniere ? ((derniere.bulletins as unknown as { count: number }[])[0]?.count ?? 0) : 0;
-  const attendus = derniere
-    ? salariesAttendus(
-        salaries.filter((s) => s.entreprise_id === derniere.entreprise_id).map((s, i) => ({ ...s, id: String(i), matricule: "" })),
-        derniere.annee,
-        derniere.mois,
-      ).length
-    : 0;
   const pyramide = pyramideDesAges(salaries, maintenant);
-  const lien = (chemin: string) => (courante ? `/espace/entreprises/${courante.id}${chemin}` : undefined);
+  const lien = (chemin: string) => `/espace/entreprises/${courante.id}${chemin}`;
 
   return (
     <div className="flex flex-col gap-3 lg:absolute lg:inset-0 lg:mx-auto lg:max-w-7xl lg:px-8 lg:pb-5 lg:pt-4">
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h1 className="text-xl font-bold tracking-tight">
-          Tableau de bord <span className="font-semibold text-marque">· {courante ? courante.raison_sociale : "Toutes mes entreprises"}</span>
+          Tableau de bord <span className="font-semibold text-marque">· {courante.raison_sociale}</span>
         </h1>
         <p className="text-sm capitalize text-doux">{JOUR_LONG.format(maintenant)}</p>
       </header>
 
       {/* Indicateurs clés */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         <Indicateur icone={Users} libelle="Effectif" valeur={ceMois.effectif} detail="Salariés en poste aujourd'hui" teinte="indigo" href={lien("/salaries")} />
         <Indicateur icone={TrendingUp} libelle="Entrées du mois" valeur={ceMois.entrees} detail={`${effectif.reduce((s, m) => s + m.entrees, 0)} sur 12 mois`} teinte="vert" href="/espace/etats/entrees-sorties" />
         <Indicateur icone={TrendingDown} libelle="Sorties du mois" valeur={ceMois.sorties} detail={`${effectif.reduce((s, m) => s + m.sorties, 0)} sur 12 mois`} teinte="corail" href="/espace/etats/entrees-sorties" />
-        <Indicateur icone={CalendarOff} libelle="Absentéisme" valeur={`${absences.tauxAbsenteisme.toLocaleString("fr-FR")} %`} detail={`${absences.totalJours.toLocaleString("fr-FR")} jours d'absence ce mois`} teinte="ciel" href="/espace/etats/absences-par-type" />
-        <Indicateur
-          icone={FileCheck2}
-          libelle="Bulletins publiés"
-          valeur={derniere ? `${nbBulletins}/${attendus}` : "—"}
-          detail={derniere ? `Dernière paie : ${libellePeriode(derniere.annee, derniere.mois)}` : "Aucune période de paie"}
-          teinte="violet"
-          href={lien("/paie")}
-        />
-        <Indicateur icone={Inbox} libelle="Demandes en attente" valeur={demandesAttente ?? 0} detail="Demandes d'absence à traiter" teinte="ambre" href={lien("/absences")} />
-        <Indicateur icone={MessagesSquare} libelle="Réclamations" valeur={reclamations?.length ?? 0} detail="Réclamations ouvertes ou en cours" teinte="rose" href={lien("/reclamations")} />
         <Indicateur icone={CalendarClock} libelle="Fins de CDD" valeur={finsCdd} detail={`Dans les 30 jours (et ${echeances.length - finsCdd} fin(s) d'essai)`} teinte="corail" href="/espace/etats/contrats" />
       </div>
 

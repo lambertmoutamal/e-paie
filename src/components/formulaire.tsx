@@ -8,7 +8,7 @@ import { classesBouton } from "./ui";
 
 type Action = (etat: EtatFormulaire, formulaire: FormData) => Promise<EtatFormulaire>;
 
-const ContexteFormulaire = createContext<EtatFormulaire>(undefined);
+export const ContexteFormulaire = createContext<EtatFormulaire>(undefined);
 
 // Formulaire relié à une action serveur : affiche les erreurs par champ
 // et le message de réussite.
@@ -16,11 +16,14 @@ export function Formulaire({
   action,
   libelleBouton,
   colonnes = 1,
+  boutonEnHaut,
   children,
 }: {
   action: Action;
   libelleBouton: string;
   colonnes?: 1 | 2;
+  // Formulaire long : le bouton d'envoi est aussi affiché en haut
+  boutonEnHaut?: boolean;
   children: ReactNode;
 }) {
   const [etat, envoyer] = useActionState(action, undefined);
@@ -28,6 +31,12 @@ export function Formulaire({
   return (
     <ContexteFormulaire value={etat}>
       <form action={envoyer} className="flex flex-col gap-5" noValidate>
+        {boutonEnHaut && (
+          <div className="flex flex-wrap items-center justify-end gap-3 border-b border-bordure pb-4">
+            {etat?.succes && <span className="text-sm text-marque">{etat.succes}</span>}
+            <BoutonEnvoyer>{libelleBouton}</BoutonEnvoyer>
+          </div>
+        )}
         <div className={`grid gap-4 ${colonnes === 2 ? "sm:grid-cols-2" : ""}`}>{children}</div>
         <MessageEtat etat={etat} />
         <div className="flex justify-end">
@@ -270,7 +279,7 @@ export function TitreGroupe({ children }: { children: ReactNode }) {
   return <p className="pt-2 text-sm font-semibold text-doux sm:col-span-2">{children}</p>;
 }
 
-function BoutonEnvoyer({ children, variante = "principal" }: { children: ReactNode; variante?: "principal" | "secondaire" }) {
+export function BoutonEnvoyer({ children, variante = "principal" }: { children: ReactNode; variante?: "principal" | "secondaire" }) {
   const { pending } = useFormStatus();
   return (
     <button type="submit" disabled={pending} className={classesBouton(variante)}>

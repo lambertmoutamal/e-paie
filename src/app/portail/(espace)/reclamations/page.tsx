@@ -6,6 +6,7 @@ import { clientSupabaseServeur } from "@/lib/supabase/serveur";
 import { formaterDate } from "@/lib/abonnements/phases";
 import { STATUTS_RECLAMATION, SUJETS_RECLAMATION, type StatutReclamation, type SujetReclamation } from "@/lib/reclamations/regles";
 import { Badge, Carte, classesBouton, EtatVide, Page } from "@/components/ui";
+import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 export const metadata: Metadata = { title: "Mes réclamations" };
 
@@ -13,7 +14,7 @@ type Reclamation = { id: string; raison_sociale: string; sujet: SujetReclamation
 
 export default async function PageMesReclamations() {
   const supabase = await clientSupabaseServeur();
-  const { data: session } = await supabase.auth.getUser();
+  const session = { user: await utilisateurConnecte(supabase) };
   if (!session.user) redirect("/portail/connexion");
   const [{ data }, { data: emplois }] = await Promise.all([supabase.rpc("mes_reclamations"), supabase.rpc("mes_emplois")]);
   const liste = (data ?? []) as Reclamation[];

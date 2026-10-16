@@ -1,6 +1,6 @@
 // Catalogue des états (rapports) que l'on peut sortir, par entreprise.
-// « disponible » : produit à partir des données déjà présentes ; « bientot » : nécessite
-// l'import mensuel des résultats de paie (livre de paie, DTS, DAS, solde de tout compte).
+// Le livre de paie, les soldes de tout compte, la DTS et la DAS sont produits à partir
+// des résultats de paie importés chaque mois (Excel du logiciel de paie).
 
 export type CodeEtat =
   | "conges-du-mois"
@@ -22,7 +22,10 @@ export type DefinitionEtat = {
   description: string;
   groupe: "Personnel" | "Congés et absences" | "Paie" | "Déclarations";
   parMois: boolean;
+  parAnnee?: boolean;
   disponible: boolean;
+  // Produit à partir des résultats de paie importés
+  depuisResultats?: boolean;
 };
 
 export const ETATS: DefinitionEtat[] = [
@@ -34,10 +37,10 @@ export const ETATS: DefinitionEtat[] = [
   { code: "absences-par-type", titre: "Absences par type", description: "Nombre de jours d'absence par type sur le mois.", groupe: "Congés et absences", parMois: true, disponible: true },
   { code: "soldes-conges", titre: "Soldes de congés", description: "Acquis, pris, en attente et disponible de chaque salarié.", groupe: "Congés et absences", parMois: false, disponible: true },
   { code: "bulletins", titre: "Registre des bulletins", description: "Bulletins déposés et publiés pour le mois, avec leur empreinte.", groupe: "Paie", parMois: true, disponible: true },
-  { code: "livre-de-paie", titre: "Livre de paie", description: "Récapitulatif mensuel des éléments de paie de chaque salarié.", groupe: "Paie", parMois: true, disponible: false },
-  { code: "solde-tout-compte", titre: "Soldes de tout compte", description: "Sommes dues aux salariés sortis.", groupe: "Paie", parMois: true, disponible: false },
-  { code: "dts", titre: "DTS", description: "Déclaration des traitements et salaires.", groupe: "Déclarations", parMois: false, disponible: false },
-  { code: "das", titre: "DAS", description: "Déclaration annuelle des salaires.", groupe: "Déclarations", parMois: false, disponible: false },
+  { code: "livre-de-paie", titre: "Livre de paie", description: "Éléments de paie de chaque salarié pour le mois, avec totaux.", groupe: "Paie", parMois: true, disponible: true, depuisResultats: true },
+  { code: "solde-tout-compte", titre: "Soldes de tout compte", description: "Salariés sortis dans le mois : sommes versées et reçu à signer.", groupe: "Paie", parMois: true, disponible: true, depuisResultats: true },
+  { code: "dts", titre: "DTS", description: "Déclaration des traitements et salaires : cumuls annuels imposables et impôt retenu.", groupe: "Déclarations", parMois: false, parAnnee: true, disponible: true, depuisResultats: true },
+  { code: "das", titre: "DAS", description: "Déclaration annuelle des salaires : cumuls annuels soumis à cotisations sociales.", groupe: "Déclarations", parMois: false, parAnnee: true, disponible: true, depuisResultats: true },
 ];
 
 export function etatParCode(code: string): DefinitionEtat | undefined {

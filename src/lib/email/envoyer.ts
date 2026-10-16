@@ -4,7 +4,8 @@ import type { Email } from "./modeles";
 // Envoi via Resend (https://resend.com). Clé et expéditeur dans .env.local.
 // Sans clé, en développement uniquement, l'email est affiché dans la console
 // du serveur (pour tester sans configuration). En production, c'est une erreur.
-export async function envoyerEmail(destinataire: string, email: Email): Promise<void> {
+// `repondreA` : adresse qui reçoit les réponses (ex. le cabinet qui écrit à une entreprise).
+export async function envoyerEmail(destinataire: string, email: Email, repondreA?: string): Promise<void> {
   const cle = process.env.RESEND_API_KEY;
   const expediteur = process.env.EMAIL_EXPEDITEUR;
 
@@ -23,7 +24,7 @@ export async function envoyerEmail(destinataire: string, email: Email): Promise<
       from: expediteur,
       to: [destinataire],
       // Adresse réelle pour les réponses (facultative) : améliore la confiance des messageries.
-      ...(process.env.EMAIL_REPONSE ? { reply_to: process.env.EMAIL_REPONSE } : {}),
+      ...(repondreA ? { reply_to: repondreA } : process.env.EMAIL_REPONSE ? { reply_to: process.env.EMAIL_REPONSE } : {}),
       subject: email.sujet,
       html: email.html,
       text: email.texte,

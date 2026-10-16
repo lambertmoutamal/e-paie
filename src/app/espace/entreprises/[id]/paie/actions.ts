@@ -6,6 +6,8 @@ import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { alerterPaie } from "@/lib/notifications/alertes-paie";
+import { envoyerAvisBulletins, type BilanAvis } from "@/lib/notifications/avis-bulletins";
+import { signerBulletinsPeriode } from "@/lib/bulletins/signature";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import { estPdf, libellePeriode, lireCircuit, schemaPeriode, TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
 import { compterPages } from "@/lib/bulletins/pages";
@@ -128,6 +130,26 @@ export async function retirerBulletin(entrepriseId: string, bulletinId: string) 
   refresh();
 }
 
+// Annulation du dépôt : tous les bulletins de la période sont retirés, tant qu'elle n'a pas
+// été envoyée en validation. Après l'envoi, seul un refus du validateur la rouvre ; elle
+// revient alors en brouillon chez la personne qui l'a préparée (modifier ou supprimer).
+// La base n'autorise le retrait qu'à qui dépose les bulletins, et seulement en brouillon.
+export async function annulerDepot(entrepriseId: string, periodeId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const { data: periode } = await supabase.from("periodes_paie").select("statut").eq("id", periodeId).eq("entreprise_id", entrepriseId).maybeSingle();
+  if (!periode) return { erreur: "Période introuvable." };
+  if (periode.statut !== "brouillon") {
+    return { erreur: "La paie a été envoyée en validation : le dépôt ne peut plus être annulé. Seul un validateur peut la refuser." };
+  }
+  const { data, error } = await supabase.from("bulletins").delete().eq("periode_id", periodeId).eq("entreprise_id", entrepriseId).select("fichier_chemin");
+  if (error) return { erreur: "Le dépôt n'a pas pu être annulé." };
+  if (!data?.length) return { erreur: "Aucun bulletin retiré : vous ne pouvez pas annuler ce dépôt." };
+  const chemins = data.map((b) => b.fichier_chemin);
+  for (let i = 0; i < chemins.length; i += 100) await supabase.storage.from(ESPACE).remove(chemins.slice(i, i + 100));
+  refresh();
+  return { succes: `Dépôt annulé : ${data.length} bulletin(s) retiré(s).` };
+}
+
 // ---------------------------------------------------------------------
 // Circuit de validation (les règles sont appliquées par la base)
 // ---------------------------------------------------------------------
@@ -176,14 +198,65 @@ export async function deciderEtape(periodeId: string, _e: EtatFormulaire, formul
   const { data, error } = await supabase.rpc("valider_etape", { p_periode_id: periodeId, p_commentaire: commentaire || null });
   if (error) return { erreur: messageCircuit(error, "La validation n'a pas pu être enregistrée."), valeurs };
   after(() => alerterPaie(periodeId)); // prévient l'étape suivante, ou les publieurs si approuvée
+  if (data === "approuvee") {
+    // Validation finale : signature et cachet de l'entreprise apposés sur chaque bulletin
+    const bilan = await signerBulletinsPeriode(periodeId);
+    refresh();
+    return {
+      succes: bilan.raison
+        ? `Période approuvée : elle est désormais verrouillée. Signature non apposée : ${bilan.raison}`
+        : `Période approuvée : elle est désormais verrouillée. Signature et cachet apposés sur ${bilan.signes} bulletin(s)${bilan.echecs ? ` (${bilan.echecs} échec(s))` : ""}.`,
+    };
+  }
   refresh();
-  return { succes: data === "approuvee" ? "Période approuvée : elle est désormais verrouillée." : "Étape validée : la période passe à l'étape suivante." };
+  return { succes: "Étape validée : la période passe à l'étape suivante." };
 }
 
 export async function publierPeriode(periodeId: string): Promise<EtatFormulaire> {
   const { supabase } = await exigerUtilisateur();
   const { data, error } = await supabase.rpc("publier_periode", { p_periode_id: periodeId });
   if (error) return { erreur: messageCircuit(error, "La publication a échoué.") };
+  // Avis WhatsApp aux salariés qui l'ont accepté (après la réponse : la page n'attend pas)
+  after(() => envoyerAvisBulletins(periodeId).catch((e) => console.error("Avis de bulletins non envoyés :", e)));
   refresh();
-  return { succes: `${data} bulletin(s) publié(s) : les salariés peuvent les consulter.` };
+  return { succes: `${data} bulletin(s) publié(s) : les salariés peuvent les consulter. Les avis WhatsApp partent maintenant.` };
+}
+
+function resumeBilan(b: BilanAvis): string {
+  const morceaux = [`${b.envoyes} avis envoyé(s)`];
+  if (b.echecs) morceaux.push(`${b.echecs} échec(s)`);
+  if (b.sansNumero) morceaux.push(`${b.sansNumero} salarié(s) sans téléphone`);
+  if (b.sansAccord) morceaux.push(`${b.sansAccord} sans accord WhatsApp`);
+  if (b.dejaPrevenus) morceaux.push(`${b.dejaPrevenus} déjà prévenu(s)`);
+  return `${morceaux.join(", ")}.`;
+}
+
+// Signature et cachet sur les bulletins d'une paie déjà approuvée (réglage fait après coup,
+// échec, nouvelle signature). Réservé à qui peut publier la paie de l'entreprise.
+export async function apposerSignature(entrepriseId: string, periodeId: string, refaire: boolean): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const [{ data: autorise }, { data: periode }] = await Promise.all([
+    supabase.rpc("peut_publier", { p_entreprise_id: entrepriseId }),
+    supabase.from("periodes_paie").select("statut").eq("id", periodeId).eq("entreprise_id", entrepriseId).maybeSingle(),
+  ]);
+  if (autorise !== true || !periode) return { erreur: "Vous ne pouvez pas signer les bulletins de cette paie." };
+  const bilan = await signerBulletinsPeriode(periodeId, refaire);
+  refresh();
+  if (bilan.raison) return { erreur: bilan.raison };
+  return { succes: `Signature et cachet apposés sur ${bilan.signes} bulletin(s)${bilan.echecs ? `, ${bilan.echecs} échec(s)` : ""}${bilan.dejaSignes ? `, ${bilan.dejaSignes} déjà signé(s)` : ""}.` };
+}
+
+// Renvoi des avis aux salariés pas encore prévenus (nouveau numéro, accord donné, échec).
+// Réservé à ceux qui peuvent publier la paie de l'entreprise.
+export async function renvoyerAvis(entrepriseId: string, periodeId: string): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const [{ data: autorise }, { data: periode }] = await Promise.all([
+    supabase.rpc("peut_publier", { p_entreprise_id: entrepriseId }),
+    supabase.from("periodes_paie").select("statut").eq("id", periodeId).eq("entreprise_id", entrepriseId).maybeSingle(),
+  ]);
+  if (autorise !== true || !periode) return { erreur: "Vous ne pouvez pas envoyer les avis de cette paie." };
+  if (periode.statut !== "publiee") return { erreur: "Les avis partent seulement une fois la paie publiée." };
+  const bilan = await envoyerAvisBulletins(periodeId);
+  refresh();
+  return { succes: resumeBilan(bilan) };
 }

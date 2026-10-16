@@ -12,6 +12,9 @@ import { ChampsEntreprise } from "../champs-entreprise";
 import { MODULES } from "@/lib/modules";
 import { CarteModule } from "@/components/carte-module";
 import { CarteEcheances, type Echeance } from "@/components/echeances";
+import { clientSupabaseAdmin } from "@/lib/supabase/admin";
+import { schemaZone } from "@/lib/bulletins/regles-signature";
+import { ReglageEmargement } from "./reglage-emargement";
 
 export const metadata: Metadata = { title: "Entreprise" };
 
@@ -22,7 +25,7 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
   // La RLS ne renvoie l'entreprise qu'aux personnes qui y ont accès.
   const { data: entreprise } = await supabase
     .from("entreprises")
-    .select("id, raison_sociale, nif, rccm, numero_cnss, adresse, telephone, email, mode, statut, cabinet_id, cabinets(nom)")
+    .select("id, raison_sociale, nif, rccm, numero_cnss, numero_cnamgs, adresse, telephone, email, mode, statut, cabinet_id, signature_chemin, cachet_chemin, zone_emargement, cabinets(nom)")
     .eq("id", id)
     .maybeSingle();
   if (!entreprise) notFound();
@@ -38,6 +41,12 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
     supabase.rpc("echeances_contrats", { p_jours: 30 }),
   ]);
   const peutGerer = gere === true;
+  // Aperçus de la signature et du cachet (espace privé) : liens temporaires, administrateurs seulement
+  const lienImage = async (chemin: string | null) =>
+    chemin && peutGerer ? ((await clientSupabaseAdmin().storage.from("signatures").createSignedUrl(chemin, 600)).data?.signedUrl ?? null) : null;
+  const [apercuSignature, apercuCachet] = await Promise.all([lienImage(entreprise.signature_chemin), lienImage(entreprise.cachet_chemin)]);
+  const zone = schemaZone.safeParse(entreprise.zone_emargement);
+  const signatureReglee = Boolean((entreprise.signature_chemin || entreprise.cachet_chemin) && zone.success);
   const nomCabinet = entreprise.cabinets ? champLie(entreprise.cabinets, "nom") : null;
 
   return (
@@ -144,6 +153,7 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
                 ["NIF", entreprise.nif],
                 ["RCCM", entreprise.rccm],
                 ["N° employeur CNSS", entreprise.numero_cnss],
+                ["N° employeur CNAMGS", entreprise.numero_cnamgs],
                 ["Téléphone", entreprise.telephone],
                 ["Email de l'entreprise", entreprise.email],
                 ["Adresse", entreprise.adresse],
@@ -169,11 +179,23 @@ export default async function PageEntreprise({ params }: PageProps<"/espace/entr
               </details>
             )}
           </Carte>
-          <p className="text-xs text-doux">
-            Logo, cachet et signature numérisés : ajout prévu avec le dépôt des fichiers (étape 7).
-          </p>
         </div>
       </div>
+
+      <Carte
+        titre="Signature et cachet sur les bulletins"
+        description={
+          signatureReglee
+            ? "Réglé : à la validation finale de chaque paie, la signature et le cachet sont apposés dans la case « Émargement employeur » de chaque bulletin."
+            : "À la validation finale de chaque paie, DématPaie appose la signature et le cachet de l'entreprise sur chaque bulletin. Déposez les images et indiquez l'emplacement une fois."
+        }
+      >
+        {peutGerer ? (
+          <ReglageEmargement entrepriseId={id} zone={zone.success ? zone.data : null} apercuSignature={apercuSignature} apercuCachet={apercuCachet} />
+        ) : (
+          <p className="text-sm text-doux">{signatureReglee ? "La signature et le cachet sont réglés." : "Pas encore réglé : un administrateur de l'entreprise doit le faire."}</p>
+        )}
+      </Carte>
     </Page>
   );
 }
