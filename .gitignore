@@ -43,3 +43,6 @@ next-env.d.ts
 
 # fichiers du lecteur PDF (copiés depuis node_modules par scripts/copier-pdfjs.mjs)
 /public/pdfjs
+
+# Sauvegardes locales de la base (données personnelles) : jamais sur GitHub
+/sauvegardes/
