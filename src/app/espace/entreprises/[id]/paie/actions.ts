@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { alerterPaie } from "@/lib/notifications/alertes-paie";
 import { envoyerAvisBulletins, type BilanAvis } from "@/lib/notifications/avis-bulletins";
+import { signerBulletinsPeriode } from "@/lib/bulletins/signature";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
 import { estPdf, libellePeriode, lireCircuit, schemaPeriode, TAILLE_MAX_BULLETIN } from "@/lib/bulletins/regles";
 import { compterPages } from "@/lib/bulletins/pages";
@@ -197,8 +198,18 @@ export async function deciderEtape(periodeId: string, _e: EtatFormulaire, formul
   const { data, error } = await supabase.rpc("valider_etape", { p_periode_id: periodeId, p_commentaire: commentaire || null });
   if (error) return { erreur: messageCircuit(error, "La validation n'a pas pu être enregistrée."), valeurs };
   after(() => alerterPaie(periodeId)); // prévient l'étape suivante, ou les publieurs si approuvée
+  if (data === "approuvee") {
+    // Validation finale : signature et cachet de l'entreprise apposés sur chaque bulletin
+    const bilan = await signerBulletinsPeriode(periodeId);
+    refresh();
+    return {
+      succes: bilan.raison
+        ? `Période approuvée : elle est désormais verrouillée. Signature non apposée : ${bilan.raison}`
+        : `Période approuvée : elle est désormais verrouillée. Signature et cachet apposés sur ${bilan.signes} bulletin(s)${bilan.echecs ? ` (${bilan.echecs} échec(s))` : ""}.`,
+    };
+  }
   refresh();
-  return { succes: data === "approuvee" ? "Période approuvée : elle est désormais verrouillée." : "Étape validée : la période passe à l'étape suivante." };
+  return { succes: "Étape validée : la période passe à l'étape suivante." };
 }
 
 export async function publierPeriode(periodeId: string): Promise<EtatFormulaire> {
@@ -218,6 +229,21 @@ function resumeBilan(b: BilanAvis): string {
   if (b.sansAccord) morceaux.push(`${b.sansAccord} sans accord WhatsApp`);
   if (b.dejaPrevenus) morceaux.push(`${b.dejaPrevenus} déjà prévenu(s)`);
   return `${morceaux.join(", ")}.`;
+}
+
+// Signature et cachet sur les bulletins d'une paie déjà approuvée (réglage fait après coup,
+// échec, nouvelle signature). Réservé à qui peut publier la paie de l'entreprise.
+export async function apposerSignature(entrepriseId: string, periodeId: string, refaire: boolean): Promise<EtatFormulaire> {
+  const { supabase } = await exigerUtilisateur();
+  const [{ data: autorise }, { data: periode }] = await Promise.all([
+    supabase.rpc("peut_publier", { p_entreprise_id: entrepriseId }),
+    supabase.from("periodes_paie").select("statut").eq("id", periodeId).eq("entreprise_id", entrepriseId).maybeSingle(),
+  ]);
+  if (autorise !== true || !periode) return { erreur: "Vous ne pouvez pas signer les bulletins de cette paie." };
+  const bilan = await signerBulletinsPeriode(periodeId, refaire);
+  refresh();
+  if (bilan.raison) return { erreur: bilan.raison };
+  return { succes: `Signature et cachet apposés sur ${bilan.signes} bulletin(s)${bilan.echecs ? `, ${bilan.echecs} échec(s)` : ""}${bilan.dejaSignes ? `, ${bilan.dejaSignes} déjà signé(s)` : ""}.` };
 }
 
 // Renvoi des avis aux salariés pas encore prévenus (nouveau numéro, accord donné, échec).

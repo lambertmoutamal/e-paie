@@ -7,7 +7,7 @@ import { formaterDate } from "@/lib/abonnements/phases";
 import { libellePeriode, libelleRole, salariesAttendus, STATUTS_PERIODE, type EtapeCircuit, type StatutPeriode } from "@/lib/bulletins/regles";
 import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, classesBouton, EnTetePage, EtatVide, Page, Statistique } from "@/components/ui";
-import { annulerDepot, deciderEtape, publierPeriode, renvoyerAvis, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
+import { annulerDepot, apposerSignature, deciderEtape, publierPeriode, renvoyerAvis, retirerBulletin, soumettrePeriode, supprimerPeriode } from "../actions";
 import { LIBELLES_AVIS, type StatutAvis } from "@/lib/notifications/regles-avis";
 import { DecisionEtape } from "./decision-etape";
 import { DepotUnique } from "./depot-bulletins";
@@ -53,7 +53,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
       .order("prenoms"),
     supabase
       .from("bulletins")
-      .select("id, salarie_id, fichier_chemin, fichier_nom, taille, empreinte_sha256, depose_le")
+      .select("id, salarie_id, fichier_chemin, fichier_signe_chemin, signe_le, fichier_nom, taille, empreinte_sha256, depose_le")
       .eq("periode_id", periodeId)
       .eq("type", "normal"),
     supabase.rpc("peut_deposer_bulletins", { p_entreprise_id: id }),
@@ -95,6 +95,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
   const sansTelephone = (salaries ?? []).filter((s) => parSalarie.has(s.id) && !s.telephone).length;
   const sansAccord = (salaries ?? []).filter((s) => parSalarie.has(s.id) && s.telephone && !s.accord_whatsapp_le).length;
   const nbEmarges = (bulletins ?? []).filter((b) => emargeLe.has(b.id)).length;
+  const nbSignes = (bulletins ?? []).filter((b) => b.fichier_signe_chemin).length;
   const compteAvis = (statuts: StatutAvis[]) => [...avisParBulletin.values()].filter((a) => statuts.includes(a.statut as StatutAvis)).length;
   // Paie refusée par un validateur : elle revient en brouillon chez qui l'a préparée
   const dernierEvenement = historique?.[0];
@@ -246,6 +247,32 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
               Publiée aux salariés le {formaterDate(periode.publiee_le)}.
             </p>
           )}
+          {(periode.statut === "approuvee" || periode.statut === "publiee") && !!bulletins?.length && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-bordure p-3 text-sm">
+              <p className="flex items-center gap-2">
+                <FileSignature size={16} className="text-marque" aria-hidden />
+                <span>
+                  <strong>Signature et cachet de l&apos;employeur</strong> : {nbSignes} bulletin(s) sur {bulletins.length} signé(s)
+                  {nbSignes < bulletins.length && (
+                    <>
+                      {" "}
+                      · réglage dans la{" "}
+                      <Link href={`/espace/entreprises/${id}`} className="font-medium text-marque hover:underline">
+                        fiche de l&apos;entreprise
+                      </Link>
+                    </>
+                  )}
+                </span>
+              </p>
+              {peutPublier === true && (
+                <ActionEnLigne
+                  action={apposerSignature.bind(null, id, periodeId, nbSignes === bulletins.length)}
+                  libelle={nbSignes === bulletins.length ? "Signer de nouveau" : "Apposer signature et cachet"}
+                  variante={nbSignes === bulletins.length ? "discret" : "secondaire"}
+                />
+              )}
+            </div>
+          )}
           {periode.statut === "publiee" && (
             <div className="flex flex-col gap-3 rounded-xl border border-bordure p-3">
               <div className="grid gap-2 text-sm sm:grid-cols-2">
@@ -334,7 +361,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
                     </p>
                     {b ? (
                       <p className="truncate text-sm text-doux">
-                        <a href={lienBulletin(b.fichier_chemin)} target="_blank" rel="noopener" className="text-marque hover:underline">
+                        <a href={lienBulletin(b.fichier_signe_chemin ?? b.fichier_chemin)} target="_blank" rel="noopener" className="text-marque hover:underline">
                           {b.fichier_nom}
                         </a>{" "}
                         · {taille(b.taille)} · déposé le {formaterDate(b.depose_le)} ·{" "}
@@ -346,6 +373,7 @@ export default async function PagePeriode({ params }: PageProps<"/espace/entrepr
                   </div>
                   {!b && <Badge teinte="ambre">Manquant</Badge>}
                   {b && !idsAttendus.has(s.id) && <Badge>Hors période</Badge>}
+                  {b?.fichier_signe_chemin && <Badge teinte="bleu">Signé par l&apos;employeur</Badge>}
                   {b && periode.statut === "publiee" && (
                     <div className="flex flex-wrap items-center gap-2">
                       {avisParBulletin.has(b.id) && (

@@ -15,7 +15,7 @@ export async function GET(_requete: NextRequest, { params }: RouteContext<"/espa
   const [{ data: bulletin }, { data: emargement }] = await Promise.all([
     supabase
       .from("bulletins")
-      .select("fichier_chemin, empreinte_sha256, salaries(matricule, nom, prenoms), periodes_paie(annee, mois)")
+      .select("fichier_chemin, fichier_signe_chemin, empreinte_sha256, salaries(matricule, nom, prenoms), periodes_paie(annee, mois)")
       .eq("id", bulletinId)
       .eq("periode_id", periodeId)
       .eq("entreprise_id", id)
@@ -24,7 +24,8 @@ export async function GET(_requete: NextRequest, { params }: RouteContext<"/espa
   ]);
   if (!bulletin) return new NextResponse("Bulletin introuvable.", { status: 404 });
 
-  const { data: fichier, error } = await supabase.storage.from("bulletins").download(bulletin.fichier_chemin);
+  // Version signée par l'employeur si elle existe, sinon le bulletin d'origine
+  const { data: fichier, error } = await supabase.storage.from("bulletins").download(bulletin.fichier_signe_chemin ?? bulletin.fichier_chemin);
   if (error || !fichier) return new NextResponse("Bulletin introuvable.", { status: 404 });
 
   const s = bulletin.salaries as unknown as { matricule: string; nom: string; prenoms: string };

@@ -252,3 +252,17 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   lancent toutes leurs lectures en même temps.
 - Pour les essais en local : mode production (`npm run build` puis `npx next start -p 3001`), bien plus
   rapide et plus léger que le mode développement.
+
+## 2026-10-16 — Signature et cachet de l'employeur sur les bulletins
+
+- **Une signature unique de l'entreprise** et son **cachet** (images PNG/JPEG) sont déposés sur la fiche
+  de l'entreprise, avec l'**emplacement** de la case « Émargement employeur », tracé une fois sur un
+  bulletin modèle (enregistré en fractions de la page, donc valable quel que soit le format du PDF).
+- **À la validation finale**, chaque bulletin reçoit le cachet (moitié gauche de la case) et la
+  signature (moitié droite). Le fichier d'origine est conservé ; une version signée est enregistrée à
+  côté (avec sa propre empreinte) et c'est elle que le salarié télécharge et que reprend l'exemplaire
+  émargé. Bouton « Apposer signature et cachet » pour une paie déjà approuvée.
+- La version signée n'est modifiable que par le serveur (protection en base, testée). Il s'agit d'une
+  signature visuelle (image), pas d'une signature électronique certifiée.
+- Connexion directe à la base : le port 5432 du pooler Supabase est coupé depuis ce poste (ECONNRESET) ;
+  le port 6543 fonctionne (migrations et tests de sécurité lancés avec ce port).
