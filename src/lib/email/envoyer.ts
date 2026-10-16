@@ -1,4 +1,5 @@
 import "server-only";
+import { expediteurDematPaie } from "./expediteur";
 import type { Email } from "./modeles";
 
 // Envoi via Resend (https://resend.com). Clé et expéditeur dans .env.local.
@@ -7,7 +8,7 @@ import type { Email } from "./modeles";
 // `repondreA` : adresse qui reçoit les réponses (ex. le cabinet qui écrit à une entreprise).
 export async function envoyerEmail(destinataire: string, email: Email, repondreA?: string): Promise<void> {
   const cle = process.env.RESEND_API_KEY;
-  const expediteur = process.env.EMAIL_EXPEDITEUR;
+  const expediteur = expediteurDematPaie(process.env.EMAIL_EXPEDITEUR ?? "");
 
   if (!cle || !expediteur) {
     if (process.env.NODE_ENV === "production") {
