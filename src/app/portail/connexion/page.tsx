@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CadreAuth } from "@/components/cadre-auth";
 import { FormulairePortail } from "./formulaire-portail";
+import { BoutonInstallation } from "../application";
 
 export const metadata: Metadata = { title: "Espace salarié" };
 
@@ -20,6 +21,9 @@ export default function PageConnexionSalarie() {
       }
     >
       <FormulairePortail />
+      <div className="mt-6">
+        <BoutonInstallation />
+      </div>
     </CadreAuth>
   );
 }

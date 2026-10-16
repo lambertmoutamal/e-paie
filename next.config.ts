@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "6mb" },
   },
   partialPrefetching: true,
+  // Service de l'application salarié : toujours la dernière version (pas de cache)
+  async headers() {
+    return [{ source: "/sw-salarie.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }] }];
+  },
   // Générateur de PDF des contrats : chargé tel quel par Node (il lit ses fichiers de police)
   serverExternalPackages: ["pdfmake"],
   outputFileTracingIncludes: { "/**": ["./node_modules/pdfmake/fonts/Roboto/*.ttf"] },

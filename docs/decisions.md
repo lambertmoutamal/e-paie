@@ -284,3 +284,13 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
 - `code_connexion` (Authentification) **refusé sur le compte de test** : Meta réserve les modèles
   d'authentification aux entreprises vérifiées avec leur propre numéro. D'ici là, le code de connexion
   part en texte simple (livré si le salarié a écrit au numéro dans les 24 h).
+
+## 2026-10-16 — Application installable « DématPaie Salarié »
+
+- L'espace salarié est une **application web installable** (écran d'accueil du téléphone, plein écran,
+  icône DématPaie) : Android et iPhone, sans magasin d'applications. Manifeste et icônes réservés aux
+  pages `/portail` (l'espace employeur reste un site classique).
+- Le service de l'application ne garde **aucune page ni aucun bulletin** sur le téléphone (confidentialité) ;
+  sans réseau, une page explique qu'il faut une connexion.
+- Bouton « Installer l'application » (Android, ordinateur) et marche à suivre sur iPhone (Partager →
+  « Sur l'écran d'accueil »). Installation sur téléphone possible une fois DématPaie en ligne.

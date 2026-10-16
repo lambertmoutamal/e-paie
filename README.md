@@ -199,6 +199,12 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
   catégorie « Utility »). Twilio signale « reçu / lu / échec » à l'adresse `/api/twilio/statut` (appel signé).
   Sans configuration, en développement, les messages s'affichent dans la console.
 
+## Application mobile des salariés
+
+- L'espace salarié s'installe comme une application (« DématPaie Salarié ») depuis le navigateur du
+  téléphone : bouton « Installer l'application » (Android) ou Partager → « Sur l'écran d'accueil » (iPhone).
+- Fonctionne une fois DématPaie en ligne (adresse en https). Aucun bulletin n'est gardé sur le téléphone.
+
 ## Congés et absences
 
 - Côté entreprise : ouvrez l'entreprise, puis le module **Congés & absences** (onglets

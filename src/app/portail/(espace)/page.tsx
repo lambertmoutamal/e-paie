@@ -7,6 +7,7 @@ import { libellePeriode } from "@/lib/bulletins/regles";
 import { ActionEnLigne } from "@/components/formulaire";
 import { Badge, Carte, EtatVide, Page } from "@/components/ui";
 import { definirAccordWhatsApp } from "./actions";
+import { BoutonInstallation } from "../application";
 import { utilisateurConnecte } from "@/lib/auth/connecte";
 
 export const metadata: Metadata = { title: "Mes bulletins" };
@@ -50,6 +51,7 @@ export default async function PageMesBulletins() {
 
   return (
     <Page>
+      <BoutonInstallation />
       <header>
         <h1 className="text-2xl font-bold tracking-tight">{moi ? `Bonjour ${moi.prenoms}` : "Mon espace"}</h1>
         <p className="mt-1 text-doux">Vos bulletins de paie, disponibles à tout moment.</p>
