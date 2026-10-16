@@ -21,10 +21,11 @@ export function libellePeriode(annee: number, mois: number): string {
   return `${NOMS_MOIS[mois - 1]} ${annee}`;
 }
 
-// Mois proposés à la création d'une période : les 12 derniers mois et les 2 suivants.
+// Mois proposés à la création d'une période : les 12 derniers mois et les 2 suivants,
+// dans l'ordre du calendrier (janvier → décembre, année par année).
 export function moisProposes(aujourdhui = new Date()): { valeur: string; libelle: string }[] {
   const liste = [];
-  for (let decalage = 2; decalage >= -12; decalage--) {
+  for (let decalage = -12; decalage <= 2; decalage++) {
     const d = new Date(Date.UTC(aujourdhui.getUTCFullYear(), aujourdhui.getUTCMonth() + decalage, 1));
     const annee = d.getUTCFullYear();
     const mois = d.getUTCMonth() + 1;

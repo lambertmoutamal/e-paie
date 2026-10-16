@@ -28,8 +28,9 @@ export default async function PagePeriodes({ params }: PageProps<"/espace/entrep
   const existantes = new Set((periodes ?? []).map((p) => `${p.annee}-${String(p.mois).padStart(2, "0")}`));
   const proposes = moisProposes();
   const disponibles = proposes.filter((m) => !existantes.has(m.valeur));
-  // Par défaut : le mois en cours (troisième de la liste), sinon le premier mois libre.
-  const parDefaut = disponibles.find((m) => m.valeur === proposes[2].valeur) ?? disponibles[0];
+  // Par défaut : le mois en cours (suivi des 2 mois à venir), sinon le dernier mois libre.
+  const moisEnCours = proposes[proposes.length - 3].valeur;
+  const parDefaut = disponibles.find((m) => m.valeur === moisEnCours) ?? disponibles[disponibles.length - 1];
 
   return (
     <Page>

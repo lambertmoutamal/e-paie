@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { associerFichiers, bornesMois, estPdf, libellePeriode, lireCircuit, lireNomFichier, salariesAttendus } from "@/lib/bulletins/regles";
+import { associerFichiers, bornesMois, estPdf, libellePeriode, lireCircuit, lireNomFichier, moisProposes, salariesAttendus } from "@/lib/bulletins/regles";
 
 describe("périodes", () => {
+  test("mois proposés dans l'ordre du calendrier, de janvier à décembre", () => {
+    const liste = moisProposes(new Date(Date.UTC(2026, 9, 16))).map((m) => m.libelle);
+    expect(liste).toHaveLength(15);
+    expect(liste.slice(0, 4)).toEqual(["Octobre 2025", "Novembre 2025", "Décembre 2025", "Janvier 2026"]);
+    expect(liste.slice(-3)).toEqual(["Octobre 2026", "Novembre 2026", "Décembre 2026"]);
+  });
+
   test("libellé et bornes du mois (années bissextiles comprises)", () => {
     expect(libellePeriode(2026, 10)).toBe("Octobre 2026");
     expect(bornesMois(2028, 2)).toEqual({ debut: "2028-02-01", fin: "2028-02-29" });
