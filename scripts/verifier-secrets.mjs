@@ -11,6 +11,8 @@ const VARIABLES_SECRETES = [
   "GENUKA_SECRET_KEY",
   "GENUKA_WEBHOOK_SECRET",
   "TWILIO_AUTH_TOKEN",
+  "META_WHATSAPP_JETON",
+  "META_APP_SECRET",
 ];
 const motifs = ["sb_secret_", "service_role", ...VARIABLES_SECRETES];
 const valeurs = VARIABLES_SECRETES.map((nom) => process.env[nom]).filter((v) => v && v.length >= 8);
