@@ -273,3 +273,14 @@ e-paie/
 - **`password authentication failed`** : le mot de passe dans `DATABASE_URL` est faux, ou
   les crochets `[ ]` autour sont restés. S'il contient `@ # / ? % :`, réinitialisez-le dans
   Supabase avec uniquement des lettres et des chiffres.
+
+## Mise en ligne (Vercel)
+
+- Hébergeur : **Vercel** (formule gratuite pour la phase d'essai ; formule Pro obligatoire avant un usage
+  commercial). Région des fonctions : Paris (`cdg1`, dans `vercel.json`), à côté de la base Supabase.
+- Chaque enregistrement sur la branche `main` de GitHub est mis en ligne automatiquement.
+- Réglages à recopier dans Vercel (Settings → Environment Variables), jamais dans le code :
+  `NEXT_PUBLIC_SITE_URL` (adresse en ligne), `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+  `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `EMAIL_EXPEDITEUR`, `EMAIL_ALERTES`, `GENUKA_*`, `META_WHATSAPP_*`,
+  `META_APP_SECRET`. `DATABASE_URL` n'est **pas** nécessaire en ligne (outils et tests du poste uniquement).
+- Envois de fichiers limités à 4 Mo (Vercel refuse plus de 4,5 Mo par envoi) ; bulletins : 2 Mo.

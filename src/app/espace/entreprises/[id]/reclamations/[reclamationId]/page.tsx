@@ -82,7 +82,7 @@ export default async function PageReclamation({ params }: PageProps<"/espace/ent
         <Carte titre="Répondre au salarié">
           <Formulaire action={repondreReclamation.bind(null, id, r.salarie_id, r.id)} libelleBouton="Envoyer la réponse">
             <ZoneTexte nom="contenu" libelle="Votre réponse" max={3000} />
-            <ChampFichier libelle="Pièce jointe (facultatif)" aide="Exemple : bulletin corrigé, attestation. PDF ou image, 5 Mo maximum." />
+            <ChampFichier libelle="Pièce jointe (facultatif)" aide="Exemple : bulletin corrigé, attestation. PDF ou image, 4 Mo maximum." />
             <CaseACocher nom="resoudre">Le problème est réglé : marquer la réclamation comme résolue</CaseACocher>
           </Formulaire>
         </Carte>

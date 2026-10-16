@@ -64,7 +64,7 @@ export default async function PageReclamation({ params }: PageProps<"/portail/re
         <Carte titre={r.statut === "resolue" ? "Le problème persiste ? Répondez" : "Répondre"}>
           <Formulaire action={repondreReclamation.bind(null, r.id, r.salarie_id, emploi.entreprise_id)} libelleBouton="Envoyer">
             <ZoneTexte nom="contenu" libelle="Votre message" max={3000} />
-            <ChampFichier libelle="Pièce jointe (facultatif)" aide="Photo ou PDF, 5 Mo maximum." />
+            <ChampFichier libelle="Pièce jointe (facultatif)" aide="Photo ou PDF, 4 Mo maximum." />
           </Formulaire>
         </Carte>
       ) : (

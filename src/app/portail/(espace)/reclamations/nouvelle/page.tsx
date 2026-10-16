@@ -66,7 +66,7 @@ export default async function PageNouvelleReclamation({ searchParams }: PageProp
           />
           <Champ nom="objet" libelle="En quelques mots" requis pleineLargeur aide="Exemple : prime de transport absente" />
           <ZoneTexte nom="message" libelle="Votre message" max={3000} />
-          <ChampFichier libelle="Pièce jointe (facultatif)" aide="Photo ou PDF, 5 Mo maximum." />
+          <ChampFichier libelle="Pièce jointe (facultatif)" aide="Photo ou PDF, 4 Mo maximum." />
         </Formulaire>
       </Carte>
       <p className="text-sm text-doux">

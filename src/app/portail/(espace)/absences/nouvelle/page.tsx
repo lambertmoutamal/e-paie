@@ -69,7 +69,7 @@ export default async function PageNouvelleDemande({ searchParams }: PageProps<"/
           <Champ nom="debut" libelle="Du" type="date" requis valeurInitiale={demain.toISOString().slice(0, 10)} />
           <Champ nom="fin" libelle="Au" type="date" requis valeurInitiale={demain.toISOString().slice(0, 10)} />
           <ZoneTexte nom="motif" libelle="Message pour le RH (facultatif)" max={500} />
-          <ChampFichier libelle="Justificatif" aide="Obligatoire pour certaines permissions (acte de mariage, certificat…). PDF ou photo, 5 Mo maximum." />
+          <ChampFichier libelle="Justificatif" aide="Obligatoire pour certaines permissions (acte de mariage, certificat…). PDF ou photo, 4 Mo maximum." />
         </Formulaire>
       </Carte>
       <p className="text-sm text-doux">Les week-ends et jours fériés ne sont pas décomptés. Vous serez prévenu dès que le RH aura répondu.</p>

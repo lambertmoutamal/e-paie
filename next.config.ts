@@ -4,8 +4,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   experimental: {
-    // Envoi de fichiers (contrats signés, documents) : 5 Mo maximum + marge du formulaire
-    serverActions: { bodySizeLimit: "6mb" },
+    // Envoi de fichiers (contrats signés, documents) : 4 Mo maximum + marge du formulaire
+    // (Vercel refuse tout envoi de plus de 4,5 Mo)
+    serverActions: { bodySizeLimit: "4.5mb" },
   },
   partialPrefetching: true,
   // Protections du navigateur sur toutes les pages : pas d'affichage dans le cadre d'un autre site

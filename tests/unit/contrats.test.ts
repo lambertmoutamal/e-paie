@@ -59,10 +59,10 @@ describe("avenant", () => {
 });
 
 describe("fichiers", () => {
-  test("accepte PDF, JPEG, PNG de 5 Mo maximum", () => {
+  test("accepte PDF, JPEG, PNG de 4 Mo maximum", () => {
     expect(verifierFichier({ size: 1000, type: "application/pdf" })).toBeNull();
     expect(verifierFichier({ size: 1000, type: "image/png" })).toBeNull();
-    expect(verifierFichier({ size: 6 * 1024 * 1024, type: "application/pdf" })).toBe("Fichier trop lourd (5 Mo maximum).");
+    expect(verifierFichier({ size: 5 * 1024 * 1024, type: "application/pdf" })).toBe("Fichier trop lourd (4 Mo maximum).");
     expect(verifierFichier({ size: 1000, type: "application/x-msdownload" })).toBe("Format accepté : PDF, JPEG ou PNG.");
     expect(verifierFichier(null)).toBe("Choisissez un fichier.");
   });

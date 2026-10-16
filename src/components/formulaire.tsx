@@ -270,7 +270,7 @@ export function ChampFichier({ libelle, requis, aide }: { libelle: string; requi
         aria-describedby={`${id}-message`}
         className="block w-full rounded-lg border border-bordure bg-surface text-sm file:mr-3 file:h-11 file:cursor-pointer file:border-0 file:bg-marque-claire file:px-4 file:font-semibold file:text-marque"
       />
-      <MessageChamp id={id} erreur={erreur} aide={aide ?? "PDF, JPEG ou PNG, 5 Mo maximum. Sur téléphone, vous pouvez prendre une photo."} />
+      <MessageChamp id={id} erreur={erreur} aide={aide ?? "PDF, JPEG ou PNG, 4 Mo maximum. Sur téléphone, vous pouvez prendre une photo."} />
     </div>
   );
 }

@@ -27,7 +27,8 @@ export const CATEGORIES_DOCUMENT = {
   autre: "Autre",
 } as const;
 
-export const TAILLE_MAX_FICHIER = 5 * 1024 * 1024; // 5 Mo
+// 4 Mo : un envoi ne peut pas dépasser 4,5 Mo chez l'hébergeur (Vercel)
+export const TAILLE_MAX_FICHIER = 4 * 1024 * 1024; // 4 Mo
 export const TYPES_FICHIER_ACCEPTES = ["application/pdf", "image/jpeg", "image/png"] as const;
 
 const MONTANT = new Intl.NumberFormat("fr-FR");
@@ -160,7 +161,7 @@ export const schemaDocument = z.object({
 export function verifierFichier(fichier: { size: number; type: string } | null | undefined): string | null {
   if (!fichier || fichier.size === 0) return "Choisissez un fichier.";
   if (!(TYPES_FICHIER_ACCEPTES as readonly string[]).includes(fichier.type)) return "Format accepté : PDF, JPEG ou PNG.";
-  if (fichier.size > TAILLE_MAX_FICHIER) return "Fichier trop lourd (5 Mo maximum).";
+  if (fichier.size > TAILLE_MAX_FICHIER) return "Fichier trop lourd (4 Mo maximum).";
   return null;
 }
 
