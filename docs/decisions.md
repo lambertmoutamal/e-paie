@@ -294,3 +294,22 @@ ce qui a été décidé, quand, et ce que cela change par rapport au cahier des 
   sans réseau, une page explique qu'il faut une connexion.
 - Bouton « Installer l'application » (Android, ordinateur) et marche à suivre sur iPhone (Partager →
   « Sur l'écran d'accueil »). Installation sur téléphone possible une fois DématPaie en ligne.
+
+## 2026-10-16 — Contrôle de sécurité avant déploiement
+
+Vérifié : secrets hors du code et de l'historique git, clé « service » utilisée seulement côté serveur,
+toutes les tables protégées par RLS (sauf `prive.envois_email`, inaccessible aux comptes), aucun stockage
+public, fonctions sensibles à chemin de recherche fixé et fermées aux visiteurs, aucune requête SQL
+construite avec du texte, aucun `eval`, webhooks (Meta, Twilio, Genuka) refusés sans signature valide,
+anti-abus sur l'envoi des codes, 150 tests d'isolement entre entreprises au vert.
+
+Renforcé :
+- en-têtes de protection du navigateur sur toutes les pages (cadre interdit aux autres sites, type de
+  fichier non deviné, https imposé, caméra/micro/position refusés) ;
+- connexion salarié : le numéro venant du navigateur est contrôlé, et c'est le numéro vérifié par
+  Supabase qui est rattaché aux fiches ;
+- recherche de salariés : guillemets et `*` neutralisés en plus ;
+- test de congés rendu indépendant du jour où il tourne (il tombait un dimanche).
+
+Reste connu : alerte « modérée » sur `sprintf-js` (via `mammoth`, import Word dans le navigateur de
+l'employeur, sans risque pour les données) — à suivre lors des mises à jour.

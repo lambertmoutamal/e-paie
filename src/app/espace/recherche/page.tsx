@@ -17,7 +17,7 @@ export default async function PageRecherche({ searchParams }: PageProps<"/espace
 
   let resultats: { id: string; entreprise_id: string; matricule: string; nom: string; prenoms: string; poste: string | null; statut: string; entreprises: unknown }[] = [];
   if (recherche.length >= 2) {
-    const motif = `%${recherche.replace(/[%_,()\\]/g, " ")}%`;
+    const motif = `%${recherche.replace(/[%_*,"()\\]/g, " ")}%`;
     const { data } = await supabase
       .from("salaries")
       .select("id, entreprise_id, matricule, nom, prenoms, poste, statut, entreprises(raison_sociale)")

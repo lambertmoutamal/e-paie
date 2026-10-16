@@ -36,6 +36,10 @@ async function regler(client: pg.Client, entreprise: string, champs: Record<stri
 }
 
 const DEMANDER = "select public.demander_absence($1, $2, current_date + $3::integer, current_date + $4::integer, false, false, null, null) as id";
+// Nombre de jours jusqu'au premier mardi situé au moins « minimum » jours après aujourd'hui :
+// la demande tombe toujours sur des jours de travail, quel que soit le jour où le test tourne.
+const mardiDans = async (client: pg.Client, minimum: number): Promise<number> =>
+  (await client.query("select (current_date + $1::integer + ((9 - extract(isodow from current_date + $1::integer)::integer) % 7)) - current_date as n", [minimum])).rows[0].n;
 const aTraiter = async (client: pg.Client, u: string) => {
   await commeUtilisateur(client, u);
   return (await client.query("select demande_id from public.mes_demandes_a_traiter()")).rows.map((r) => r.demande_id);
@@ -58,8 +62,9 @@ describe("Qui valide les demandes", () => {
       const jeu = await creerJeuDeDonnees(client);
       const d = await preparer(client, jeu);
       await regler(client, jeu.entreprises.A1, { validation_absences: "rh_puis_administrateur" });
+      const mardi = await mardiDans(client, 30);
       await commeUtilisateur(client, d.compte);
-      const id = (await client.query(DEMANDER, [d.awa, d.conge, 30, 31])).rows[0].id;
+      const id = (await client.query(DEMANDER, [d.awa, d.conge, mardi, mardi + 1])).rows[0].id;
 
       expect(await aTraiter(client, d.rh)).toEqual([id]);
       expect(await aTraiter(client, jeu.utilisateurs.adminCabinetA)).toEqual([]);
@@ -80,8 +85,9 @@ describe("Qui valide les demandes", () => {
       const jeu = await creerJeuDeDonnees(client);
       const d = await preparer(client, jeu);
       await regler(client, jeu.entreprises.A1, { validation_absences: "administrateurs" });
+      const mardi = await mardiDans(client, 30);
       await commeUtilisateur(client, d.compte);
-      const id = (await client.query(DEMANDER, [d.awa, d.conge, 30, 30])).rows[0].id;
+      const id = (await client.query(DEMANDER, [d.awa, d.conge, mardi, mardi])).rows[0].id;
       expect(await aTraiter(client, d.rh)).toEqual([]);
       await commeUtilisateur(client, d.rh);
       expect(await estRefusee(client, "select public.decider_demande($1, true)", [id])).toBe(true);
@@ -108,9 +114,10 @@ describe("Règles des demandes", () => {
       const jeu = await creerJeuDeDonnees(client);
       const d = await preparer(client, jeu);
       await regler(client, jeu.entreprises.A1, { delai_prevenance_jours: 15 });
+      const [proche, lointain] = [await mardiDans(client, 3), await mardiDans(client, 20)];
       await commeUtilisateur(client, d.compte);
-      expect(await estRefusee(client, DEMANDER, [d.awa, d.conge, 5, 6])).toBe(true);
-      expect(await estRefusee(client, DEMANDER, [d.awa, d.conge, 20, 21])).toBe(false);
+      expect(await estRefusee(client, DEMANDER, [d.awa, d.conge, proche, proche + 1])).toBe(true);
+      expect(await estRefusee(client, DEMANDER, [d.awa, d.conge, lointain, lointain + 1])).toBe(false);
       await client.query("reset role");
       await client.query("update public.types_absence set justificatif_requis = false where id = $1", [d.deces]);
       await commeUtilisateur(client, d.compte);

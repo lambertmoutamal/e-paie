@@ -73,6 +73,11 @@ async function envoyerCode(telephone: string, canal: Canal): Promise<string | nu
 
 // Étape 2 : vérification du code, ouverture de la session et rattachement aux fiches salarié.
 export async function verifierCode(telephone: string, canal: Canal, _e: EtatPortail, formulaire: FormData): Promise<EtatPortail> {
+  // Le numéro vient du navigateur : il doit avoir la forme internationale attendue.
+  if (typeof telephone !== "string" || !/^\+\d{8,15}$/.test(telephone)) {
+    return { etape: "telephone", erreur: "Numéro de téléphone invalide." };
+  }
+  canal = lireCanal(canal);
   const code = lireCode(String(formulaire.get("code") ?? ""));
   if (!code) return { etape: "code", telephone, canal, erreur: "Saisissez les 6 chiffres reçus." };
 
@@ -81,7 +86,8 @@ export async function verifierCode(telephone: string, canal: Canal, _e: EtatPort
   if (error || !data.user) return { etape: "code", telephone, canal, erreur: messageErreurCode(error?.code) };
 
   // Sécurité : ce parcours est réservé aux comptes salariés (jamais un compte du personnel).
-  if (data.user.app_metadata?.type !== "salarie" || data.user.email) {
+  // Le numéro rattaché est celui que Supabase vient de vérifier (pas celui envoyé par le navigateur).
+  if (data.user.app_metadata?.type !== "salarie" || data.user.email || (data.user.phone ?? "").replace(/^\+/, "") !== telephone.slice(1)) {
     await supabase.auth.signOut({ scope: "local" });
     return { etape: "telephone", erreur: "Ce numéro ne correspond pas à un compte salarié." };
   }

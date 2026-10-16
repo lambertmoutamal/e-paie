@@ -37,7 +37,7 @@ export default async function PageSalaries({ params, searchParams }: PageProps<"
   if (filtre === "sorti") requete = requete.eq("statut", "sorti");
   if (recherche) {
     // Les caractères spéciaux sont neutralisés pour ne pas perturber le filtre.
-    const motif = `%${recherche.replace(/[%_,()\\]/g, " ")}%`;
+    const motif = `%${recherche.replace(/[%_*,"()\\]/g, " ")}%`;
     requete = requete.or(`nom.ilike.${motif},prenoms.ilike.${motif},matricule.ilike.${motif}`);
   }
   const [{ data: salaries, count }, { data: peutGerer }] = await Promise.all([
