@@ -313,3 +313,12 @@ Renforcé :
 
 Reste connu : alerte « modérée » sur `sprintf-js` (via `mammoth`, import Word dans le navigateur de
 l'employeur, sans risque pour les données) — à suivre lors des mises à jour.
+
+Réglages Supabase (Authentication), vérifiés le 2026-10-16 :
+- inscriptions libres par l'API fermées, connexions anonymes fermées, email à confirmer ;
+- mot de passe : **10 caractères minimum, lettres et chiffres** (aligné sur DématPaie ; avant : 6) ;
+- liens email (invitation, mot de passe oublié) : 24 h, à usage unique (choix volontaire, plus pratique) ;
+- code WhatsApp des salariés : 6 chiffres, valable 60 secondes ;
+- limites : 30 codes par heure pour le projet, 30 vérifications et 30 connexions par 5 min et par adresse IP ;
+- non disponibles en formule gratuite / à brancher plus tard : refus des mots de passe divulgués (formule Pro),
+  CAPTCHA (demande une modification des écrans de connexion).
