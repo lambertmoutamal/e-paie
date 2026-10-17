@@ -65,10 +65,10 @@ describe("Isolation des bulletins", () => {
       await client.query("reset role");
       await client.query("delete from public.bulletins where id = $1", [ids.bulletinA1]);
       await commeUtilisateur(client, g);
-      expect(await estRefusee(client, DEPOT, [jeu.entreprises.B1, ids.periodeB1, ids.salarieB1, `${jeu.entreprises.B1}/x/1.pdf`, g])).toBe(true);
-      expect(await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeA1, ids.salarieB1, `${jeu.entreprises.A1}/x/2.pdf`, g])).toBe(true);
-      expect(await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeB1, ids.salarieA1, `${jeu.entreprises.A1}/x/3.pdf`, g])).toBe(true);
-      expect(await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeA1, ids.salarieA1, `${jeu.entreprises.A1}/x/4.pdf`, g])).toBe(false);
+      expect(await estRefusee(client, DEPOT, [jeu.entreprises.B1, ids.periodeB1, ids.salarieB1, `${jeu.entreprises.B1}/${ids.periodeB1}/1.pdf`, g])).toBe(true);
+      expect(await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeA1, ids.salarieB1, `${jeu.entreprises.A1}/${ids.periodeA1}/2.pdf`, g])).toBe(true);
+      expect(await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeB1, ids.salarieA1, `${jeu.entreprises.A1}/${ids.periodeB1}/3.pdf`, g])).toBe(true);
+      expect(await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeA1, ids.salarieA1, `${jeu.entreprises.A1}/${ids.periodeA1}/4.pdf`, g])).toBe(false);
     }));
 
   test("impossible de stocker un fichier dans le dossier bulletins d'une autre entreprise", () =>
@@ -122,7 +122,7 @@ describe("Droits de dépôt", () => {
       const ids = await preparer(client, jeu);
       const g = jeu.utilisateurs.gestionnaireA1;
       await commeUtilisateur(client, g);
-      expect(await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeA1, ids.salarieA1, `${jeu.entreprises.A1}/x/doublon.pdf`, g])).toBe(true);
+      expect(await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeA1, ids.salarieA1, `${jeu.entreprises.A1}/${ids.periodeA1}/doublon.pdf`, g])).toBe(true);
     }));
 
   test("un bulletin ne peut pas être signé au nom d'un autre déposant", () =>
@@ -133,7 +133,7 @@ describe("Droits de dépôt", () => {
       await client.query("delete from public.bulletins where id = $1", [ids.bulletinA1]);
       await commeUtilisateur(client, jeu.utilisateurs.gestionnaireA1);
       expect(
-        await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeA1, ids.salarieA1, `${jeu.entreprises.A1}/x/5.pdf`, jeu.utilisateurs.adminCabinetA]),
+        await estRefusee(client, DEPOT, [jeu.entreprises.A1, ids.periodeA1, ids.salarieA1, `${jeu.entreprises.A1}/${ids.periodeA1}/5.pdf`, jeu.utilisateurs.adminCabinetA]),
       ).toBe(true);
     }));
 });

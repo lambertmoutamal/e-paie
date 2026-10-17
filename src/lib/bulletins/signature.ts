@@ -45,6 +45,8 @@ export async function signerBulletinsPeriode(periodeId: string, refaire = false)
       continue;
     }
     try {
+      // La clé secrète contourne les droits : on ne lit que le dossier de l'entreprise et de la période.
+      if (!b.fichier_chemin.startsWith(`${b.entreprise_id}/${periodeId}/`)) throw new Error("Chemin de bulletin hors du dossier de la période.");
       const { data: fichier } = await admin.storage.from("bulletins").download(b.fichier_chemin);
       if (!fichier) throw new Error("Bulletin introuvable dans le stockage.");
       const pdf = await PDFDocument.load(new Uint8Array(await fichier.arrayBuffer()), { ignoreEncryption: true });
