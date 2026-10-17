@@ -8,6 +8,7 @@ import {
   History,
   KeyRound,
   Layers,
+  LogIn,
   ShieldCheck,
   Smartphone,
   UserRound,
@@ -17,6 +18,7 @@ import { MODULES } from "@/lib/modules";
 import { ICONES_MODULES } from "@/components/icone-module";
 import { Badge, classesBouton } from "@/components/ui";
 import { PagePublique, TitreSection } from "@/components/vitrine";
+import { TARIFS, formaterPrix } from "@/lib/abonnements/tarifs";
 
 // Garanties réelles de la plateforme (aucun chiffre ni témoignage inventé).
 const GARANTIES = [
@@ -56,10 +58,10 @@ const SECURITE = [
 
 const QUESTIONS = [
   { q: "Faut-il installer un logiciel ?", r: "Non. DématPaie fonctionne dans le navigateur, sur ordinateur comme sur téléphone. Rien à installer, rien à mettre à jour." },
-  { q: "Comment se passe l'essai gratuit ?", r: "Vous créez votre compte en quelques minutes : 30 jours d'accès complet, sans engagement et sans moyen de paiement. Vous choisissez ensuite de souscrire ou non." },
+  { q: "Comment se passe l'essai gratuit ?", r: "Vous créez votre compte en quelques minutes : un mois (30 jours) d'accès complet, sans engagement et sans moyen de paiement. Vous choisissez ensuite de souscrire ou non." },
   { q: "Puis-je importer mes salariés existants ?", r: "Oui, depuis un fichier Excel. Un modèle est fourni et chaque ligne est vérifiée avant l'import." },
   { q: "Mes salariés doivent-ils avoir un smartphone ?", r: "Le portail salarié est conçu pour le téléphone, mais il fonctionne aussi sur ordinateur. La connexion se fait par numéro de téléphone." },
-  { q: "Comment payer l'abonnement ?", r: "Par Mobile Money, mensuellement ou annuellement (2 mois offerts sur l'annuel)." },
+  { q: "Comment payer l'abonnement ?", r: "Par Mobile Money, au mois ou à l'année (2 mois offerts sur l'annuel). Cabinets : 20 000 FCFA par mois. Entreprises : 2 000 FCFA par salarié et par mois." },
 ];
 
 export default function Accueil() {
@@ -82,7 +84,7 @@ export default function Accueil() {
                 Demander une démo <ArrowRight size={16} aria-hidden />
               </Link>
               <Link href="/inscription" className={`${classesBouton("secondaire")} h-12 px-5`}>
-                Essai gratuit 30 jours
+                Essai gratuit d&apos;un mois
               </Link>
             </div>
             <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-doux">
@@ -92,6 +94,12 @@ export default function Accueil() {
                 </span>
               ))}
             </p>
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-bordure bg-surface px-4 py-3">
+              <p className="text-sm text-doux">Cabinet ou entreprise déjà inscrit ?</p>
+              <Link href="/connexion" className={`${classesBouton("discret")} -mx-2`}>
+                <LogIn size={16} aria-hidden /> Se connecter à mon espace
+              </Link>
+            </div>
           </div>
 
           {/* Aperçu stylisé de l'application (illustration, sans image à télécharger) */}
@@ -226,6 +234,50 @@ export default function Accueil() {
               validation finale.
             </p>
           </article>
+        </div>
+      </section>
+
+      {/* Tarifs */}
+      <section id="tarifs" className="scroll-mt-20 bg-surface">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <TitreSection
+            surtitre="Tarifs"
+            titre="Des prix simples, un mois d'essai offert"
+            texte="Essayez gratuitement pendant un mois, sans engagement et sans moyen de paiement. Vous choisissez ensuite de souscrire ou non."
+            centre
+          />
+          <div className="mx-auto mt-10 grid max-w-4xl gap-4 md:grid-cols-2">
+            {TARIFS.map((t) => (
+              <article key={t.cible} className="flex flex-col gap-4 rounded-xl border border-bordure bg-background p-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-lg font-semibold">{t.titre}</h3>
+                  <Badge teinte="vert">1 mois d&apos;essai gratuit</Badge>
+                </div>
+                <p>
+                  <span className="text-3xl font-bold tracking-tight">{formaterPrix(t.prixMensuel)}</span>{" "}
+                  <span className="text-sm text-doux">{t.unite}</span>
+                </p>
+                <p className="text-sm text-doux">{t.accroche}</p>
+                <ul className="flex flex-col gap-2 text-sm">
+                  {t.points.map((p) => (
+                    <li key={p} className="flex items-start gap-2">
+                      <CircleCheck size={15} className="mt-0.5 shrink-0 text-marque" aria-hidden />
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <Link href={t.inscription} className={`${classesBouton("principal")} mt-auto h-12 w-full`}>
+                  Commencer l&apos;essai gratuit <ArrowRight size={16} aria-hidden />
+                </Link>
+              </article>
+            ))}
+          </div>
+          <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-doux">
+            Paiement par Mobile Money, au mois ou à l&apos;année (2 mois offerts sur l&apos;annuel). Déjà inscrit ?{" "}
+            <Link href="/connexion" className="font-semibold text-marque hover:underline">
+              Se connecter
+            </Link>
+          </p>
         </div>
       </section>
 

@@ -9,6 +9,7 @@ import { classesBouton } from "./ui";
 const LIENS = [
   { href: "/#modules", libelle: "Fonctionnalités" },
   { href: "/experts-comptables", libelle: "Experts-comptables" },
+  { href: "/#tarifs", libelle: "Tarifs" },
   { href: "/#securite", libelle: "Sécurité" },
   { href: "/#questions", libelle: "Questions" },
 ];
@@ -33,7 +34,7 @@ export function EnTetePublic() {
           <Link href="/portail/connexion" className={classesBouton("discret", "petit")}>
             Espace salarié
           </Link>
-          <Link href="/connexion" className={classesBouton("discret", "petit")}>
+          <Link href="/connexion" className={classesBouton("secondaire", "petit")}>
             Se connecter
           </Link>
           <Link href="/demo" className={classesBouton("principal", "petit")}>
@@ -41,29 +42,31 @@ export function EnTetePublic() {
           </Link>
         </div>
 
-        {/* Menu téléphone : sans JavaScript, fonctionne même sur une connexion lente */}
-        <details className="relative lg:hidden">
-          <summary className={`${classesBouton("secondaire", "petit")} cursor-pointer list-none`} aria-label="Ouvrir le menu">
-            <Menu size={18} aria-hidden />
-          </summary>
-          <div className="absolute right-0 mt-2 flex w-64 flex-col gap-1 rounded-xl border border-bordure bg-surface p-2 shadow-lg">
-            {LIENS.map((l) => (
-              <Link key={l.href} href={l.href} className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
-                {l.libelle}
+        {/* Téléphone : « Se connecter » toujours visible, le reste dans le menu (sans JavaScript) */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <Link href="/connexion" className={classesBouton("secondaire")}>
+            Se connecter
+          </Link>
+          <details className="relative">
+            <summary className={`${classesBouton("secondaire")} w-11 cursor-pointer list-none px-0`} aria-label="Ouvrir le menu">
+              <Menu size={18} aria-hidden />
+            </summary>
+            <div className="absolute right-0 mt-2 flex w-64 flex-col gap-1 rounded-xl border border-bordure bg-surface p-2 shadow-lg">
+              {LIENS.map((l) => (
+                <Link key={l.href} href={l.href} className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
+                  {l.libelle}
+                </Link>
+              ))}
+              <hr className="my-1 border-bordure" />
+              <Link href="/portail/connexion" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
+                Espace salarié
               </Link>
-            ))}
-            <hr className="my-1 border-bordure" />
-            <Link href="/portail/connexion" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
-              Espace salarié
-            </Link>
-            <Link href="/connexion" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
-              Se connecter
-            </Link>
-            <Link href="/demo" className={`${classesBouton("principal", "petit")} w-full`}>
-              Demander une démo
-            </Link>
-          </div>
-        </details>
+              <Link href="/demo" className={`${classesBouton("principal", "petit")} w-full`}>
+                Demander une démo
+              </Link>
+            </div>
+          </details>
+        </div>
       </div>
     </header>
   );
@@ -81,12 +84,14 @@ export function PiedPublic() {
           <p className="font-semibold">Produit</p>
           <Link href="/#modules" className="text-doux hover:text-foreground">Fonctionnalités</Link>
           <Link href="/experts-comptables" className="text-doux hover:text-foreground">Experts-comptables</Link>
+          <Link href="/#tarifs" className="text-doux hover:text-foreground">Tarifs</Link>
           <Link href="/#securite" className="text-doux hover:text-foreground">Sécurité</Link>
         </div>
         <div className="flex flex-col gap-2">
           <p className="font-semibold">Contact</p>
           <Link href="/demo" className="text-doux hover:text-foreground">Demander une démo</Link>
-          <Link href="/inscription" className="text-doux hover:text-foreground">Essai gratuit 30 jours</Link>
+          <Link href="/inscription" className="text-doux hover:text-foreground">Essai gratuit d&apos;un mois</Link>
+          <Link href="/connexion" className="text-doux hover:text-foreground">Se connecter</Link>
           <Link href="/conditions" className="text-doux hover:text-foreground">Conditions d&apos;utilisation</Link>
         </div>
       </div>

@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import Accueil from "@/app/page";
 import PageExpertsComptables from "@/app/experts-comptables/page";
 import PageIntrouvable from "@/app/not-found";
 import { MODULES } from "@/lib/modules";
+import { DUREE_ESSAI_JOURS, TARIFS, formaterPrix } from "@/lib/abonnements/tarifs";
 import { lireFormulaire } from "@/lib/validation/formulaire";
 import { schemaDemandeDemo } from "@/lib/validation/schemas";
 
@@ -32,6 +33,28 @@ describe("site vitrine", () => {
     expect(container.querySelector("#securite")).not.toBeNull();
     expect(container.querySelector("#questions")).not.toBeNull();
     expect(container.querySelector("#modules")).not.toBeNull();
+  });
+
+  test("les inscrits trouvent « Se connecter » dans l'en-tête et dans la promesse", () => {
+    render(<Accueil />);
+    const connexions = screen.getAllByRole("link", { name: /Se connecter/ }).filter((l) => l.getAttribute("href") === "/connexion");
+    // en-tête ordinateur, en-tête téléphone, promesse, tarifs, pied de page
+    expect(connexions.length).toBeGreaterThanOrEqual(4);
+    expect(screen.getByText("Cabinet ou entreprise déjà inscrit ?")).toBeDefined();
+  });
+
+  test("la section Tarifs affiche les deux offres, l'essai d'un mois et mène à l'inscription", () => {
+    const { container } = render(<Accueil />);
+    const tarifs = container.querySelector("#tarifs") as HTMLElement;
+    expect(tarifs).not.toBeNull();
+    const texte = (tarifs.textContent ?? "").replace(/ /g, " ");
+    expect(texte).toContain("20 000 FCFA");
+    expect(texte).toContain("2 000 FCFA");
+    expect(texte).toContain("par salarié et par mois");
+    expect(within(tarifs).getAllByText("1 mois d'essai gratuit")).toHaveLength(2);
+    const liens = within(tarifs).getAllByRole("link").map((l) => l.getAttribute("href"));
+    expect(liens).toEqual(expect.arrayContaining(["/inscription?type=cabinet", "/inscription?type=entreprise", "/connexion"]));
+    expect(texte).not.toMatch(/Gabon/i);
   });
 
   test("la page experts-comptables propose une démo pour les cabinets", () => {
@@ -69,4 +92,21 @@ test("la page introuvable propose un retour à l'accueil", () => {
   render(<PageIntrouvable />);
   const lien = screen.getByRole("link", { name: "Retour à l'accueil" });
   expect(lien.getAttribute("href")).toBe("/");
+});
+
+describe("tarifs affichés", () => {
+  test("prix en FCFA, sans coupure de ligne au milieu du montant", () => {
+    expect(formaterPrix(20000)).toBe("20 000 FCFA");
+    expect(formaterPrix(2000)).toBe("2 000 FCFA");
+    expect(formaterPrix(0)).toBe("0 FCFA");
+  });
+
+  test("cabinet 20 000 par mois, entreprise 2 000 par salarié, essai de 30 jours", () => {
+    const cabinet = TARIFS.find((t) => t.cible === "cabinet");
+    const entreprise = TARIFS.find((t) => t.cible === "entreprise");
+    expect(cabinet?.prixMensuel).toBe(20000);
+    expect(entreprise?.prixMensuel).toBe(2000);
+    expect(entreprise?.unite).toContain("par salarié");
+    expect(DUREE_ESSAI_JOURS).toBe(30);
+  });
 });
