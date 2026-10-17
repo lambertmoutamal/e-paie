@@ -28,7 +28,7 @@ export function FormulairePortail() {
         </label>
         <div className="flex gap-2">
           <label htmlFor="indicatif" className="sr-only">
-            Pays
+            Indicatif téléphonique
           </label>
           <select id="indicatif" name="indicatif" defaultValue={saisie?.indicatif ?? "+241"} className={`${STYLE_BASE} w-36 shrink-0 px-2`}>
             {INDICATIFS.map(([valeur, libelle]) => (

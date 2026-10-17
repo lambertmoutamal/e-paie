@@ -4,7 +4,8 @@ import { formaterDate } from "@/lib/abonnements/phases";
 import { formaterJours, libelleDates, NATURES_ABSENCE, STATUTS_DEMANDE, type NatureAbsence, type StatutDemande } from "@/lib/absences/regles";
 import { champLie } from "@/lib/supabase/relations";
 import { Champ, ChampFichier, ChoixListe, Formulaire, ZoneTexte } from "@/components/formulaire";
-import { Badge, Carte, EtatVide, Page } from "@/components/ui";
+import { Badge, Carte, EtatVide, LienBouton, Page } from "@/components/ui";
+import { Pastilles } from "@/components/tableau";
 import { annulerAbsence, deciderDemande, saisirAbsence } from "./actions";
 import { chargerContexte, EnTeteAbsences, lienJustificatif } from "./commun";
 import { AnnulationAbsence, DecisionDemande } from "./formulaires";
@@ -15,9 +16,11 @@ export const metadata: Metadata = { title: "Congés et absences" };
 const CHAMPS =
   "id, salarie_id, prevalidee_le, debut, fin, debut_apres_midi, fin_midi, nb_jours, statut, motif, justificatif_chemin, saisie_rh, commentaire_decision, cree_le, decide_le, salaries(nom, prenoms, matricule), types_absence(libelle, nature, deduit_solde)";
 
-export default async function PageDemandes({ params }: PageProps<"/espace/entreprises/[id]/absences">) {
+export default async function PageDemandes({ params, searchParams }: PageProps<"/espace/entreprises/[id]/absences">) {
   await connection(); // page calculée à chaque visite (elle lit la date du jour)
   const { id } = await params;
+  const { statut } = await searchParams;
+  const filtre = typeof statut === "string" && statut in STATUTS_DEMANDE && statut !== "en_attente" ? (statut as StatutDemande) : "tous";
   const { supabase, entreprise, peutGerer } = await chargerContexte(id);
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
@@ -29,6 +32,9 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
     supabase.from("types_absence").select("id, libelle").eq("entreprise_id", id).eq("actif", true).order("ordre"),
     supabase.rpc("derniers_conges_entreprise", { p_entreprise_id: id }),
   ]);
+  const toutes = historique ?? [];
+  const visibles = filtre === "tous" ? toutes : toutes.filter((d) => d.statut === filtre);
+  const lienFiltre = (s: string) => `/espace/entreprises/${id}/absences${s === "tous" ? "" : `?statut=${s}`}#historique`;
   const dernierDe = new Map(((derniers ?? []) as { salarie_id: string; debut: string; fin: string }[]).map((d) => [d.salarie_id, d]));
   const soldeDe = new Map(((soldes ?? []) as { salarie_id: string; disponible: number }[]).map((s) => [s.salarie_id, Number(s.disponible)]));
 
@@ -87,6 +93,7 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
       </Carte>
 
       {peutGerer && (
+        <div id="saisir-absence" className="scroll-mt-24">
         <Carte titre="Saisir une absence" description="Maladie, absence injustifiée, congé pris sans demande… L'absence est enregistrée comme acceptée et le salarié est prévenu.">
           <Formulaire action={saisirAbsence.bind(null, id)} libelleBouton="Enregistrer l'absence" colonnes={2}>
             <ChoixListe
@@ -102,14 +109,52 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
             <ChampFichier libelle="Justificatif (facultatif)" />
           </Formulaire>
         </Carte>
+        </div>
       )}
 
+      <div id="historique" className="scroll-mt-24">
       <Carte titre="Historique" description="Les 60 dernières absences traitées." sansMarge>
-        {!historique?.length ? (
-          <EtatVide icone={CalendarCheck2} titre="Aucune absence pour l'instant" />
+        {!toutes.length ? (
+          <EtatVide
+            icone={CalendarCheck2}
+            titre="Aucune absence pour l'instant"
+            action={
+              peutGerer ? (
+                <LienBouton href="#saisir-absence" variante="secondaire">
+                  Saisir une absence
+                </LienBouton>
+              ) : undefined
+            }
+          />
         ) : (
+          <>
+          <div className="border-b border-bordure p-4 sm:px-5">
+            <Pastilles
+              libelle="Filtrer par décision"
+              elements={[
+                { href: lienFiltre("tous"), libelle: "Toutes", actif: filtre === "tous", nombre: toutes.length },
+                ...(["acceptee", "refusee", "annulee"] as StatutDemande[]).map((s) => ({
+                  href: lienFiltre(s),
+                  libelle: STATUTS_DEMANDE[s].libelle,
+                  actif: filtre === s,
+                  nombre: toutes.filter((d) => d.statut === s).length,
+                })),
+              ]}
+            />
+          </div>
+          {!visibles.length && (
+            <EtatVide
+              icone={CalendarCheck2}
+              titre="Aucune absence avec ce statut"
+              action={
+                <LienBouton href={lienFiltre("tous")} variante="secondaire">
+                  Voir toutes les absences
+                </LienBouton>
+              }
+            />
+          )}
           <ul className="divide-y divide-bordure">
-            {historique.map((d) => {
+            {visibles.map((d) => {
               const type = d.types_absence as unknown as { libelle: string; nature: NatureAbsence };
               const statut = STATUTS_DEMANDE[d.statut as StatutDemande];
               return (
@@ -141,8 +186,10 @@ export default async function PageDemandes({ params }: PageProps<"/espace/entrep
               );
             })}
           </ul>
+          </>
         )}
       </Carte>
+      </div>
     </Page>
   );
 }

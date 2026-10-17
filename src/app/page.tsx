@@ -5,6 +5,11 @@ import {
   Building2,
   CircleCheck,
   FileLock2,
+  Fingerprint,
+  Lock,
+  Send,
+  Upload,
+  UserCheck,
   History,
   KeyRound,
   Layers,
@@ -26,6 +31,13 @@ const GARANTIES = [
   { icone: History, titre: "Journal d'audit infalsifiable", texte: "Qui a fait quoi, et quand, pour chaque action." },
   { icone: ShieldCheck, titre: "Hébergement sécurisé en Europe", texte: "Connexions chiffrées, accès strictement contrôlés." },
   { icone: Smartphone, titre: "Pensé pour le téléphone", texte: "Léger, utilisable même avec une connexion faible." },
+];
+
+const ETAPES_BULLETIN = [
+  { icone: Upload, titre: "Bulletin déposé", texte: "Le gestionnaire dépose les bulletins de la période." },
+  { icone: UserCheck, titre: "Validé", texte: "Contrôle puis approbation, par des personnes différentes." },
+  { icone: Fingerprint, titre: "Verrouillé, avec empreinte", texte: "La version publiée ne peut plus être modifiée sans que cela se voie." },
+  { icone: Send, titre: "Publié", texte: "Le salarié le consulte sur son téléphone." },
 ];
 
 const PUBLICS = [
@@ -80,11 +92,11 @@ export default function Accueil() {
               des bulletins, congés et échanges, dans un espace sécurisé.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/demo" className={`${classesBouton("principal")} h-12 px-5`}>
-                Demander une démo <ArrowRight size={16} aria-hidden />
+              <Link href="/inscription" className={`${classesBouton("principal")} h-12 px-5`}>
+                Essai gratuit d&apos;un mois <ArrowRight size={16} aria-hidden />
               </Link>
-              <Link href="/inscription" className={`${classesBouton("secondaire")} h-12 px-5`}>
-                Essai gratuit d&apos;un mois
+              <Link href="/demo" className={`${classesBouton("secondaire")} h-12 px-5`}>
+                Demander une démo
               </Link>
             </div>
             <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-doux">
@@ -102,36 +114,54 @@ export default function Accueil() {
             </div>
           </div>
 
-          {/* Aperçu stylisé de l'application (illustration, sans image à télécharger) */}
-          <div aria-hidden className="relative mx-auto w-full max-w-md">
-            <div className="rounded-2xl border border-bordure bg-surface p-4 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold">Bulletins · Octobre</p>
-                <span className="rounded-full bg-marque-claire px-2 py-0.5 text-xs font-medium text-marque">Publié</span>
+          {/* Maquette de l'application (HTML et CSS seulement). Illustration : les noms sont fictifs. */}
+          <figure aria-hidden className="relative mx-auto w-full max-w-md">
+            <div className="overflow-hidden rounded-2xl border border-bordure bg-surface shadow-flottant">
+              <div className="flex items-center gap-1.5 border-b border-bordure bg-background px-3 py-2">
+                <span className="size-2.5 rounded-full bg-black/10" />
+                <span className="size-2.5 rounded-full bg-black/10" />
+                <span className="size-2.5 rounded-full bg-black/10" />
+                <span className="ml-2 rounded bg-black/[.04] px-2 py-0.5 text-[11px] text-doux">dematpaie · Paie</span>
               </div>
-              {[
-                ["NDONG Awa", "Comptable"],
-                ["MBA Paul", "Technicien"],
-                ["OBAME Clarisse", "Assistante RH"],
-                ["NZE Jean", "Chauffeur"],
-              ].map(([nom, poste]) => (
-                <div key={nom} className="flex items-center gap-3 border-t border-bordure py-2.5">
-                  <span className="grid size-8 place-items-center rounded-full bg-marque text-xs font-semibold text-white">
-                    {nom.split(" ").map((m) => m[0]).join("")}
+              <div className="p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-sm font-semibold">Bulletins · Octobre</p>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-marque-claire px-2 py-0.5 text-xs font-semibold text-marque-fonce">
+                    <Lock size={11} /> Verrouillé
                   </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{nom}</p>
-                    <p className="text-xs text-doux">{poste}</p>
-                  </div>
-                  <CircleCheck size={16} className="text-marque" />
                 </div>
-              ))}
+                <div className="mb-3 grid grid-cols-3 gap-2 text-center">
+                  {[["Déposés", "4"], ["Validés", "4"], ["Publiés", "4"]].map(([l, v]) => (
+                    <div key={l} className="rounded-lg bg-background px-2 py-2">
+                      <p className="text-lg font-bold leading-none">{v}</p>
+                      <p className="mt-1 text-[11px] text-doux">{l}</p>
+                    </div>
+                  ))}
+                </div>
+                {[
+                  ["NDONG Awa", "Comptable"],
+                  ["MBA Paul", "Technicien"],
+                  ["OBAME Clarisse", "Assistante RH"],
+                ].map(([nom, poste]) => (
+                  <div key={nom} className="flex items-center gap-3 border-t border-bordure py-2.5">
+                    <span className="grid size-8 place-items-center rounded-full bg-marque text-xs font-semibold text-white">
+                      {nom.split(" ").map((m) => m[0]).join("")}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{nom}</p>
+                      <p className="text-xs text-doux">{poste}</p>
+                    </div>
+                    <CircleCheck size={16} className="text-marque" />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="absolute -bottom-5 -left-5 hidden rounded-xl border border-bordure bg-surface p-3 shadow-lg sm:block">
+            <div className="absolute -bottom-5 -left-3 hidden rounded-xl border border-bordure bg-surface p-3 shadow-survol sm:block">
               <p className="text-xs text-doux">Validation</p>
               <p className="text-sm font-semibold">Contrôlé → Approuvé → Publié</p>
             </div>
-          </div>
+            <figcaption className="mt-7 text-center text-xs text-doux sm:mt-8">Illustration : les noms sont fictifs.</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -148,6 +178,28 @@ export default function Accueil() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Parcours d'un bulletin */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <TitreSection surtitre="Le parcours d'un bulletin" titre="Du dépôt à la publication, chaque étape est tracée" texte="Une fois publié, le bulletin est verrouillé : sa copie reçoit une empreinte, et toute modification serait détectée." />
+        <ol className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {ETAPES_BULLETIN.map(({ icone: Icone, titre, texte }, i) => (
+            <li key={titre} className="relative flex gap-4 rounded-2xl border border-bordure bg-surface p-5 shadow-carte lg:flex-col">
+              <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-marque text-white">
+                <Icone size={22} aria-hidden />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-marque">Étape {i + 1}</p>
+                <p className="mt-0.5 font-semibold">{titre}</p>
+                <p className="mt-1 text-sm text-doux">{texte}</p>
+              </div>
+              {i < ETAPES_BULLETIN.length - 1 && (
+                <ArrowRight size={18} aria-hidden className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-surface text-marque lg:block" />
+              )}
+            </li>
+          ))}
+        </ol>
       </section>
 
       {/* Modules */}

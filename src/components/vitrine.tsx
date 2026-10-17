@@ -24,7 +24,7 @@ export function EnTetePublic() {
 
         <nav aria-label="Navigation principale" className="hidden items-center gap-6 text-sm font-medium text-doux lg:flex">
           {LIENS.map((l) => (
-            <Link key={l.href} href={l.href} className="hover:text-foreground">
+            <Link key={l.href} href={l.href} className="rounded py-2 hover:text-foreground">
               {l.libelle}
             </Link>
           ))}
@@ -37,8 +37,11 @@ export function EnTetePublic() {
           <Link href="/connexion" className={classesBouton("secondaire", "petit")}>
             Se connecter
           </Link>
-          <Link href="/demo" className={classesBouton("principal", "petit")}>
+          <Link href="/demo" className={classesBouton("secondaire", "petit")}>
             Demander une démo
+          </Link>
+          <Link href="/inscription" className={classesBouton("principal", "petit")}>
+            Essai gratuit
           </Link>
         </div>
 
@@ -53,16 +56,19 @@ export function EnTetePublic() {
             </summary>
             <div className="absolute right-0 mt-2 flex w-64 flex-col gap-1 rounded-xl border border-bordure bg-surface p-2 shadow-lg">
               {LIENS.map((l) => (
-                <Link key={l.href} href={l.href} className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
+                <Link key={l.href} href={l.href} className="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium hover:bg-marque-claire/60">
                   {l.libelle}
                 </Link>
               ))}
               <hr className="my-1 border-bordure" />
-              <Link href="/portail/connexion" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-black/[.03]">
+              <Link href="/portail/connexion" className="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium hover:bg-marque-claire/60">
                 Espace salarié
               </Link>
-              <Link href="/demo" className={`${classesBouton("principal", "petit")} w-full`}>
+              <Link href="/demo" className={`${classesBouton("secondaire", "petit")} w-full`}>
                 Demander une démo
+              </Link>
+              <Link href="/inscription" className={`${classesBouton("principal", "petit")} w-full`}>
+                Essai gratuit d&apos;un mois
               </Link>
             </div>
           </details>

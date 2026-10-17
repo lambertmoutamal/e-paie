@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { FileSpreadsheet, Search, UserPlus, Users } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { formaterDate } from "@/lib/abonnements/phases";
-import { Badge, Carte, classesBouton, EnTetePage, EtatVide, LienBouton, Ligne, ListeLignes, Page } from "@/components/ui";
+import { Badge, classesBouton, EnTetePage, EtatVide, LienBouton, Page } from "@/components/ui";
+import { Pastilles, Tableau } from "@/components/tableau";
 import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Salariés" };
@@ -51,6 +52,21 @@ export default async function PageSalaries({ params, searchParams }: PageProps<"
     return `/espace/entreprises/${id}/salaries?${p}`;
   };
 
+  const lienStatut = (s: string) => {
+    const p = new URLSearchParams({ ...(recherche && { q: recherche }), statut: s });
+    return `/espace/entreprises/${id}/salaries?${p}`;
+  };
+  const etat = (s: { statut: string; date_embauche: string; date_sortie: string | null; telephone: string | null }) =>
+    s.statut === "sorti" ? (
+      <Badge>Sorti(e) le {formaterDate(s.date_sortie!)}</Badge>
+    ) : s.date_embauche > aujourdhui ? (
+      <Badge teinte="bleu">Arrive le {formaterDate(s.date_embauche)}</Badge>
+    ) : !s.telephone ? (
+      <Badge teinte="ambre">Sans téléphone</Badge>
+    ) : (
+      <Badge teinte="succes">En poste</Badge>
+    );
+
   return (
     <Page>
       <EnTetePage
@@ -85,43 +101,65 @@ export default async function PageSalaries({ params, searchParams }: PageProps<"
             className="h-11 w-full rounded-lg border border-bordure bg-surface pl-9 pr-3 outline-none focus:border-marque focus:ring-2 focus:ring-marque/20"
           />
         </label>
-        <select
-          name="statut"
-          defaultValue={filtre}
-          aria-label="Statut"
-          className="h-11 rounded-lg border border-bordure bg-surface px-3 outline-none focus:border-marque"
-        >
-          <option value="actif">En poste</option>
-          <option value="a_venir">À venir (prévisionnels)</option>
-          <option value="sorti">Sortis</option>
-          <option value="tous">Tous</option>
-        </select>
+        <input type="hidden" name="statut" value={filtre} />
         <button type="submit" className={classesBouton("secondaire")}>
           Rechercher
         </button>
       </form>
 
-      <Carte titre={`${total} salarié${total > 1 ? "s" : ""}`} sansMarge>
-        {!salaries?.length ? (
+      <Pastilles
+        libelle="Filtrer par statut"
+        elements={[
+          { href: lienStatut("actif"), libelle: "En poste", actif: filtre === "actif" },
+          { href: lienStatut("a_venir"), libelle: "À venir", actif: filtre === "a_venir" },
+          { href: lienStatut("sorti"), libelle: "Sortis", actif: filtre === "sorti" },
+          { href: lienStatut("tous"), libelle: "Tous", actif: filtre === "tous" },
+        ]}
+      />
+
+      <h2 className="text-base font-semibold" aria-live="polite">
+        {total} salarié{total > 1 ? "s" : ""}
+      </h2>
+
+      {!salaries?.length ? (
+        <div className="rounded-2xl border border-bordure bg-surface shadow-carte">
           <EtatVide
             icone={Users}
             titre={recherche ? "Aucun résultat" : "Aucun salarié"}
             texte={recherche ? "Essayez avec un autre nom ou matricule." : peutGerer ? "Ajoutez vos salariés un par un ou importez-les depuis Excel." : undefined}
+            action={
+              peutGerer === true && !recherche ? (
+                <div className="flex flex-wrap justify-center gap-2">
+                  <LienBouton href={`/espace/entreprises/${id}/salaries/nouveau`} icone={UserPlus}>
+                    Ajouter un salarié
+                  </LienBouton>
+                  <LienBouton href={`/espace/entreprises/${id}/salaries/importer`} variante="secondaire" icone={FileSpreadsheet}>
+                    Importer depuis Excel
+                  </LienBouton>
+                </div>
+              ) : recherche ? (
+                <LienBouton href={lienStatut("tous").replace(/q=[^&]*&?/, "")} variante="secondaire">
+                  Effacer la recherche
+                </LienBouton>
+              ) : undefined
+            }
           />
-        ) : (
-          <ListeLignes>
-            {salaries.map((s) => (
-              <Ligne
-                key={s.id}
-                href={`/espace/entreprises/${id}/salaries/${s.id}`}
-                titre={`${s.nom} ${s.prenoms}`}
-                sousTitre={[`Matricule ${s.matricule}`, s.poste, `embauché(e) le ${formaterDate(s.date_embauche)}`].filter(Boolean).join(" · ")}
-                fin={s.statut === "sorti" ? <Badge>Sorti(e) le {formaterDate(s.date_sortie!)}</Badge> : s.date_embauche > aujourdhui ? <Badge teinte="bleu">Arrive le {formaterDate(s.date_embauche)}</Badge> : !s.telephone ? <Badge teinte="ambre">Sans téléphone</Badge> : null}
-              />
-            ))}
-          </ListeLignes>
-        )}
-      </Carte>
+        </div>
+      ) : (
+        <Tableau
+          legende="Liste des salariés"
+          lignes={salaries}
+          cleLigne={(s) => s.id}
+          hrefLigne={(s) => `/espace/entreprises/${id}/salaries/${s.id}`}
+          colonnes={[
+            { cle: "nom", titre: "Nom", principale: true, rendu: (s) => `${s.nom} ${s.prenoms}` },
+            { cle: "matricule", titre: "Matricule", rendu: (s) => s.matricule },
+            { cle: "poste", titre: "Poste", rendu: (s) => s.poste },
+            { cle: "embauche", titre: "Embauché(e) le", rendu: (s) => formaterDate(s.date_embauche) },
+            { cle: "statut", titre: "Statut", statut: true, rendu: (s) => etat(s) },
+          ]}
+        />
+      )}
 
       {nbPages > 1 && (
         <nav aria-label="Pages" className="flex items-center justify-center gap-3 text-sm">

@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import type { EtatFormulaire } from "@/lib/validation/formulaire";
 import { classesBouton } from "./ui";
+import { SaisieMotDePasse } from "./champ-mot-de-passe";
 
 type Action = (etat: EtatFormulaire, formulaire: FormData) => Promise<EtatFormulaire>;
 
@@ -102,18 +103,31 @@ export function Champ({
   return (
     <div className={`flex flex-col gap-1.5 ${pleineLargeur ? "sm:col-span-2" : ""}`}>
       <Etiquette id={id} libelle={libelle} requis={requis} />
-      <input
-        id={id}
-        name={nom}
-        type={type}
-        defaultValue={etat?.valeurs?.[nom] ?? valeurInitiale ?? ""}
-        autoComplete={autoComplete}
-        inputMode={type === "email" ? "email" : type === "tel" ? "tel" : undefined}
-        disabled={desactive}
-        aria-invalid={erreur ? true : undefined}
-        aria-describedby={erreur || aide ? `${id}-message` : undefined}
-        className={STYLE_SAISIE}
-      />
+      {type === "password" ? (
+        <SaisieMotDePasse
+          id={id}
+          name={nom}
+          defaultValue={etat?.valeurs?.[nom] ?? valeurInitiale ?? ""}
+          autoComplete={autoComplete}
+          disabled={desactive}
+          aria-invalid={erreur ? true : undefined}
+          aria-describedby={erreur || aide ? `${id}-message` : undefined}
+          className={STYLE_SAISIE}
+        />
+      ) : (
+        <input
+          id={id}
+          name={nom}
+          type={type}
+          defaultValue={etat?.valeurs?.[nom] ?? valeurInitiale ?? ""}
+          autoComplete={autoComplete}
+          inputMode={type === "email" ? "email" : type === "tel" ? "tel" : undefined}
+          disabled={desactive}
+          aria-invalid={erreur ? true : undefined}
+          aria-describedby={erreur || aide ? `${id}-message` : undefined}
+          className={STYLE_SAISIE}
+        />
+      )}
       <MessageChamp id={id} erreur={erreur} aide={aide} />
     </div>
   );

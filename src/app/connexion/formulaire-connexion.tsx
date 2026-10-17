@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import type { EtatConnexion } from "@/lib/auth/connexion";
 import { classesBouton } from "@/components/ui";
+import { SaisieMotDePasse } from "@/components/champ-mot-de-passe";
 
 type Props = {
   action: (etat: EtatConnexion, formulaire: FormData) => Promise<EtatConnexion>;
@@ -14,11 +15,12 @@ const STYLE_SAISIE =
 
 export function FormulaireConnexion({ action }: Props) {
   const [etat, envoyer, enCours] = useActionState(action, undefined);
+  const idMotDePasse = useId();
 
   return (
     <form action={envoyer} className="flex flex-col gap-4" noValidate>
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium">Email</span>
+        <span className="text-sm font-semibold">Email</span>
         <input
           name="email"
           type="email"
@@ -30,10 +32,12 @@ export function FormulaireConnexion({ action }: Props) {
         />
       </label>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium">Mot de passe</span>
-        <input name="mot_de_passe" type="password" autoComplete="current-password" required className={STYLE_SAISIE} />
-      </label>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={idMotDePasse} className="text-sm font-semibold">
+          Mot de passe
+        </label>
+        <SaisieMotDePasse id={idMotDePasse} name="mot_de_passe" autoComplete="current-password" required className={STYLE_SAISIE} />
+      </div>
 
       {etat?.erreur && (
         <p role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
