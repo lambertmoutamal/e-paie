@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { CalendarClock, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { BellRing, CalendarClock, CalendarDays, ChevronRight, CircleCheck, FileSignature, MessagesSquare, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { valeurLiee } from "@/lib/supabase/relations";
 import { TYPES_CONTRAT } from "@/lib/contrats/regles";
 import { SUJETS_RECLAMATION } from "@/lib/reclamations/regles";
 import { exigerEntrepriseCourante, idEntrepriseMemorise } from "@/lib/entreprise-courante";
 import { absencesDuMois, compter, evolutionEffectif, pyramideDesAges, repartitionSexe, type AbsenceStat, type SalarieStat } from "@/lib/tableau-de-bord/calculs";
+import { mesTachesEntrepriseCourante } from "@/lib/bulletins/actions-a-faire";
+import { EtatVide, LienBouton } from "@/components/ui";
 import type { Echeance } from "@/components/echeances";
 import { GraphiqueAnneau, GraphiqueBarresHorizontales, GraphiqueEffectif, GraphiquePyramide } from "@/components/graphiques-dynamiques";
 
@@ -51,14 +53,84 @@ function Indicateur({ icone: Icone, libelle, valeur, detail, teinte, href }: { i
 }
 
 // Carte de graphique : sur ordinateur, le graphique remplit la place restante
-function CarteGraphique({ titre, sousTitre, children }: { titre: string; sousTitre?: string; children: ReactNode }) {
+function CarteGraphique({ titre, sousTitre, vide, children }: { titre: string; sousTitre?: string; vide?: ReactNode; children: ReactNode }) {
   return (
-    <section className="flex min-h-0 flex-col rounded-2xl border border-bordure bg-surface p-3.5 shadow-carte">
+    <section className="flex flex-col rounded-2xl border border-bordure bg-surface p-3.5 shadow-carte">
       <h2 className="truncate text-sm font-semibold">
         {titre}
         {sousTitre && <span className="font-normal text-doux"> · {sousTitre}</span>}
       </h2>
-      <div className="mt-2 h-56 min-h-0 lg:h-auto lg:flex-1">{children}</div>
+      <div className="mt-2 h-60 min-h-0">{vide ?? children}</div>
+    </section>
+  );
+}
+
+// Carte « À faire aujourd'hui » : ce qui attend la personne, en gros compteurs cliquables
+function CarteAFaire({
+  paie,
+  demandes,
+  reclamations,
+  ailleurs,
+  lienPaie,
+  lienAbsences,
+  lienReclamations,
+}: {
+  paie: { aValider: number; aPublier: number; aCorriger: number };
+  demandes: number;
+  reclamations: number;
+  ailleurs: number;
+  lienPaie: string;
+  lienAbsences: string;
+  lienReclamations: string;
+}) {
+  const paieTotal = paie.aValider + paie.aPublier + paie.aCorriger;
+  const total = paieTotal + demandes + reclamations;
+  const detailPaie = [paie.aValider && `${paie.aValider} à valider`, paie.aPublier && `${paie.aPublier} à publier`, paie.aCorriger && `${paie.aCorriger} à corriger`].filter(Boolean).join(" · ");
+  const elements = [
+    { icone: FileSignature, libelle: "Paies à traiter", valeur: paieTotal, detail: detailPaie || "Rien en attente", href: lienPaie },
+    { icone: CalendarDays, libelle: "Demandes de congés", valeur: demandes, detail: demandes ? "À accepter ou refuser" : "Rien en attente", href: lienAbsences },
+    { icone: MessagesSquare, libelle: "Réclamations", valeur: reclamations, detail: reclamations ? "Salariés qui attendent une réponse" : "Rien en attente", href: lienReclamations },
+  ];
+  return (
+    <section aria-labelledby="titre-a-faire" className={`rounded-2xl border bg-surface shadow-carte ${total ? "border-amber-300" : "border-bordure"}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-5">
+        <div className="flex items-center gap-3">
+          <span className={`grid size-10 place-items-center rounded-xl ${total ? "bg-amber-100 text-amber-800" : "bg-emerald-50 text-emerald-700"}`}>
+            {total ? <BellRing size={19} aria-hidden /> : <CircleCheck size={19} aria-hidden />}
+          </span>
+          <div>
+            <h2 id="titre-a-faire" className="text-base font-semibold tracking-tight">À faire aujourd&apos;hui</h2>
+            <p className="text-sm text-doux">{total ? `${total} chose${total > 1 ? "s" : ""} vous attend${total > 1 ? "ent" : ""}.` : "Rien à faire, tout est à jour."}</p>
+          </div>
+        </div>
+        {total > 0 && (
+          <Link href="/espace/a-faire" className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-marque hover:underline">
+            Tout voir <ChevronRight size={16} aria-hidden />
+          </Link>
+        )}
+      </div>
+      <ul className="grid gap-2.5 p-4 sm:grid-cols-3 sm:px-5">
+        {elements.map((e) => (
+          <li key={e.libelle}>
+            <Link
+              href={e.href}
+              className={`flex min-h-16 items-center gap-3 rounded-xl border px-3.5 py-3 transition hover:shadow-survol ${e.valeur ? "border-amber-200 bg-amber-50/60 hover:border-amber-300" : "border-bordure bg-background hover:border-marque/30"}`}
+            >
+              <e.icone size={20} className={e.valeur ? "shrink-0 text-amber-700" : "shrink-0 text-doux"} aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">{e.libelle}</span>
+                <span className="block truncate text-xs text-doux">{e.detail}</span>
+              </span>
+              <span className={`text-2xl font-bold tabular-nums ${e.valeur ? "text-amber-900" : "text-doux"}`}>{e.valeur}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {ailleurs > 0 && (
+        <p className="border-t border-bordure px-4 py-3 text-sm text-doux sm:px-5">
+          {ailleurs} autre{ailleurs > 1 ? "s" : ""} chose{ailleurs > 1 ? "s" : ""} vous attend{ailleurs > 1 ? "ent" : ""} dans vos autres entreprises (menu du compte, « Changer d&apos;entreprise »).
+        </p>
+      )}
     </section>
   );
 }
@@ -74,8 +146,9 @@ export default async function TableauDeBord() {
 
   // Toutes les lectures sont limitées par la base au périmètre de la personne
   // Lancées en même temps que la vérification de l'entreprise (une seule attente au lieu de deux)
-  const [courante, { data: salariesBruts }, { data: contrats }, { data: absencesBrutes }, { data: reclamations }, { data: echeancesBrutes }] =
+  const [taches, courante, { data: salariesBruts }, { data: contrats }, { data: absencesBrutes }, { data: reclamations }, { data: echeancesBrutes }] =
     await Promise.all([
+      mesTachesEntrepriseCourante(),
       // Une seule entreprise à la fois : celle choisie à la connexion (sinon, écran de choix)
       exigerEntrepriseCourante(),
       supabase.from("salaries").select("entreprise_id, sexe, date_naissance, date_embauche, date_sortie, statut").in("entreprise_id", perimetre).limit(5000),
@@ -105,16 +178,45 @@ export default async function TableauDeBord() {
   const echeances = ((echeancesBrutes ?? []) as Echeance[]).filter((e) => perimetre.includes(e.entreprise_id));
   const finsCdd = echeances.filter((e) => e.nature === "fin_contrat").length;
   const pyramide = pyramideDesAges(salaries, maintenant);
+  const sansSalarie =
+    salaries.length === 0 ? (
+      <EtatVide
+        icone={Users}
+        titre="Aucun salarié pour l'instant"
+        texte="Ajoutez vos premiers salariés pour voir apparaître les statistiques."
+        action={
+          <LienBouton href={`/espace/entreprises/${courante.id}/salaries/nouveau`} icone={UserPlus} taille="petit">
+            Ajouter un salarié
+          </LienBouton>
+        }
+      />
+    ) : undefined;
+  const donneesContrats = compter(contrats ?? [], (c) => c.type_contrat, TYPES_CONTRAT);
+  const donneesReclamations = compter(reclamations ?? [], (r) => r.sujet, Object.fromEntries(Object.entries(SUJETS_RECLAMATION).map(([k, v]) => [k, v.libelle])));
   const lien = (chemin: string) => `/espace/entreprises/${courante.id}${chemin}`;
 
   return (
-    <div className="flex flex-col gap-3 lg:absolute lg:inset-0 lg:mx-auto lg:max-w-7xl lg:px-8 lg:pb-5 lg:pt-4">
+    <div className="flex flex-col gap-4">
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h1 className="text-xl font-bold tracking-tight">
           Tableau de bord <span className="font-semibold text-marque">· {courante.raison_sociale}</span>
         </h1>
         <p className="text-sm capitalize text-doux">{JOUR_LONG.format(maintenant)}</p>
       </header>
+
+      <CarteAFaire
+        paie={{
+          aValider: taches.actions.filter((a) => a.action === "a_valider").length,
+          aPublier: taches.actions.filter((a) => a.action === "a_publier").length,
+          aCorriger: taches.actions.filter((a) => a.action === "a_corriger").length,
+        }}
+        demandes={taches.demandes.length}
+        reclamations={taches.reclamations.length}
+        ailleurs={taches.ailleurs.reduce((s, e) => s + e.nombre, 0)}
+        lienPaie={lien("/paie")}
+        lienAbsences={lien("/absences")}
+        lienReclamations={lien("/reclamations")}
+      />
 
       {/* Indicateurs clés */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -124,27 +226,37 @@ export default async function TableauDeBord() {
         <Indicateur icone={CalendarClock} libelle="Fins de CDD" valeur={finsCdd} detail={`Dans les 30 jours (et ${echeances.length - finsCdd} fin(s) d'essai)`} teinte="corail" href="/espace/etats/contrats" />
       </div>
 
-      {/* Graphiques : remplissent l'écran, sans défilement */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:grid-rows-2">
-        <CarteGraphique titre="Évolution de l'effectif" sousTitre="12 derniers mois">
+      {/* Graphiques */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <CarteGraphique titre="Évolution de l'effectif" sousTitre="12 derniers mois" vide={sansSalarie}>
           <GraphiqueEffectif donnees={effectif} />
         </CarteGraphique>
-        <CarteGraphique titre="Pyramide des âges" sousTitre={pyramide.sansDate ? `${pyramide.sansDate} sans date de naissance ou sexe` : "salariés en poste"}>
+        <CarteGraphique titre="Pyramide des âges" sousTitre={pyramide.sansDate ? `${pyramide.sansDate} sans date de naissance ou sexe` : "salariés en poste"} vide={sansSalarie}>
           <GraphiquePyramide donnees={pyramide.tranches} />
         </CarteGraphique>
-        <CarteGraphique titre="Contrats en cours" sousTitre="par type">
-          <GraphiqueAnneau donnees={compter(contrats ?? [], (c) => c.type_contrat, TYPES_CONTRAT)} />
+        <CarteGraphique
+          titre="Contrats en cours"
+          sousTitre="par type"
+          vide={donneesContrats.length === 0 ? <EtatVide icone={FileSignature} titre="Aucun contrat en cours" texte="Les contrats apparaissent ici une fois créés." /> : undefined}
+        >
+          <GraphiqueAnneau donnees={donneesContrats} />
         </CarteGraphique>
-        <CarteGraphique titre="Hommes et femmes" sousTitre="salariés en poste">
+        <CarteGraphique titre="Hommes et femmes" sousTitre="salariés en poste" vide={sansSalarie}>
           <GraphiqueAnneau donnees={repartitionSexe(salaries, maintenant)} />
         </CarteGraphique>
-        <CarteGraphique titre="Absences du mois" sousTitre="jours par type">
+        <CarteGraphique
+          titre="Absences du mois"
+          sousTitre="jours par type"
+          vide={absences.parType.length === 0 ? <EtatVide icone={CalendarDays} titre="Aucune absence ce mois-ci" texte="Les congés acceptés du mois s'afficheront ici." /> : undefined}
+        >
           <GraphiqueBarresHorizontales donnees={absences.parType.map((a) => ({ nom: a.type, valeur: a.jours }))} unite=" j" />
         </CarteGraphique>
-        <CarteGraphique titre="Réclamations ouvertes" sousTitre="par sujet">
-          <GraphiqueBarresHorizontales
-            donnees={compter(reclamations ?? [], (r) => r.sujet, Object.fromEntries(Object.entries(SUJETS_RECLAMATION).map(([k, v]) => [k, v.libelle])))}
-          />
+        <CarteGraphique
+          titre="Réclamations ouvertes"
+          sousTitre="par sujet"
+          vide={donneesReclamations.length === 0 ? <EtatVide icone={CircleCheck} titre="Aucune réclamation ouverte" texte="Tout est traité." /> : undefined}
+        >
+          <GraphiqueBarresHorizontales donnees={donneesReclamations} />
         </CarteGraphique>
       </div>
     </div>

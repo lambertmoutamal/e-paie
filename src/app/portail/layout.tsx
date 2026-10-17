@@ -14,7 +14,8 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = { themeColor: COULEUR_MARQUE };
+// viewportFit « cover » : la barre du bas tient compte de la zone de sécurité des téléphones (encoche, barre de gestes)
+export const viewport: Viewport = { themeColor: COULEUR_MARQUE, viewportFit: "cover" };
 
 export default function MiseEnPageApplication({ children }: LayoutProps<"/portail">) {
   return (

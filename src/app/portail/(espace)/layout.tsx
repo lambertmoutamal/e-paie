@@ -16,23 +16,31 @@ export default function MiseEnPagePortail({ children }: LayoutProps<"/portail">)
             <Logo taille={28} />
           </Link>
           <form action={deconnecterSalarie}>
-            <button type="submit" className="inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-doux hover:bg-black/[.04] hover:text-foreground">
+            <button type="submit" className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm font-medium text-doux hover:bg-black/[.04] hover:text-foreground">
               <LogOut size={16} aria-hidden />
               Déconnexion
             </button>
           </form>
         </div>
-        {/* Les onglets lisent l'adresse de la page : ils s'affichent dès qu'elle est connue */}
-        <Suspense fallback={<div className="h-11" aria-hidden />}>
-          <OngletsPortail />
-        </Suspense>
+        {/* Ordinateur et tablette : onglets sous la barre du haut */}
+        <div className="hidden sm:block">
+          <Suspense fallback={<div className="h-11" aria-hidden />}>
+            <OngletsPortail />
+          </Suspense>
+        </div>
       </header>
-      <main className="flex-1 px-4 py-6">
+      {/* Téléphone : barre fixe en bas de l'écran, à portée du pouce (hors de l'en-tête, qui est flou) */}
+      <div className="sm:hidden">
+        <Suspense fallback={null}>
+          <OngletsPortail enBas />
+        </Suspense>
+      </div>
+      <main className="flex-1 px-4 pb-28 pt-6 sm:pb-6">
         <div className="mx-auto w-full max-w-3xl">
           <Suspense fallback={<Squelette />}>{children}</Suspense>
         </div>
       </main>
-      <footer className="px-4 py-6 text-center text-xs text-doux">DématPaie · vos bulletins, toujours disponibles</footer>
+      <footer className="px-4 pb-28 pt-2 text-center sm:pb-6 sm:pt-6 text-xs text-doux">DématPaie · vos bulletins, toujours disponibles</footer>
     </div>
   );
 }
