@@ -22,6 +22,10 @@ export async function ajouterAdminCabinet(
   const { data: autorise } = await supabase.rpc("peut_gerer_cabinet", { p_cabinet_id: cabinetId });
   if (autorise !== true) return { erreur: "Vous n'avez pas le droit de gérer ce cabinet." };
 
+  // Une invitation par adresse et par minute (anti-envois en rafale depuis l'adresse DématPaie)
+  if (!(await reserverEnvoi(`admin-cabinet:${cabinetId}:${email.toLowerCase()}`, 60))) {
+    return { erreur: "Une invitation vient d'être envoyée à cette adresse. Patientez une minute." };
+  }
   const { data: cabinet } = await supabase.from("cabinets").select("nom").eq("id", cabinetId).single();
   const compte = await trouverOuCreerCompte(email, nomComplet);
   const { error } = await supabase.from("membres_cabinet").insert({ cabinet_id: cabinetId, profil_id: compte.id });
@@ -68,6 +72,74 @@ export async function affecterPersonne(
   // Des paies attendent peut-être déjà ce rôle (ex. aucun signataire jusqu'ici)
   after(() => alerterNouveauRole(entrepriseId, compte.id));
   return { message: await prevenir(compte, email, nomComplet, perimetre) };
+}
+
+// Équipe du cabinet : un collaborateur reçoit le même rôle dans une ou plusieurs entreprises
+// clientes du cabinet, en une fois (un seul compte, un seul email). Il n'a aucun accès au cabinet.
+export async function affecterCollaborateur(
+  supabase: SupabaseClient,
+  cabinetId: string,
+  entrepriseIds: string[],
+  email: string,
+  nomComplet: string,
+  role: string,
+): Promise<Resultat> {
+  if (!entrepriseIds.length) return { erreur: "Cochez au moins une entreprise cliente." };
+  const { data: autorise } = await supabase.rpc("peut_gerer_cabinet", { p_cabinet_id: cabinetId });
+  if (autorise !== true) return { erreur: "Seul un administrateur du cabinet peut gérer son équipe." };
+
+  // Uniquement des entreprises de CE cabinet (la RLS vérifie à nouveau chaque affectation)
+  const { data: entreprises } = await supabase
+    .from("entreprises")
+    .select("id, raison_sociale")
+    .eq("cabinet_id", cabinetId)
+    .in("id", entrepriseIds);
+  if (!entreprises || entreprises.length !== new Set(entrepriseIds).size) {
+    return { erreur: "Une des entreprises choisies n'appartient pas à ce cabinet." };
+  }
+
+  // Une affectation par adresse et par minute (anti-envois en rafale depuis l'adresse DématPaie)
+  if (!(await reserverEnvoi(`affectation:${cabinetId}:${email.toLowerCase()}`, 60))) {
+    return { erreur: "Cette adresse vient d'être affectée. Patientez une minute avant de recommencer." };
+  }
+  const compte = await trouverOuCreerCompte(email, nomComplet);
+  // Rien de nouveau (mêmes accès déjà actifs) : pas de nouvel email
+  if (!compte.nouveau) {
+    const { count } = await supabase
+      .from("affectations")
+      .select("entreprise_id", { count: "exact", head: true })
+      .eq("profil_id", compte.id)
+      .eq("role", role)
+      .eq("actif", true)
+      .in("entreprise_id", entreprises.map((e) => e.id));
+    if (count === entreprises.length) return { message: "Cette personne a déjà ces accès : rien n'a changé." };
+  }
+  // Une affectation retirée auparavant est simplement réactivée.
+  const { error } = await supabase
+    .from("affectations")
+    .upsert(
+      entreprises.map((e) => ({ entreprise_id: e.id, profil_id: compte.id, role, actif: true })),
+      { onConflict: "entreprise_id,profil_id,role" },
+    );
+  if (error) {
+    await supprimerCompteCree(compte);
+    return { erreur: "La personne n'a pas pu être affectée." };
+  }
+  after(async () => {
+    for (const e of entreprises) await alerterNouveauRole(e.id, compte.id);
+  });
+  const perimetre = `${libelleRole(role)} · ${entreprises.map((e) => e.raison_sociale).join(", ")}`;
+  return { message: await prevenir(compte, email, nomComplet, perimetre) };
+}
+
+// Retrait d'un administrateur du cabinet (la base refuse de retirer le dernier).
+export async function retirerAdminCabinet(supabase: SupabaseClient, cabinetId: string, profilId: string): Promise<Resultat> {
+  const { data: autorise } = await supabase.rpc("peut_gerer_cabinet", { p_cabinet_id: cabinetId });
+  if (autorise !== true) return { erreur: "Seul un administrateur du cabinet peut retirer un administrateur." };
+  const { data, error } = await supabase.from("membres_cabinet").delete().eq("cabinet_id", cabinetId).eq("profil_id", profilId).select("profil_id");
+  if (error) return { erreur: error.message.includes("au moins un administrateur") ? "Le cabinet doit garder au moins un administrateur." : "Retrait impossible." };
+  if (!data?.length) return { erreur: "Cette personne n'est pas administrateur de ce cabinet." };
+  return { message: "Administrateur retiré. Ses éventuelles affectations aux entreprises sont conservées." };
 }
 
 // Envoie l'invitation (nouveau compte) ou un simple avis (compte existant).

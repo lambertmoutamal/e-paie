@@ -14,6 +14,8 @@ describe("une seule entreprise à la fois", () => {
   test("l'écran de choix et le compte restent ouverts", () => {
     expect(exigeEntrepriseChoisie("/choix-entreprise")).toBe(false);
     expect(exigeEntrepriseChoisie("/espace/mot-de-passe")).toBe(false);
+    // L'équipe du cabinet se gère au niveau du cabinet, sans entreprise de travail
+    expect(exigeEntrepriseChoisie("/espace/equipe")).toBe(false);
     expect(exigeEntrepriseChoisie("/espace/profilXYZ")).toBe(true);
     expect(exigeEntrepriseChoisie("/connexion")).toBe(false);
     expect(exigeEntrepriseChoisie("/espaceX")).toBe(false);

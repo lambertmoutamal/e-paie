@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Briefcase, Building2, Inbox, LogOut } from "lucide-react";
+import { Briefcase, Building2, Inbox, LogOut, Users } from "lucide-react";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { Carte, EtatVide, LienBouton, Squelette, classesBouton } from "@/components/ui";
 import { champLie } from "@/lib/supabase/relations";
@@ -43,7 +43,16 @@ async function ChoixEntreprise() {
   const [liste, { adminPlateforme, cabinets }] = await Promise.all([entreprisesAccessibles(), droitsUtilisateur()]);
   // Cabinets administrés qui n'ont pas encore leur espace « Mon cabinet »
   const sansEspaceInterne = cabinets.filter((c) => !liste.some((e) => e.interne_cabinet && e.cabinet_id === c.cabinet_id));
-  const monCabinet = sansEspaceInterne.length > 0 && <CarteMonCabinet cabinets={sansEspaceInterne} plusieurs={cabinets.length > 1} />;
+  const monCabinet = (
+    <>
+      {sansEspaceInterne.length > 0 && <CarteMonCabinet cabinets={sansEspaceInterne} plusieurs={cabinets.length > 1} />}
+      {cabinets.length > 0 && (
+        <LienBouton href="/espace/equipe" icone={Users} variante="secondaire">
+          Équipe du cabinet : administrateurs et collaborateurs
+        </LienBouton>
+      )}
+    </>
+  );
 
   if (liste.length === 0) {
     const { count: demandes } = await supabase.from("demandes_entreprise").select("id", { count: "exact", head: true }).eq("statut", "en_attente");

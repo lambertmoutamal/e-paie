@@ -337,3 +337,13 @@ Réglages Supabase (Authentication), vérifiés le 2026-10-16 :
   du cabinet crée en un clic l'espace « Mon cabinet ». C'est une entreprise interne, une seule par cabinet,
   gérée comme une entreprise cliente (salariés, contrats, congés, bulletins, portail salarié), avec les mêmes
   droits et la même isolation, et couverte par l'abonnement du cabinet.
+
+## 2026-10-17 — Équipe du cabinet : administrateurs et collaborateurs
+
+- Nouvelle page **Équipe du cabinet** (menu Paramètres, et lien sur l'écran de choix d'entreprise), réservée
+  aux administrateurs du cabinet.
+- **Administrateur du cabinet** : gère le cabinet, son équipe et toutes ses entreprises clientes. Un administrateur
+  peut en inviter ou en retirer d'autres ; le cabinet garde toujours au moins un administrateur.
+- **Collaborateur** : employé du cabinet affecté, avec une tâche (gestionnaire de paie, contrôleur, signataire,
+  RH), à une ou plusieurs entreprises clientes en une seule fois (un seul email d'invitation). Il ne voit que ces
+  entreprises et n'a aucun accès à la gestion du cabinet. Ses accès se retirent ou se rétablissent un par un.

@@ -10,6 +10,7 @@ const PAGES_LIBRES = [
   "/espace/abonnement",
   "/espace/modules",
   "/espace/cabinets",
+  "/espace/equipe",
   "/espace/demandes-demo",
   "/espace/demandes-entreprises",
   "/espace/fichiers",

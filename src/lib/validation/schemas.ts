@@ -83,6 +83,12 @@ export const schemaNouvelleAffectation = schemaNouveauMembre.extend({
   role: z.enum(ROLES_ENTREPRISE, { error: "Choisissez un rôle." }),
 });
 
+// Tâches confiées à un collaborateur du cabinet dans les entreprises clientes
+export const ROLES_EQUIPE_CABINET = ["gestionnaire_paie", "controleur", "signataire", "rh"] as const;
+export const schemaAffectationEquipe = schemaNouveauMembre.extend({
+  role: z.enum(ROLES_EQUIPE_CABINET, { error: "Choisissez une tâche." }),
+});
+
 // Inscription libre d'un prospect (cabinet ou entreprise)
 export const schemaInscription = z.object({
   type: z.enum(["cabinet", "entreprise"], { error: "Indiquez si vous êtes un cabinet ou une entreprise." }),

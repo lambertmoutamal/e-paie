@@ -11,11 +11,14 @@ export function groupesMenu({
   entrepriseId,
   adminPlateforme,
   administrateur,
+  adminCabinet = false,
   voitAbonnement,
 }: {
   entrepriseId: string | null;
   adminPlateforme: boolean;
   administrateur: boolean;
+  // Administrateur d'au moins un cabinet : gère l'équipe du cabinet
+  adminCabinet?: boolean;
   voitAbonnement: boolean;
 }): GroupeMenu[] {
   const e = (chemin: string) => (entrepriseId ? `/espace/entreprises/${entrepriseId}${chemin}` : "/choix-entreprise");
@@ -83,6 +86,9 @@ export function groupesMenu({
               { libelle: "Liste des entreprises", href: "/espace/entreprises", description: "Administration des entreprises du cabinet" },
               { libelle: "Demandes d'entreprises", href: "/espace/demandes-entreprises", description: "Entreprises qui souhaitent vous confier leur paie" },
             ]
+          : []),
+        ...(adminCabinet
+          ? [{ libelle: "Équipe du cabinet", href: "/espace/equipe", description: "Administrateurs, et collaborateurs affectés aux entreprises clientes" }]
           : []),
         ...(adminPlateforme
           ? [

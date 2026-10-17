@@ -84,6 +84,7 @@ async function Menu({ variante }: { variante: "haut" | "mobile" }) {
     entrepriseId: courante?.id ?? null,
     adminPlateforme,
     administrateur: adminPlateforme || cabinets.length > 0,
+    adminCabinet: cabinets.length > 0,
     voitAbonnement: adminPlateforme || abonnements.length > 0,
   });
   return variante === "haut" ? <MenuGroupes groupes={groupes} /> : <MenuMobile groupes={groupes} />;
