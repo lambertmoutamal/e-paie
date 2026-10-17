@@ -251,6 +251,21 @@ Sans configuration Twilio, en développement, les messages WhatsApp s'affichent 
 | `npm run lint` | Vérifie la qualité du code |
 | `npm run build` | Prépare la version de production |
 
+## Équipe d'agents IA (Claude Code)
+
+Trois agents spécialisés sont affectés au projet, dans `.claude/agents/` :
+
+| Agent | Rôle | Quand l'appeler |
+|---|---|---|
+| `manager-saas` | Chef de projet et architecte SaaS | Cadrer une étape du plan, découper en tâches, relire avant commit, répartir le travail |
+| `securite-saas` | Expert cybersécurité, tests de failles | Audit d'un module, test d'isolation entre clients, revue de tout changement sensible (connexion, rôles, paiement, fichiers) |
+| `designer-saas` | Web design et UX des SaaS | Nouvelle page, revue d'une interface, portail salarié sur téléphone, cohérence avec la charte |
+
+Dans Claude Code, ouvert dans ce dossier, demandez simplement par exemple :
+« Utilise l'agent securite-saas pour auditer le portail salarié » ou
+« Demande à manager-saas de préparer l'étape 12 du plan ».
+L'expert sécurité ne teste qu'en local, sur la base de développement, jamais sur le site en ligne.
+
 ## Organisation des dossiers
 
 ```

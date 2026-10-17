@@ -322,3 +322,11 @@ Réglages Supabase (Authentication), vérifiés le 2026-10-16 :
 - limites : 30 codes par heure pour le projet, 30 vérifications et 30 connexions par 5 min et par adresse IP ;
 - non disponibles en formule gratuite / à brancher plus tard : refus des mots de passe divulgués (formule Pro),
   CAPTCHA (demande une modification des écrans de connexion).
+
+## 2026-10-17 — Équipe d'agents IA
+
+- Trois agents Claude Code affectés au projet (`.claude/agents/`) : **manager-saas** (cadrage, découpage,
+  relecture), **securite-saas** (audit et tests de failles), **designer-saas** (interfaces et UX).
+- L'expert sécurité ne teste qu'en local, sur la base de développement, dans des transactions annulées :
+  jamais d'attaque contre le site en ligne ni contre les prestataires (Supabase, Twilio, Resend, Genuka).
+- Aucun agent ne lance la remise à zéro de la base, une migration ou un envoi sur Git sans accord du porteur du projet.
