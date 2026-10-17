@@ -13,6 +13,13 @@
   --marque-claire: #eef0ff;
   --accent: #f2665a;
   --accent-claire: #fdeceb;
+  /* Corail foncé : à utiliser derrière du texte blanc (contraste 4,5:1) */
+  --accent-fonce: #c8372d;
+
+  /* Ombres douces, teintées d'indigo : trois niveaux d'élévation */
+  --ombre-carte: 0 1px 2px rgba(27, 30, 46, 0.04), 0 1px 3px rgba(27, 30, 46, 0.06);
+  --ombre-survol: 0 4px 12px rgba(49, 46, 129, 0.1), 0 1px 3px rgba(27, 30, 46, 0.06);
+  --ombre-flottant: 0 12px 32px rgba(49, 46, 129, 0.18), 0 2px 6px rgba(27, 30, 46, 0.08);
 }
 
 @theme inline {
@@ -27,6 +34,10 @@
   --color-marque-nuit: var(--marque-nuit);
   --color-accent: var(--accent);
   --color-accent-claire: var(--accent-claire);
+  --color-accent-fonce: var(--accent-fonce);
+  --shadow-carte: var(--ombre-carte);
+  --shadow-survol: var(--ombre-survol);
+  --shadow-flottant: var(--ombre-flottant);
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -34,7 +45,43 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--marque-claire);
+  color: var(--marque-nuit);
+}
+
+/* Les chiffres s'alignent dans les tableaux et les montants */
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Défilement fluide seulement si la personne n'a pas demandé de réduire les animations */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Animations réduites : transitions et mouvements quasi instantanés */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Contour de focus visible et cohérent (navigation au clavier) */

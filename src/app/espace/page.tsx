@@ -29,18 +29,18 @@ const TEINTES = {
 function Indicateur({ icone: Icone, libelle, valeur, detail, teinte, href }: { icone: LucideIcon; libelle: string; valeur: string | number; detail?: string; teinte: keyof typeof TEINTES; href?: string }) {
   const contenu = (
     <>
-      <span className={`grid size-9 shrink-0 place-items-center rounded-xl ${TEINTES[teinte]}`}>
-        <Icone size={18} aria-hidden />
+      <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${TEINTES[teinte]}`}>
+        <Icone size={19} aria-hidden />
       </span>
       <span className="min-w-0">
-        <span className="block text-xl font-bold leading-tight tabular-nums">{valeur}</span>
+        <span className="block text-2xl font-bold leading-tight tracking-tight tabular-nums">{valeur}</span>
         <span className="block truncate text-xs font-medium text-doux">{libelle}</span>
       </span>
     </>
   );
-  const classes = "flex items-center gap-2.5 rounded-2xl border border-bordure bg-surface px-3 py-2.5 shadow-[0_1px_3px_rgba(27,30,46,.05)]";
+  const classes = "flex items-center gap-2.5 rounded-2xl border border-bordure bg-surface px-3.5 py-3 shadow-carte";
   return href ? (
-    <Link href={href} title={detail} className={`${classes} transition hover:-translate-y-0.5 hover:shadow-md`}>
+    <Link href={href} title={detail} className={`${classes} transition motion-safe:hover:-translate-y-0.5 hover:border-marque/30 hover:shadow-survol`}>
       {contenu}
     </Link>
   ) : (
@@ -53,7 +53,7 @@ function Indicateur({ icone: Icone, libelle, valeur, detail, teinte, href }: { i
 // Carte de graphique : sur ordinateur, le graphique remplit la place restante
 function CarteGraphique({ titre, sousTitre, children }: { titre: string; sousTitre?: string; children: ReactNode }) {
   return (
-    <section className="flex min-h-0 flex-col rounded-2xl border border-bordure bg-surface p-3.5 shadow-[0_1px_3px_rgba(27,30,46,.05)]">
+    <section className="flex min-h-0 flex-col rounded-2xl border border-bordure bg-surface p-3.5 shadow-carte">
       <h2 className="truncate text-sm font-semibold">
         {titre}
         {sousTitre && <span className="font-normal text-doux"> · {sousTitre}</span>}

@@ -48,13 +48,13 @@ export function Formulaire({
 }
 
 const STYLE_SAISIE =
-  "h-11 w-full rounded-lg border border-bordure bg-surface px-3 text-base text-foreground shadow-[inset_0_1px_1px_rgba(0,0,0,.03)] outline-none transition focus:border-marque focus:ring-2 focus:ring-marque/20 disabled:bg-black/[.03] disabled:text-doux aria-invalid:border-red-500 aria-invalid:ring-red-100";
+  "h-11 w-full rounded-lg border border-bordure bg-surface px-3 text-base text-foreground shadow-[inset_0_1px_1px_rgba(0,0,0,.03)] outline-none transition placeholder:text-doux/70 hover:border-marque/40 focus:border-marque focus:ring-2 focus:ring-marque/20 disabled:cursor-not-allowed disabled:bg-black/[.03] disabled:text-doux aria-invalid:border-red-500 aria-invalid:ring-2 aria-invalid:ring-red-100";
 
 function Etiquette({ id, libelle, requis }: { id: string; libelle: string; requis?: boolean }) {
   return (
-    <label htmlFor={id} className="text-sm font-medium">
+    <label htmlFor={id} className="text-sm font-semibold">
       {libelle}
-      {requis && <span className="text-red-600"> *</span>}
+      {requis && <span className="text-red-700" aria-hidden> *</span>}
     </label>
   );
 }
@@ -62,8 +62,8 @@ function Etiquette({ id, libelle, requis }: { id: string; libelle: string; requi
 function MessageChamp({ id, erreur, aide }: { id: string; erreur?: string; aide?: string }) {
   if (erreur) {
     return (
-      <p id={`${id}-message`} className="flex items-center gap-1 text-sm text-red-700">
-        <CircleAlert size={14} aria-hidden />
+      <p id={`${id}-message`} className="flex items-start gap-1 text-sm font-medium text-red-700">
+        <CircleAlert size={14} className="mt-1 shrink-0" aria-hidden />
         {erreur}
       </p>
     );
@@ -187,14 +187,14 @@ export function ChoixCartes({
 
   return (
     <fieldset className="flex flex-col gap-1.5 sm:col-span-2" aria-describedby={erreur ? `${id}-message` : undefined}>
-      <legend className="mb-1.5 text-sm font-medium">{libelle}</legend>
+      <legend className="mb-1.5 text-sm font-semibold">{libelle}</legend>
       <div className="grid gap-3 sm:grid-cols-2">
         {options.map((o) => (
           <label
             key={o.valeur}
-            className="flex cursor-pointer gap-3 rounded-xl border border-bordure bg-surface p-4 transition has-[:checked]:border-marque has-[:checked]:bg-marque-claire/50 has-[:checked]:ring-1 has-[:checked]:ring-marque"
+            className="flex min-h-16 cursor-pointer gap-3 rounded-xl border border-bordure bg-surface p-4 transition hover:border-marque/40 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marque has-[:checked]:border-marque has-[:checked]:bg-marque-claire/50 has-[:checked]:ring-1 has-[:checked]:ring-marque"
           >
-            <input type="radio" name={nom} value={o.valeur} defaultChecked={choisie === o.valeur} className="mt-1 accent-[var(--marque)]" />
+            <input type="radio" name={nom} value={o.valeur} defaultChecked={choisie === o.valeur} className="mt-0.5 size-5 shrink-0 accent-[var(--marque)]" />
             <span>
               <span className="block font-semibold">{o.titre}</span>
               <span className="block text-sm text-doux">{o.texte}</span>
@@ -213,14 +213,14 @@ export function CaseACocher({ nom, children, coche }: { nom: string; children: R
   const id = useId();
   return (
     <div className="flex flex-col gap-1 sm:col-span-2">
-      <label htmlFor={id} className="flex items-start gap-2 text-sm">
+      <label htmlFor={id} className="flex min-h-11 cursor-pointer items-start gap-3 py-1.5 text-sm">
         <input
           id={id}
           type="checkbox"
           name={nom}
           defaultChecked={etat?.valeurs ? etat.valeurs[nom] === "on" : coche}
           aria-invalid={erreur ? true : undefined}
-          className="mt-0.5 size-4 accent-[var(--marque)]"
+          className="size-5 shrink-0 accent-[var(--marque)]"
         />
         <span>{children}</span>
       </label>
@@ -235,7 +235,7 @@ export function ZoneTexte({ nom, libelle, aide, max = 2000 }: { nom: string; lib
   const id = useId();
   return (
     <div className="flex flex-col gap-1.5 sm:col-span-2">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-sm font-semibold">
         {libelle}
       </label>
       <textarea
@@ -246,7 +246,7 @@ export function ZoneTexte({ nom, libelle, aide, max = 2000 }: { nom: string; lib
         defaultValue={etat?.valeurs?.[nom] ?? ""}
         aria-invalid={erreur ? true : undefined}
         aria-describedby={erreur || aide ? `${id}-message` : undefined}
-        className="w-full rounded-lg border border-bordure bg-surface px-3 py-2 text-base outline-none transition focus:border-marque focus:ring-2 focus:ring-marque/20"
+        className="w-full rounded-lg border border-bordure bg-surface px-3 py-2 text-base outline-none transition hover:border-marque/40 aria-invalid:border-red-500 focus:border-marque focus:ring-2 focus:ring-marque/20"
       />
       <MessageChamp id={id} erreur={erreur} aide={aide} />
     </div>
@@ -276,7 +276,7 @@ export function ChampFichier({ libelle, requis, aide }: { libelle: string; requi
 }
 
 export function TitreGroupe({ children }: { children: ReactNode }) {
-  return <p className="pt-2 text-sm font-semibold text-doux sm:col-span-2">{children}</p>;
+  return <p className="border-b border-bordure pb-1.5 pt-3 text-xs font-bold uppercase tracking-wider text-doux sm:col-span-2">{children}</p>;
 }
 
 export function BoutonEnvoyer({ children, variante = "principal" }: { children: ReactNode; variante?: "principal" | "secondaire" }) {

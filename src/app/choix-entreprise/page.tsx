@@ -17,19 +17,19 @@ export const metadata: Metadata = { title: "Choisir l'entreprise" };
 // qu'aucune entreprise n'est choisie. Seule la déconnexion reste possible.
 export default function PageChoisirEntreprise() {
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-md">
+    <div className="flex min-h-dvh flex-col bg-gradient-to-b from-marque-claire/70 via-background to-background">
+      <header className="bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-flottant">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 lg:px-8">
           <Logo clair taille={30} />
           <form action={seDeconnecter}>
-            <button type="submit" className="inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white/90 hover:bg-white/10">
+            <button type="submit" className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-semibold text-white hover:bg-white/10">
               <LogOut size={16} aria-hidden />
               Se déconnecter
             </button>
           </form>
         </div>
       </header>
-      <main className="flex-1 px-4 pb-10 pt-8 lg:px-8">
+      <main className="flex-1 px-4 pb-12 pt-8 sm:pt-12 lg:px-8">
         <Suspense fallback={<Squelette />}>
           <ChoixEntreprise />
         </Suspense>
@@ -89,10 +89,10 @@ async function ChoixEntreprise() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 py-4">
       <header className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{liste.length > 1 ? "Sur quelle entreprise voulez-vous travailler ?" : "Votre entreprise"}</h1>
-        <p className="mt-1 text-doux">
+        <h1 className="text-balance text-2xl font-bold tracking-tight sm:text-3xl">{liste.length > 1 ? "Sur quelle entreprise voulez-vous travailler ?" : "Votre entreprise"}</h1>
+        <p className="mx-auto mt-2 max-w-xl text-doux">
           {liste.length > 1
-            ? `Vous avez accès à ${liste.length} entreprises. Vous pourrez en changer à tout moment depuis le menu de votre compte (vos initiales, en haut à droite).`
+            ? `Vous avez accès à ${liste.length} entreprises. Vous pourrez en changer à tout moment : ouvrez le menu de votre compte (vos initiales, en haut à droite).`
             : "Voici l'entreprise à laquelle vous avez accès. Cliquez dessus pour commencer."}
         </p>
       </header>
@@ -105,7 +105,7 @@ async function ChoixEntreprise() {
 // Le cabinet fait aussi la paie de ses propres employés : espace « Mon cabinet », créé en un clic.
 function CarteMonCabinet({ cabinets, plusieurs }: { cabinets: { cabinet_id: string; cabinets: unknown }[]; plusieurs: boolean }) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-dashed border-marque/40 bg-marque-claire p-4 sm:flex-row sm:items-center">
+    <section className="flex flex-col gap-3 rounded-2xl border border-dashed border-marque/40 bg-marque-claire p-4 shadow-carte sm:flex-row sm:items-center">
       <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-marque text-white">
         <Building2 size={22} aria-hidden />
       </span>

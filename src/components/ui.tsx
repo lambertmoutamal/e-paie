@@ -8,13 +8,13 @@ type Variante = "principal" | "secondaire" | "discret" | "danger";
 
 export function classesBouton(variante: Variante = "principal", taille: "normal" | "petit" = "normal") {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
-  const tailles = { normal: "h-11 px-4 text-sm", petit: "h-9 px-3 text-sm" };
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg font-semibold transition-[background-color,box-shadow,color] duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60";
+  const tailles = { normal: "h-11 px-4 text-sm", petit: "h-11 px-3 text-sm sm:h-9" };
   const variantes: Record<Variante, string> = {
-    principal: "bg-marque text-white hover:bg-marque-fonce",
-    secondaire: "border border-bordure bg-surface text-foreground hover:bg-black/[.03]",
+    principal: "bg-marque text-white shadow-sm hover:bg-marque-fonce hover:shadow-survol",
+    secondaire: "border border-bordure bg-surface text-foreground shadow-sm hover:border-marque/30 hover:bg-marque-claire/60",
     discret: "text-marque hover:bg-marque-claire",
-    danger: "border border-red-200 bg-surface text-red-700 hover:bg-red-50",
+    danger: "border border-red-200 bg-surface text-red-700 hover:border-red-300 hover:bg-red-50",
   };
   return `${base} ${tailles[taille]} ${variantes[variante]}`;
 }
@@ -52,7 +52,7 @@ export function EnTetePage({
           <nav aria-label="Fil d'Ariane" className="mb-1 flex flex-wrap items-center gap-1 text-sm text-doux">
             {fil.map((f) => (
               <span key={f.href} className="inline-flex items-center gap-1">
-                <Link href={f.href} className="hover:text-marque">
+                <Link href={f.href} className="inline-flex min-h-8 items-center rounded font-medium hover:text-marque hover:underline">
                   {f.libelle}
                 </Link>
                 <ChevronRight size={14} aria-hidden />
@@ -60,8 +60,8 @@ export function EnTetePage({
             ))}
           </nav>
         )}
-        <h1 className="truncate text-2xl font-bold tracking-tight">{titre}</h1>
-        {description && <p className="mt-1 text-doux">{description}</p>}
+        <h1 className="break-words text-2xl font-bold tracking-tight sm:text-[1.75rem] sm:leading-9">{titre}</h1>
+        {description && <p className="mt-1 max-w-2xl text-doux">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
     </header>
@@ -82,12 +82,12 @@ export function Carte({
   sansMarge?: boolean;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-bordure bg-surface shadow-[0_1px_3px_rgba(27,30,46,.05)]">
+    <section className="overflow-hidden rounded-2xl border border-bordure bg-surface shadow-carte">
       {(titre || action) && (
-        <div className="flex items-start justify-between gap-3 border-b border-bordure px-4 py-3 sm:px-5">
+        <div className="flex items-start justify-between gap-3 border-b border-bordure px-4 py-3.5 sm:px-5">
           <div>
-            {titre && <h2 className="font-semibold">{titre}</h2>}
-            {description && <p className="text-sm text-doux">{description}</p>}
+            {titre && <h2 className="text-base font-semibold tracking-tight">{titre}</h2>}
+            {description && <p className="mt-0.5 text-sm text-doux">{description}</p>}
           </div>
           {action}
         </div>
@@ -118,7 +118,7 @@ export function Ligne({
   const contenu = (
     <>
       {Icone && (
-        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-marque-claire text-marque">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-marque-claire text-marque">
           <Icone size={18} aria-hidden />
         </span>
       )}
@@ -127,14 +127,14 @@ export function Ligne({
         {sousTitre && <div className="truncate text-sm text-doux">{sousTitre}</div>}
       </div>
       {fin && <div className="flex shrink-0 items-center gap-2">{fin}</div>}
-      {href && <ChevronRight size={18} className="shrink-0 text-doux" aria-hidden />}
+      {href && <ChevronRight size={18} className="shrink-0 text-doux transition-transform group-hover/ligne:translate-x-0.5 group-hover/ligne:text-marque" aria-hidden />}
     </>
   );
-  const classes = "flex items-center gap-3 px-4 py-3 sm:px-5";
+  const classes = "flex min-h-14 items-center gap-3 px-4 py-3 sm:px-5";
   return (
     <li>
       {href ? (
-        <Link href={href} className={`${classes} hover:bg-black/[.02]`}>
+        <Link href={href} className={`${classes} group/ligne transition-colors hover:bg-marque-claire/50 focus-visible:-outline-offset-2`}>
           {contenu}
         </Link>
       ) : (
@@ -145,16 +145,17 @@ export function Ligne({
 }
 
 const TEINTES = {
-  vert: "bg-marque-claire text-marque",
-  gris: "bg-black/[.05] text-doux",
-  ambre: "bg-amber-50 text-amber-800",
-  rouge: "bg-red-50 text-red-700",
-  bleu: "bg-sky-50 text-sky-800",
+  vert: "bg-marque-claire text-marque-fonce ring-marque/15",
+  succes: "bg-emerald-50 text-emerald-800 ring-emerald-600/20",
+  gris: "bg-black/[.05] text-doux ring-black/5",
+  ambre: "bg-amber-50 text-amber-800 ring-amber-600/20",
+  rouge: "bg-red-50 text-red-700 ring-red-600/20",
+  bleu: "bg-sky-50 text-sky-800 ring-sky-600/20",
 };
 
 export function Badge({ teinte = "gris", children }: { teinte?: keyof typeof TEINTES; children: ReactNode }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${TEINTES[teinte]}`}>
+    <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${TEINTES[teinte]}`}>
       {children}
     </span>
   );
@@ -162,13 +163,15 @@ export function Badge({ teinte = "gris", children }: { teinte?: keyof typeof TEI
 
 export function EtatVide({ icone: Icone, titre, texte, action }: { icone: LucideIcon; titre: string; texte?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-      <span className="grid size-12 place-items-center rounded-full bg-marque-claire text-marque">
-        <Icone size={22} aria-hidden />
+    <div className="flex flex-col items-center gap-2 px-4 py-12 text-center">
+      <span className="grid size-16 place-items-center rounded-full bg-marque-claire/70 ring-8 ring-marque-claire/40">
+        <span className="grid size-11 place-items-center rounded-full bg-surface text-marque shadow-carte">
+          <Icone size={22} aria-hidden />
+        </span>
       </span>
-      <p className="font-semibold">{titre}</p>
+      <p className="mt-2 text-base font-semibold">{titre}</p>
       {texte && <p className="max-w-sm text-sm text-doux">{texte}</p>}
-      {action && <div className="mt-2">{action}</div>}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }
@@ -187,12 +190,15 @@ export function Statistique({
   libelle,
   valeur,
   href,
+  detail,
   teinte = "indigo",
 }: {
   icone: LucideIcon;
   libelle: string;
   valeur: number | string;
   href?: string;
+  // Précision courte sous le libellé
+  detail?: string;
   teinte?: keyof typeof TEINTES_STAT;
 }) {
   const contenu = (
@@ -202,13 +208,14 @@ export function Statistique({
       </span>
       <div className="min-w-0">
         <p className="text-2xl font-bold tabular-nums leading-tight">{valeur}</p>
-        <p className="truncate text-sm text-doux">{libelle}</p>
+        <p className="truncate text-sm font-medium text-doux">{libelle}</p>
+        {detail && <p className="truncate text-xs text-doux">{detail}</p>}
       </div>
     </>
   );
-  const classes = "flex items-center gap-3 rounded-2xl border border-bordure bg-surface p-4 shadow-[0_1px_2px_rgba(27,30,46,.04)]";
+  const classes = "flex items-center gap-3 rounded-2xl border border-bordure bg-surface p-4 shadow-carte";
   return href ? (
-    <Link href={href} className={`${classes} transition hover:-translate-y-0.5 hover:shadow-md`}>
+    <Link href={href} className={`${classes} transition motion-safe:hover:-translate-y-0.5 hover:border-marque/30 hover:shadow-survol`}>
       {contenu}
     </Link>
   ) : (
@@ -218,10 +225,10 @@ export function Statistique({
 
 export function Squelette({ lignes = 3 }: { lignes?: number }) {
   return (
-    <div className="flex animate-pulse flex-col gap-3" aria-label="Chargement">
-      <div className="h-7 w-48 rounded bg-black/[.06]" />
+    <div className="flex flex-col gap-3 motion-safe:animate-pulse" role="status" aria-busy="true" aria-label="Chargement">
+      <div className="h-7 w-48 rounded-lg bg-black/[.06]" />
       {Array.from({ length: lignes }, (_, i) => (
-        <div key={i} className="h-16 rounded-xl bg-black/[.04]" />
+        <div key={i} className="h-16 rounded-2xl bg-black/[.04]" />
       ))}
     </div>
   );

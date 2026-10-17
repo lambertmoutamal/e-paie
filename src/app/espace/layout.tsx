@@ -20,7 +20,7 @@ import { changerEntreprise } from "./actions-navigation";
 export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
   return (
     <div className="flex h-dvh flex-col print:block print:h-auto">
-      <header className="sticky top-0 z-20 print:hidden bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-md">
+      <header className="sticky top-0 z-20 print:hidden bg-gradient-to-r from-marque-nuit via-marque-fonce to-marque text-white shadow-flottant">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 lg:gap-6 lg:px-8">
           <Link href="/espace" aria-label="Accueil" className="shrink-0">
             <Logo clair taille={30} />
@@ -40,16 +40,16 @@ export default function MiseEnPageEspace({ children }: LayoutProps<"/espace">) {
               id="recherche-salarie"
               name="q"
               placeholder="Rechercher un salarié…"
-              className="h-10 w-44 rounded-full border border-white/20 bg-white/10 pl-9 pr-3 text-sm text-white outline-none placeholder:text-white/60 focus:w-64 focus:bg-white/20 focus:ring-2 focus:ring-white/40 transition-all"
+              className="h-10 w-44 rounded-full border border-white/20 bg-white/10 pl-9 pr-3 text-sm text-white outline-none placeholder:text-white/75 focus:w-64 focus:bg-white/20 focus:ring-2 focus:ring-white/40 transition-all"
             />
           </form>
-          <Link href="/espace/recherche" className="grid size-10 place-items-center rounded-full hover:bg-white/10 xl:hidden" aria-label="Rechercher un salarié">
+          <Link href="/espace/recherche" className="grid size-11 place-items-center rounded-full hover:bg-white/10 xl:hidden" aria-label="Rechercher un salarié">
             <Search size={19} aria-hidden />
           </Link>
-          <Suspense fallback={<span className="size-10" />}>
+          <Suspense fallback={<span className="size-11" />}>
             <Cloche />
           </Suspense>
-          <Suspense fallback={<span className="size-10" />}>
+          <Suspense fallback={<span className="size-11" />}>
             <MenuUtilisateur />
           </Suspense>
           <Suspense fallback={null}>
@@ -97,13 +97,13 @@ async function Cloche() {
   return (
     <Link
       href="/espace/a-faire"
-      className="relative grid size-10 place-items-center rounded-full hover:bg-white/10"
+      className="relative grid size-11 place-items-center rounded-full hover:bg-white/10"
       aria-label={nombre ? `${nombre} action(s) à faire` : "Aucune action à faire"}
       title={nombre ? `${nombre} action(s) à faire` : "Aucune action à faire"}
     >
       <Bell size={19} aria-hidden />
       {nombre > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-bold text-white ring-2 ring-marque-fonce">
+        <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-accent-fonce px-1 text-xs font-bold text-white ring-2 ring-marque-fonce">
           {nombre > 99 ? "99+" : nombre}
         </span>
       )}
@@ -157,10 +157,10 @@ async function MenuUtilisateur() {
 
   return (
     <details className="group relative">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full p-0.5 hover:bg-white/10" aria-label="Mon compte">
-        <span className="grid size-9 place-items-center rounded-full bg-accent text-sm font-bold text-white ring-2 ring-white/40">{initiales}</span>
+      <summary className="flex size-11 cursor-pointer list-none items-center justify-center rounded-full hover:bg-white/10" aria-label="Mon compte">
+        <span className="grid size-9 place-items-center rounded-full bg-accent-fonce text-sm font-bold text-white ring-2 ring-white/40">{initiales}</span>
       </summary>
-      <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-xl border border-bordure bg-surface text-foreground shadow-xl">
+      <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-bordure bg-surface text-foreground shadow-flottant">
         <div className="border-b border-bordure bg-marque-claire/60 px-4 py-3">
           <p className="truncate font-semibold">{profil?.nom_complet || "Mon compte"}</p>
           <p className="truncate text-xs text-doux">{profil?.email}</p>
@@ -171,7 +171,7 @@ async function MenuUtilisateur() {
             <p className="truncate font-semibold">{courante?.raison_sociale ?? "Aucune entreprise choisie"}</p>
             {liste.length > 1 && (
               <form action={changerEntreprise}>
-                <button type="submit" className="mt-1 inline-flex items-center gap-1.5 font-semibold text-marque hover:underline">
+                <button type="submit" className="mt-1 inline-flex min-h-11 items-center gap-1.5 font-semibold text-marque hover:underline">
                   <ArrowLeftRight size={14} aria-hidden />
                   Changer d&apos;entreprise
                 </button>
@@ -181,20 +181,20 @@ async function MenuUtilisateur() {
         )}
         <ul className="py-1 text-sm">
           <li>
-            <Link href="/espace/profil" className="flex items-center gap-2 px-4 py-2 hover:bg-black/[.04]">
+            <Link href="/espace/profil" className="flex min-h-11 items-center gap-2 px-4 py-2 hover:bg-marque-claire/60">
               <UserRound size={16} className="text-doux" aria-hidden />
               Mon profil
             </Link>
           </li>
           <li>
-            <Link href="/espace/mot-de-passe" className="flex items-center gap-2 px-4 py-2 hover:bg-black/[.04]">
+            <Link href="/espace/mot-de-passe" className="flex min-h-11 items-center gap-2 px-4 py-2 hover:bg-marque-claire/60">
               <KeyRound size={16} className="text-doux" aria-hidden />
               Changer mon mot de passe
             </Link>
           </li>
           <li className="border-t border-bordure">
             <form action={seDeconnecter}>
-              <button type="submit" className="flex w-full items-center gap-2 px-4 py-2 text-left text-red-700 hover:bg-red-50">
+              <button type="submit" className="flex min-h-11 w-full items-center gap-2 px-4 py-2 text-left text-red-700 hover:bg-red-50">
                 <LogOut size={16} aria-hidden />
                 Se déconnecter
               </button>

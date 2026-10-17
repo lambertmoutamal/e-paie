@@ -1,10 +1,20 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Briefcase, Building2, ChevronRight, LoaderCircle, Search } from "lucide-react";
+import { Building2, ChevronRight, LoaderCircle, Search } from "lucide-react";
 import { choisirEntrepriseEtContinuer } from "../espace/actions-navigation";
 
-const COULEURS = ["bg-indigo-500", "bg-rose-500", "bg-emerald-500", "bg-amber-500", "bg-sky-500", "bg-violet-500", "bg-orange-500", "bg-teal-500"];
+// Teintes assez foncées pour un texte blanc lisible (contraste 4,5:1)
+const COULEURS = ["bg-indigo-600", "bg-rose-600", "bg-emerald-700", "bg-amber-700", "bg-sky-700", "bg-violet-600", "bg-orange-700", "bg-teal-700"];
+
+// Deux lettres : initiales des deux premiers mots de la raison sociale
+function initiales(nom: string) {
+  const mots = nom.split(/[\s\-']+/).filter((m) => /\p{L}/u.test(m));
+  return mots
+    .slice(0, 2)
+    .map((m) => Array.from(m)[0].toUpperCase())
+    .join("");
+}
 
 // Liste des entreprises à choisir, avec recherche quand elles sont nombreuses.
 export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: string; raison_sociale: string; interne_cabinet: boolean; effectif: number }[] }) {
@@ -28,9 +38,14 @@ export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: stri
             onChange={(e) => setFiltre(e.target.value)}
             autoFocus
             placeholder="Rechercher une entreprise…"
-            className="h-12 w-full rounded-full border border-bordure bg-surface pl-11 pr-4 text-base shadow-sm outline-none focus:border-marque focus:ring-2 focus:ring-marque/20"
+            className="h-12 w-full rounded-full border border-bordure bg-surface pl-11 pr-4 text-base shadow-carte outline-none placeholder:text-doux/70 focus:border-marque focus:ring-2 focus:ring-marque/20"
           />
         </label>
+      )}
+      {visibles.length === 0 && (
+        <p role="status" className="rounded-2xl border border-dashed border-bordure bg-surface px-4 py-8 text-center text-doux">
+          Aucune entreprise ne correspond à « {filtre.trim()} ». Essayez un autre nom.
+        </p>
       )}
       <ul className="grid gap-3 sm:grid-cols-2">
         {visibles.map((e, i) => (
@@ -39,13 +54,13 @@ export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: stri
               type="button"
               disabled={enCours}
               onClick={() => choisir(e.id)}
-              className="group flex w-full items-center gap-4 rounded-2xl border border-bordure bg-surface p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-marque/40 hover:shadow-md disabled:opacity-60"
+              className="group flex min-h-20 w-full cursor-pointer items-center gap-4 rounded-2xl border border-bordure bg-surface p-4 text-left shadow-carte transition motion-safe:hover:-translate-y-0.5 hover:border-marque/40 hover:shadow-survol disabled:cursor-wait disabled:opacity-60"
             >
-              <span className={`grid size-12 shrink-0 place-items-center rounded-xl text-white ${e.interne_cabinet ? "bg-marque" : COULEURS[i % COULEURS.length]}`}>
-                {e.interne_cabinet ? <Building2 size={22} aria-hidden /> : <Briefcase size={22} aria-hidden />}
+              <span className={`grid size-12 shrink-0 place-items-center rounded-xl text-base font-bold tracking-wide text-white ${e.interne_cabinet ? "bg-marque" : COULEURS[i % COULEURS.length]}`}>
+                {e.interne_cabinet ? <Building2 size={22} aria-hidden /> : initiales(e.raison_sociale) || <Building2 size={22} aria-hidden />}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold">{e.raison_sociale}</span>
+                <span className="block truncate text-base font-semibold">{e.raison_sociale}</span>
                 <span className="block text-sm text-doux">
                   {e.interne_cabinet && "Mon cabinet · "}
                   {e.effectif} salarié{e.effectif > 1 ? "s" : ""} en poste
@@ -54,7 +69,7 @@ export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: stri
               {enCours && choix === e.id ? (
                 <LoaderCircle size={18} className="animate-spin text-marque" aria-hidden />
               ) : (
-                <ChevronRight size={18} className="text-doux transition group-hover:translate-x-0.5" aria-hidden />
+                <ChevronRight size={20} className="text-doux transition group-hover:translate-x-0.5 group-hover:text-marque" aria-hidden />
               )}
             </button>
           </li>
