@@ -330,3 +330,10 @@ Réglages Supabase (Authentication), vérifiés le 2026-10-16 :
 - L'expert sécurité ne teste qu'en local, sur la base de développement, dans des transactions annulées :
   jamais d'attaque contre le site en ligne ni contre les prestataires (Supabase, Twilio, Resend, Genuka).
 - Aucun agent ne lance la remise à zéro de la base, une migration ou un envoi sur Git sans accord du porteur du projet.
+
+## 2026-10-17 — « Mon cabinet » : la paie des employés du cabinet
+
+- Un cabinet peut faire la paie de **ses propres employés** : depuis Espace → Entreprises, l'administrateur
+  du cabinet crée en un clic l'espace « Mon cabinet ». C'est une entreprise interne, une seule par cabinet,
+  gérée comme une entreprise cliente (salariés, contrats, congés, bulletins, portail salarié), avec les mêmes
+  droits et la même isolation, et couverte par l'abonnement du cabinet.

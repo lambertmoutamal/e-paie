@@ -8,13 +8,14 @@ import { COOKIE_ENTREPRISE } from "@/lib/entreprise-chemins";
 
 export { COOKIE_ENTREPRISE };
 
-export type EntrepriseAccessible = { id: string; raison_sociale: string };
+export type EntrepriseAccessible = { id: string; raison_sociale: string; cabinet_id: string | null; interne_cabinet: boolean };
 
 // Entreprises que la personne peut voir (la base limite automatiquement la liste).
 export const entreprisesAccessibles = cache(async (): Promise<EntrepriseAccessible[]> => {
   const { supabase } = await exigerUtilisateur();
-  const { data } = await supabase.from("entreprises").select("id, raison_sociale").order("raison_sociale").limit(500);
-  return data ?? [];
+  const { data } = await supabase.from("entreprises").select("id, raison_sociale, cabinet_id, interne_cabinet").order("raison_sociale").limit(500);
+  // « Mon cabinet » (les propres employés du cabinet) en tête de liste
+  return [...(data ?? [])].sort((a, b) => Number(b.interne_cabinet) - Number(a.interne_cabinet));
 });
 
 // Entreprise sur laquelle on travaille : celle choisie à la connexion, si elle est

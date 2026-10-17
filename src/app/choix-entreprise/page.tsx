@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Briefcase, Inbox, LogOut } from "lucide-react";
+import { Briefcase, Building2, Inbox, LogOut } from "lucide-react";
 import { droitsUtilisateur, exigerUtilisateur } from "@/lib/auth/utilisateur";
-import { Carte, EtatVide, LienBouton, Squelette } from "@/components/ui";
+import { Carte, EtatVide, LienBouton, Squelette, classesBouton } from "@/components/ui";
+import { champLie } from "@/lib/supabase/relations";
 import { entreprisesAccessibles } from "@/lib/entreprise-courante";
 import { Logo } from "@/components/logo";
 import { seDeconnecter } from "../connexion/actions";
+import { ouvrirMonCabinet } from "../espace/entreprises/actions";
 import { ListeChoixEntreprises } from "./liste";
 
 export const metadata: Metadata = { title: "Choisir l'entreprise" };
@@ -38,14 +40,16 @@ export default function PageChoisirEntreprise() {
 
 async function ChoixEntreprise() {
   const { supabase } = await exigerUtilisateur();
-  const liste = await entreprisesAccessibles();
+  const [liste, { adminPlateforme, cabinets }] = await Promise.all([entreprisesAccessibles(), droitsUtilisateur()]);
+  // Cabinets administrés qui n'ont pas encore leur espace « Mon cabinet »
+  const sansEspaceInterne = cabinets.filter((c) => !liste.some((e) => e.interne_cabinet && e.cabinet_id === c.cabinet_id));
+  const monCabinet = sansEspaceInterne.length > 0 && <CarteMonCabinet cabinets={sansEspaceInterne} plusieurs={cabinets.length > 1} />;
+
   if (liste.length === 0) {
-    const [{ adminPlateforme, cabinets }, { count: demandes }] = await Promise.all([
-      droitsUtilisateur(),
-      supabase.from("demandes_entreprise").select("id", { count: "exact", head: true }).eq("statut", "en_attente"),
-    ]);
+    const { count: demandes } = await supabase.from("demandes_entreprise").select("id", { count: "exact", head: true }).eq("statut", "en_attente");
     return (
-      <div className="mx-auto max-w-xl py-6">
+      <div className="mx-auto flex max-w-xl flex-col gap-6 py-6">
+        {monCabinet}
         <Carte>
           <EtatVide
             icone={Briefcase}
@@ -83,7 +87,32 @@ async function ChoixEntreprise() {
             : "Voici l'entreprise à laquelle vous avez accès. Cliquez dessus pour commencer."}
         </p>
       </header>
+      {monCabinet}
       <ListeChoixEntreprises entreprises={liste.map((e) => ({ ...e, effectif: effectifs.get(e.id) ?? 0 }))} />
     </div>
+  );
+}
+
+// Le cabinet fait aussi la paie de ses propres employés : espace « Mon cabinet », créé en un clic.
+function CarteMonCabinet({ cabinets, plusieurs }: { cabinets: { cabinet_id: string; cabinets: unknown }[]; plusieurs: boolean }) {
+  return (
+    <section className="flex flex-col gap-3 rounded-2xl border border-dashed border-marque/40 bg-marque-claire p-4 sm:flex-row sm:items-center">
+      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-marque text-white">
+        <Building2 size={22} aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h2 className="font-semibold">Mon cabinet : vos propres salariés</h2>
+        <p className="text-sm text-doux">Faites la paie de vos employés comme pour un client. Inclus dans votre abonnement.</p>
+      </div>
+      <div className="flex flex-col gap-2">
+        {cabinets.map((c) => (
+          <form key={c.cabinet_id} action={ouvrirMonCabinet.bind(null, c.cabinet_id)}>
+            <button type="submit" className={`${classesBouton("principal")} w-full`}>
+              {plusieurs ? `Gérer les salariés de ${champLie(c.cabinets, "nom")}` : "Gérer mes salariés"}
+            </button>
+          </form>
+        ))}
+      </div>
+    </section>
   );
 }

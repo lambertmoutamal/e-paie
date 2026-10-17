@@ -1,7 +1,10 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { cookies } from "next/headers";
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
+import { COOKIE_ENTREPRISE } from "@/lib/entreprise-courante";
 import { exigerUtilisateur } from "@/lib/auth/utilisateur";
 import { affecterPersonne, renvoyerInvitation } from "@/lib/admin/membres";
 import { lireFormulaire, type EtatFormulaire } from "@/lib/validation/formulaire";
@@ -132,4 +135,36 @@ export async function enregistrerZoneEmargement(entrepriseId: string, zone: unkn
   if (error) return { erreur: "L'emplacement n'a pas pu être enregistré." };
   refresh();
   return { succes: "Emplacement enregistré : il servira pour tous les bulletins de l'entreprise." };
+}
+
+// ---------------------------------------------------------------------
+// « Mon cabinet » : le cabinet fait la paie de ses propres employés
+// ---------------------------------------------------------------------
+
+// Crée (une seule fois) l'entreprise interne du cabinet, puis l'ouvre comme entreprise de travail.
+// La base vérifie que la personne administre ce cabinet et qu'il n'en a pas déjà une.
+export async function ouvrirMonCabinet(cabinetId: string): Promise<void> {
+  const { supabase } = await exigerUtilisateur();
+  const existante = async () =>
+    (await supabase.from("entreprises").select("id").eq("cabinet_id", cabinetId).eq("interne_cabinet", true).maybeSingle()).data?.id as string | undefined;
+
+  let entrepriseId = await existante();
+  if (!entrepriseId) {
+    const { data: cabinet } = await supabase.from("cabinets").select("nom").eq("id", cabinetId).maybeSingle();
+    if (!cabinet) redirect("/espace/entreprises?mon-cabinet=refuse");
+    const { data, error } = await supabase
+      .from("entreprises")
+      .insert({ raison_sociale: cabinet.nom, cabinet_id: cabinetId, interne_cabinet: true })
+      .select("id")
+      .single();
+    // 23505 : créée entre-temps (double clic) ; on ouvre celle qui existe
+    entrepriseId = data?.id ?? (error?.code === "23505" ? await existante() : undefined);
+    if (!entrepriseId) {
+      console.error("Création de l'entreprise interne impossible :", error?.code, error?.message);
+      redirect("/espace/entreprises?mon-cabinet=refuse");
+    }
+  }
+
+  (await cookies()).set(COOKIE_ENTREPRISE, entrepriseId, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/espace" });
+  redirect(`/espace/entreprises/${entrepriseId}`);
 }

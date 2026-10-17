@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Briefcase, ChevronRight, LoaderCircle, Search } from "lucide-react";
+import { Briefcase, Building2, ChevronRight, LoaderCircle, Search } from "lucide-react";
 import { choisirEntrepriseEtContinuer } from "../espace/actions-navigation";
 
 const COULEURS = ["bg-indigo-500", "bg-rose-500", "bg-emerald-500", "bg-amber-500", "bg-sky-500", "bg-violet-500", "bg-orange-500", "bg-teal-500"];
 
 // Liste des entreprises à choisir, avec recherche quand elles sont nombreuses.
-export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: string; raison_sociale: string; effectif: number }[] }) {
+export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: string; raison_sociale: string; interne_cabinet: boolean; effectif: number }[] }) {
   const [filtre, setFiltre] = useState("");
   const [choix, setChoix] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
@@ -41,12 +41,13 @@ export function ListeChoixEntreprises({ entreprises }: { entreprises: { id: stri
               onClick={() => choisir(e.id)}
               className="group flex w-full items-center gap-4 rounded-2xl border border-bordure bg-surface p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-marque/40 hover:shadow-md disabled:opacity-60"
             >
-              <span className={`grid size-12 shrink-0 place-items-center rounded-xl text-white ${COULEURS[i % COULEURS.length]}`}>
-                <Briefcase size={22} aria-hidden />
+              <span className={`grid size-12 shrink-0 place-items-center rounded-xl text-white ${e.interne_cabinet ? "bg-marque" : COULEURS[i % COULEURS.length]}`}>
+                {e.interne_cabinet ? <Building2 size={22} aria-hidden /> : <Briefcase size={22} aria-hidden />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">{e.raison_sociale}</span>
                 <span className="block text-sm text-doux">
+                  {e.interne_cabinet && "Mon cabinet · "}
                   {e.effectif} salarié{e.effectif > 1 ? "s" : ""} en poste
                 </span>
               </span>
